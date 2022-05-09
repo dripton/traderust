@@ -1,9 +1,9 @@
-use anyhow::{Error, Result};
+use anyhow::Result;
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
 use std::collections::HashMap;
-use std::fs::{create_dir_all, write, File};
+use std::fs::{create_dir_all, read_to_string, write, File};
 use std::path::PathBuf;
 extern crate reqwest;
 use url::Url;
@@ -48,6 +48,23 @@ fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Resul
         }
     }
     Ok(())
+}
+
+/// Parse header and separator and return {field: (start, end)}
+fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, (usize, usize)> {
+    let headers: Vec<&str> = header.split_whitespace().collect();
+    let separators = separator.split_whitespace();
+    let mut field_to_start_end: HashMap<String, (usize, usize)> = HashMap::new();
+    let mut column = 0;
+    for (ii, hyphens) in separators.enumerate() {
+        let field = headers[ii];
+        let start = column;
+        let width = hyphens.len();
+        let end = column + width;
+        field_to_start_end.insert(field.to_string(), (start, end));
+        column += width + 1
+    }
+    return field_to_start_end;
 }
 
 #[derive(Debug)]
@@ -156,8 +173,30 @@ impl Sector {
         Ok(())
     }
 
-    fn parse_column_data(&self, data_dir: &PathBuf, sector_name: &str) {
-        // TODO
+    fn parse_column_data(&self, data_dir: &PathBuf, sector_name: &str) -> Result<()> {
+        let mut data_path = data_dir.clone();
+        data_path.push(sector_name.to_owned() + ".sec");
+        let blob = read_to_string(data_path)?;
+        let mut header = "";
+        let mut separator = "";
+        let mut fields: HashMap<String, (usize, usize)>;
+        for line in blob.lines() {
+            if line.len() == 0 || line.starts_with("#") {
+                continue;
+            }
+            if line.starts_with("Hex") {
+                header = line;
+            } else if line.starts_with("----") {
+                separator = line;
+                fields = parse_header_and_separator(header, separator);
+            } else {
+                // TODO
+                //let world = World::new(line, fields, self);
+                //self.hex_to_world.insert(world.hex_, world);
+            }
+        }
+
+        Ok(())
     }
 
     fn populate_neighbors(&self) {
@@ -179,7 +218,11 @@ fn main() -> Result<()> {
     create_dir_all(&data_dir)?;
 
     download_sector_data(&data_dir, &sector_names)?;
+
     let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+    for sector_name in sector_names {
+        let sector = Sector::new(&data_dir, sector_name, &mut location_to_sector);
+    }
 
     // TODO
     Ok(())
@@ -193,7 +236,7 @@ mod tests {
     use std::io;
     use tempfile::tempdir;
 
-    #[test]
+    //#[test]
     fn test_download_sector_data() -> Result<()> {
         let mut expected_filenames = Vec::new();
         let sector_names = vec![
@@ -231,6 +274,42 @@ mod tests {
         assert_eq!(expected_filenames, found_filenames);
 
         temp_dir.close()?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_header_and_separator() -> Result<()> {
+        let header = concat!(
+            r"Hex  Name                 UWP       ",
+            r"Remarks                                  {Ix}   (Ex)   ",
+            r"[Cx]   N     B  Z PBG W  A    Stellar       "
+        )
+        .to_owned();
+
+        let separator = concat!(
+            r"---- -------------------- --------- ",
+            r"---------------------------------------- ------ ------- ",
+            r"------ ----- -- - --- -- ---- --------------"
+        )
+        .to_owned();
+
+        let fields = parse_header_and_separator(&header, &separator);
+        assert_eq!(fields.len(), 14);
+        assert_eq!(fields.get("Hex"), Some(&(0, 4)));
+        assert_eq!(fields.get("Name"), Some(&(5, 25)));
+        assert_eq!(fields.get("UWP"), Some(&(26, 35)));
+        assert_eq!(fields.get("Remarks"), Some(&(36, 76)));
+        assert_eq!(fields.get("{Ix}"), Some(&(77, 83)));
+        assert_eq!(fields.get("(Ex)"), Some(&(84, 91)));
+        assert_eq!(fields.get("[Cx]"), Some(&(92, 98)));
+        assert_eq!(fields.get("N"), Some(&(99, 104)));
+        assert_eq!(fields.get("B"), Some(&(105, 107)));
+        assert_eq!(fields.get("Z"), Some(&(108, 109)));
+        assert_eq!(fields.get("PBG"), Some(&(110, 113)));
+        assert_eq!(fields.get("W"), Some(&(114, 116)));
+        assert_eq!(fields.get("A"), Some(&(117, 121)));
+        assert_eq!(fields.get("Stellar"), Some(&(122, 136)));
 
         Ok(())
     }
