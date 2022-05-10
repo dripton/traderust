@@ -2,8 +2,9 @@ use anyhow::Result;
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_to_string, write, File};
+use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 extern crate reqwest;
 use url::Url;
@@ -67,12 +68,43 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
     return field_to_start_end;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 struct World {
-    // TODO
+    sector: Sector,
+    hex: String,
+    name: String,
+    uwp: String,
+    trade_classifications: HashSet<String>,
+    importance: u64,
+    economic: String,
+    cultural: String,
+    nobles: String,
+    bases: HashSet<String>,
+    zone: String,
+    pbg: String,
+    worlds: u64,
+    allegience: String,
+    stars: Vec<String>,
+    xboat_routes: HashSet<World>,
+    major_routes: HashSet<World>,
+    main_routes: HashSet<World>,
+    intermediate_routes: HashSet<World>,
+    feeder_routes: HashSet<World>,
+    minor_routes: HashSet<World>,
+    neighbors1: HashSet<World>,
+    neighbors2: HashSet<World>,
+    neighbors3: HashSet<World>,
+    index: Option<u64>,
 }
 
-#[derive(Debug)]
+impl Hash for World {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.hex.hash(state);
+        self.name.hash(state);
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
 struct Sector {
     names: Vec<String>,
     abbreviation: String,
@@ -83,11 +115,7 @@ struct Sector {
 }
 
 impl Sector {
-    fn new(
-        data_dir: &PathBuf,
-        sector_name: String,
-        location_to_sector: &mut HashMap<(i64, i64), Sector>,
-    ) -> Sector {
+    fn new(data_dir: &PathBuf, sector_name: String) -> Sector {
         let names = Vec::new();
         let abbreviation = "".to_string();
         let location = (-1, -1);
@@ -192,7 +220,67 @@ impl Sector {
             } else {
                 // TODO
                 //let world = World::new(line, fields, self);
-                //self.hex_to_world.insert(world.hex_, world);
+                //self.hex_to_world.insert(world.hex, world);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Parse Xboat routes from xml
+    /// Must be called after all Sectors and Worlds are built
+    fn parse_xml_routes(
+        &self,
+        data_dir: &PathBuf,
+        location_to_sector: &HashMap<(i64, i64), Sector>,
+    ) -> Result<()> {
+        let mut xml_path = data_dir.clone();
+        xml_path.push(self.name().to_owned() + ".xml");
+        let xml_file = File::open(xml_path)?;
+        let root = Element::from_reader(xml_file)?;
+        let routes_opt = root.find("Routes");
+        if let Some(routes_element) = routes_opt {
+            let route_elements = routes_element.find_all("Route");
+            for route_element in route_elements {
+                let start_hex_opt = route_element.get_attr("Start");
+                if let Some(start_hex) = start_hex_opt {
+                    let end_hex_opt = route_element.get_attr("End");
+                    if let Some(end_hex) = end_hex_opt {
+                        let start_offset_x_opt = route_element.get_attr("StartOffsetX");
+                        let start_offset_x = 0;
+                        if let Some(start_offset_x) = start_offset_x_opt {};
+                        let start_offset_y_opt = route_element.get_attr("StartOffsetY");
+                        let start_offset_y = 0;
+                        if let Some(start_offset_y) = start_offset_y_opt {}
+                        let end_offset_x_opt = route_element.get_attr("EndOffsetX");
+                        let end_offset_x = 0;
+                        if let Some(end_offset_x) = end_offset_x_opt {}
+                        let end_offset_y_opt = route_element.get_attr("EndOffsetY");
+                        let end_offset_y = 0;
+                        if let Some(end_offset_y) = end_offset_y_opt {}
+                        let start_sector_opt = location_to_sector.get(&(
+                            self.location.0 + start_offset_x,
+                            self.location.1 + start_offset_y,
+                        ));
+                        let end_sector_opt = location_to_sector.get(&(
+                            self.location.0 + end_offset_x,
+                            self.location.1 + end_offset_y,
+                        ));
+                        if let Some(start_sector) = start_sector_opt {
+                            if let Some(end_sector) = end_sector_opt {
+                                let start_world_opt = start_sector.hex_to_world.get(start_hex);
+                                let end_world_opt = end_sector.hex_to_world.get(end_hex);
+                                if let Some(start_world) = start_world_opt {
+                                    if let Some(end_world) = end_world_opt {
+                                        // TODO sort these out
+                                        //start_world.xboat_routes.insert(end_world);
+                                        //end_world.xboat_routes.insert(start_world);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -221,7 +309,11 @@ fn main() -> Result<()> {
 
     let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
     for sector_name in sector_names {
-        let sector = Sector::new(&data_dir, sector_name, &mut location_to_sector);
+        let sector = Sector::new(&data_dir, sector_name);
+        location_to_sector.insert(sector.location, sector);
+    }
+    for sector in location_to_sector.values() {
+        sector.parse_xml_routes(&data_dir, &location_to_sector);
     }
 
     // TODO
