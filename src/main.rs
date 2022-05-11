@@ -70,7 +70,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
 
 #[derive(Debug, Eq, PartialEq)]
 struct World {
-    sector: Sector,
+    // sector: Sector,  TODO figure out this reference
     hex: String,
     name: String,
     uwp: String,
@@ -95,6 +95,136 @@ struct World {
     neighbors2: HashSet<World>,
     neighbors3: HashSet<World>,
     index: Option<u64>,
+}
+
+impl World {
+    fn new(line: String, fields: &HashMap<String, (usize, usize)>, sector: &Sector) -> World {
+        let mut hex = "".to_string();
+        let mut name = "".to_string();
+        let mut uwp = "".to_string();
+        let mut trade_classifications = HashSet::new();
+        let mut importance = 0;
+        let mut economic = "".to_string();
+        let mut cultural = "".to_string();
+        let mut nobles = "".to_string();
+        let mut bases = HashSet::new();
+        let mut zone = "G".to_string();
+        let mut pbg = "".to_string();
+        let mut worlds = 0;
+        let mut allegience = "".to_string();
+        let mut stars = Vec::new();
+        let xboat_routes = HashSet::new();
+        let major_routes = HashSet::new();
+        let main_routes = HashSet::new();
+        let intermediate_routes = HashSet::new();
+        let feeder_routes = HashSet::new();
+        let minor_routes = HashSet::new();
+        let neighbors1 = HashSet::new();
+        let neighbors2 = HashSet::new();
+        let neighbors3 = HashSet::new();
+        let index = None;
+
+        for (field, (start, end)) in fields.iter() {
+            let value_opt = line.get(*start..*end);
+            if let Some(value) = value_opt {
+                match field.as_str() {
+                    "Hex" => hex = value.to_string(),
+                    "Name" => name = value.trim().to_string(),
+                    "UWP" => uwp = value.to_string(),
+                    "Remarks" => {
+                        for tc in value.trim().split_whitespace() {
+                            trade_classifications.insert(tc.to_string());
+                        }
+                    }
+                    "{Ix}" => {
+                        let trimmed = value
+                            .trim_matches(|c| c == '{' || c == '}' || c == ' ')
+                            .to_string();
+                        if trimmed.len() > 0 {
+                            if let Ok(val) = trimmed.parse() {
+                                importance = val;
+                            }
+                        }
+                    }
+                    "(Ex)" => economic = value.trim_matches(|c| c == '(' || c == ')').to_string(),
+                    "[Cx]" => cultural = value.trim_matches(|c| c == '[' || c == ']').to_string(),
+                    "N" => nobles = value.trim_matches(|c| c == ' ' || c == '-').to_string(),
+                    "B" => {
+                        let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
+                        if trimmed.len() > 0 {
+                            for ch in trimmed.chars() {
+                                bases.insert(ch.to_string());
+                            }
+                        }
+                    }
+                    "Z" => {
+                        let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
+                        if trimmed.len() > 0 {
+                            zone = trimmed;
+                        }
+                    }
+                    "PBG" => pbg = value.trim().to_string(),
+                    "W" => {
+                        let trimmed = value
+                            .trim_matches(|c| c == '{' || c == '}' || c == ' ')
+                            .to_string();
+                        if trimmed.len() > 0 {
+                            if let Ok(val) = trimmed.parse() {
+                                worlds = val;
+                            }
+                        }
+                    }
+                    "A" => allegience = value.to_string(),
+                    "Stellar" => {
+                        let parts: Vec<&str> = value.trim().split_whitespace().collect();
+                        let mut ii = 0;
+                        while ii < parts.len() {
+                            let star = parts[ii];
+                            if star == "BD" || star == "D" {
+                                stars.push(star.to_owned());
+                                ii += 1;
+                            } else {
+                                stars.push(star.to_owned() + " " + &parts[ii + 1]);
+                                ii += 2;
+                            }
+                        }
+                    }
+                    &_ => (),
+                }
+            }
+        }
+
+        // TODO abs_coords_to_world[world.abs_coords] = world
+
+        let world = World {
+            // sector, // TODO
+            hex,
+            name,
+            uwp,
+            trade_classifications,
+            importance,
+            economic,
+            cultural,
+            nobles,
+            bases,
+            zone,
+            pbg,
+            worlds,
+            allegience,
+            stars,
+            xboat_routes,
+            major_routes,
+            main_routes,
+            intermediate_routes,
+            feeder_routes,
+            minor_routes,
+            neighbors1,
+            neighbors2,
+            neighbors3,
+            index,
+        };
+        world
+    }
 }
 
 impl Hash for World {
@@ -201,13 +331,14 @@ impl Sector {
         Ok(())
     }
 
-    fn parse_column_data(&self, data_dir: &PathBuf, sector_name: &str) -> Result<()> {
+    fn parse_column_data(&mut self, data_dir: &PathBuf, sector_name: &str) -> Result<()> {
         let mut data_path = data_dir.clone();
         data_path.push(sector_name.to_owned() + ".sec");
         let blob = read_to_string(data_path)?;
         let mut header = "";
         let mut separator = "";
-        let mut fields: HashMap<String, (usize, usize)>;
+        // We initialize fields here to make rustc happy, then overwrite it.
+        let mut fields: HashMap<String, (usize, usize)> = HashMap::new();
         for line in blob.lines() {
             if line.len() == 0 || line.starts_with("#") {
                 continue;
@@ -218,9 +349,9 @@ impl Sector {
                 separator = line;
                 fields = parse_header_and_separator(header, separator);
             } else {
-                // TODO
-                //let world = World::new(line, fields, self);
-                //self.hex_to_world.insert(world.hex, world);
+                let world = World::new(line.to_string(), &fields, self);
+                // TODO sort this out
+                // self.hex_to_world.insert(world.hex, world);
             }
         }
 
