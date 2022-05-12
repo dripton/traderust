@@ -531,8 +531,10 @@ impl Sector {
             hex_to_coords,
         };
 
-        sector.parse_xml_metadata(&data_dir, &sector_name);
-        sector.parse_column_data(&data_dir, &sector_name, coords_to_world);
+        sector.parse_xml_metadata(&data_dir, &sector_name).unwrap();
+        sector
+            .parse_column_data(&data_dir, &sector_name, coords_to_world)
+            .unwrap();
         sector
     }
 
@@ -745,7 +747,9 @@ fn main() -> Result<()> {
         location_to_sector.insert(sector.location, sector);
     }
     for sector in location_to_sector.values() {
-        sector.parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world);
+        sector
+            .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+            .unwrap();
     }
     {
         // Make a temporary clone to avoid having mutable and immutable refs.
