@@ -158,7 +158,7 @@ struct World {
     zone: String,
     pbg: String,
     worlds: u64,
-    allegience: String,
+    allegiance: String,
     stars: Vec<String>,
     xboat_routes: HashSet<Coords>,
     major_routes: HashSet<Coords>,
@@ -190,7 +190,7 @@ impl World {
         let mut zone = "G".to_string();
         let mut pbg = "".to_string();
         let mut worlds = 0;
-        let mut allegience = "".to_string();
+        let mut allegiance = "".to_string();
         let mut stars = Vec::new();
         let xboat_routes = HashSet::new();
         let major_routes = HashSet::new();
@@ -253,7 +253,7 @@ impl World {
                             }
                         }
                     }
-                    "A" => allegience = value.to_string(),
+                    "A" => allegiance = value.to_string(),
                     "Stellar" => {
                         let parts: Vec<&str> = value.trim().split_whitespace().collect();
                         let mut ii = 0;
@@ -287,7 +287,7 @@ impl World {
             zone,
             pbg,
             worlds,
-            allegience,
+            allegiance,
             stars,
             xboat_routes,
             major_routes,
@@ -392,7 +392,7 @@ struct Sector {
     abbreviation: String,
     location: (i64, i64),
     subsector_letter_to_name: HashMap<String, String>,
-    allegience_code_to_name: HashMap<String, String>,
+    allegiance_code_to_name: HashMap<String, String>,
     hex_to_coords: HashMap<String, Coords>,
 }
 
@@ -406,14 +406,14 @@ impl Sector {
         let abbreviation = "".to_string();
         let location = (-1, -1);
         let subsector_letter_to_name = HashMap::new();
-        let allegience_code_to_name = HashMap::new();
+        let allegiance_code_to_name = HashMap::new();
         let hex_to_coords = HashMap::new();
         let mut sector = Sector {
             names,
             abbreviation,
             location,
             subsector_letter_to_name,
-            allegience_code_to_name,
+            allegiance_code_to_name,
             hex_to_coords,
         };
 
@@ -471,14 +471,14 @@ impl Sector {
 
         let allegiances_opt = root.find("Allegiances");
         if let Some(allegiances_element) = allegiances_opt {
-            let allegience_elements = allegiances_element.find_all("Allegience");
-            for allegience_element in allegience_elements {
-                let code_opt = allegience_element.get_attr("Code");
+            let allegiance_elements = allegiances_element.find_all("allegiance");
+            for allegiance_element in allegiance_elements {
+                let code_opt = allegiance_element.get_attr("Code");
                 if let Some(code) = code_opt {
-                    let allegience_name = allegience_element.text().to_string();
-                    if allegience_name.len() > 0 {
-                        self.allegience_code_to_name
-                            .insert(code.to_string(), allegience_name);
+                    let allegiance_name = allegiance_element.text().to_string();
+                    if allegiance_name.len() > 0 {
+                        self.allegiance_code_to_name
+                            .insert(code.to_string(), allegiance_name);
                     }
                 }
             }
