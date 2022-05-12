@@ -440,7 +440,7 @@ impl Sector {
             x = x_text.parse()?;
         }
         let mut y = i64::MAX;
-        let y_opt = root.find("y");
+        let y_opt = root.find("Y");
         if let Some(y_element) = y_opt {
             let y_text = y_element.text();
             y = y_text.parse()?;
@@ -471,7 +471,7 @@ impl Sector {
 
         let allegiances_opt = root.find("Allegiances");
         if let Some(allegiances_element) = allegiances_opt {
-            let allegiance_elements = allegiances_element.find_all("allegiance");
+            let allegiance_elements = allegiances_element.find_all("Allegiance");
             for allegiance_element in allegiance_elements {
                 let code_opt = allegiance_element.get_attr("Code");
                 if let Some(code) = code_opt {
@@ -719,6 +719,46 @@ mod tests {
         assert_eq!(fields.get("A"), Some(&(117, 121)));
         assert_eq!(fields.get("Stellar"), Some(&(122, 136)));
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_sector_spin() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name(), "Spinward Marches");
+        assert_eq!(sector.names, vec!["Spinward Marches", "Tloql"]);
+        assert_eq!(sector.abbreviation, "Spin");
+        assert_eq!(sector.location, (-4, -1));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("A").unwrap(),
+            "Cronor".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("P").unwrap(),
+            "Trin's Veil".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 8);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("CsIm").unwrap(),
+            "Client state, Third Imperium".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 439);
+        let zeycude_coords = sector.hex_to_coords.get("0101").unwrap();
+        let zeycude = coords_to_world.get(zeycude_coords).unwrap();
+        assert_eq!(zeycude.name, "Zeycude");
+        let hazel_coords = sector.hex_to_coords.get("3236").unwrap();
+        let hazel = coords_to_world.get(hazel_coords).unwrap();
+        assert_eq!(hazel.name, "Hazel");
+
+        temp_dir.close()?;
         Ok(())
     }
 }
