@@ -31,6 +31,46 @@ struct Args {
     verbose: clap_verbosity_flag::Verbosity,
 }
 
+lazy_static! {
+
+    static ref SQRT3: f64 = f64::powf(3.0, 0.5);
+
+    static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
+        let mut sttg: HashMap<String, String> = HashMap::new();
+        sttg.insert("A".to_string(), "V".to_string());
+
+        sttg.insert("C".to_string(), "III".to_string());
+        sttg.insert("D".to_string(), "II".to_string());
+        sttg.insert("E".to_string(), "I".to_string());
+        sttg.insert("X".to_string(), "0".to_string());
+        sttg
+    };
+
+
+    static ref TECH_LEVEL_TRAVELLER_TO_GURPS: HashMap<u64, u64> = {
+        let mut tttg: HashMap<u64, u64> = HashMap::new();
+        tttg.insert(0, 2); // actually 1-3
+        tttg.insert(1, 4);
+        tttg.insert(2, 5);
+        tttg.insert(3, 5);
+        tttg.insert(4, 5);
+        tttg.insert(5, 6);
+        tttg.insert(6, 6);
+        tttg.insert(7, 7);
+        tttg.insert(8, 8);
+        tttg.insert(9, 9);
+        tttg.insert(10, 9);
+        tttg.insert(11, 9);
+        tttg.insert(12, 10);
+        tttg.insert(13, 10);
+        tttg.insert(14, 11);
+        tttg.insert(15, 12);
+        tttg.insert(16, 13);
+        tttg.insert(17, 13);
+        tttg
+    };
+}
+
 fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Result<()> {
     for sector_name in sector_names {
         let sector_data_filename = sector_name.to_owned() + ".sec";
