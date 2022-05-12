@@ -526,6 +526,7 @@ impl Sector {
         &self,
         data_dir: &PathBuf,
         location_to_sector: &HashMap<(i64, i64), Sector>,
+        coords_to_world: &mut HashMap<Coords, World>,
     ) -> Result<()> {
         let mut xml_path = data_dir.clone();
         xml_path.push(self.name().to_owned() + ".xml");
@@ -561,13 +562,28 @@ impl Sector {
                         ));
                         if let Some(start_sector) = start_sector_opt {
                             if let Some(end_sector) = end_sector_opt {
-                                let start_world_opt = start_sector.hex_to_coords.get(start_hex);
-                                let end_world_opt = end_sector.hex_to_coords.get(end_hex);
-                                if let Some(start_world) = start_world_opt {
-                                    if let Some(end_world) = end_world_opt {
-                                        // TODO sort these out
-                                        //start_world.xboat_routes.insert(end_world.get_coords());
-                                        //end_world.xboat_routes.insert(start_world.get_coords());
+                                if let Some(start_coords) =
+                                    start_sector.hex_to_coords.get(start_hex)
+                                {
+                                    if let Some(end_coords) = end_sector.hex_to_coords.get(end_hex)
+                                    {
+                                        // Need to do these one at a time to avoid holding two
+                                        // mutable references at once.
+                                        if let Some(start_world) = coords_to_world.get(start_coords)
+                                        {
+                                            if let Some(end_world) =
+                                                coords_to_world.get_mut(end_coords)
+                                            {
+                                                end_world.xboat_routes.insert(*start_coords);
+                                            }
+                                        }
+                                        if let Some(end_world) = coords_to_world.get(end_coords) {
+                                            if let Some(start_world) =
+                                                coords_to_world.get_mut(start_coords)
+                                            {
+                                                start_world.xboat_routes.insert(*end_coords);
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -603,7 +619,7 @@ fn main() -> Result<()> {
         location_to_sector.insert(sector.location, sector);
     }
     for sector in location_to_sector.values() {
-        sector.parse_xml_routes(&data_dir, &location_to_sector);
+        sector.parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world);
     }
     {
         // Make a temporary clone to avoid having mutable and immutable refs.
