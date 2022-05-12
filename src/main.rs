@@ -10,6 +10,7 @@ use std::path::PathBuf;
 extern crate lazy_static;
 extern crate reqwest;
 use substring::Substring;
+use tempfile::tempdir;
 use url::Url;
 
 #[derive(Debug, Parser)]
@@ -19,9 +20,8 @@ struct Args {
     sector: Vec<String>,
 
     /// Path to input matrix in numpy ndy format
-    // TODO Make this optional and use a tempdir if not provided
-    #[clap(short, long, required = true)]
-    data_directory: PathBuf,
+    #[clap(short, long)]
+    data_directory: Option<PathBuf>,
 
     /// Path to output distance and predecessor matrixes in numpy ndz format
     #[clap(short, long, default_value = "/var/tmp")]
@@ -604,7 +604,9 @@ impl Sector {
 fn main() -> Result<()> {
     let args = Args::parse();
     let output_dir = args.output_directory;
-    let data_dir = args.data_directory;
+    let temp_dir = tempdir()?;
+    let mut data_dir: PathBuf = temp_dir.path().to_path_buf();
+    if let Some(data_dir) = args.data_directory {};
     let sector_names = args.sector;
 
     create_dir_all(&output_dir)?;
@@ -629,6 +631,8 @@ fn main() -> Result<()> {
         }
     }
 
+    temp_dir.close()?;
+
     // TODO
     Ok(())
 }
@@ -639,9 +643,8 @@ mod tests {
     use std::ffi::OsString;
     use std::fs::read_dir;
     use std::io;
-    use tempfile::tempdir;
 
-    //#[test]
+    #[test]
     fn test_download_sector_data() -> Result<()> {
         let mut expected_filenames = Vec::new();
         let sector_names = vec![
