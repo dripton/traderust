@@ -497,7 +497,6 @@ impl Sector {
         data_path.push(sector_name.to_owned() + ".sec");
         let blob = read_to_string(data_path)?;
         let mut header = "";
-        let mut separator = "";
         // We initialize fields here to make rustc happy, then overwrite it.
         let mut fields: HashMap<String, (usize, usize)> = HashMap::new();
         for line in blob.lines() {
@@ -507,7 +506,7 @@ impl Sector {
             if line.starts_with("Hex") {
                 header = line;
             } else if line.starts_with("----") {
-                separator = line;
+                let separator = line;
                 fields = parse_header_and_separator(header, separator);
             } else {
                 let world = World::new(line.to_string(), &fields, self.location);
