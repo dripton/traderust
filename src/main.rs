@@ -654,17 +654,25 @@ impl Sector {
                     let end_hex_opt = route_element.get_attr("End");
                     if let Some(end_hex) = end_hex_opt {
                         let start_offset_x_opt = route_element.get_attr("StartOffsetX");
-                        let start_offset_x = 0;
-                        if let Some(start_offset_x) = start_offset_x_opt {};
+                        let mut start_offset_x = 0;
+                        if let Some(start_offset_x2) = start_offset_x_opt {
+                            start_offset_x = start_offset_x2.parse()?;
+                        };
                         let start_offset_y_opt = route_element.get_attr("StartOffsetY");
-                        let start_offset_y = 0;
-                        if let Some(start_offset_y) = start_offset_y_opt {}
+                        let mut start_offset_y = 0;
+                        if let Some(start_offset_y2) = start_offset_y_opt {
+                            start_offset_y = start_offset_y2.parse()?;
+                        }
                         let end_offset_x_opt = route_element.get_attr("EndOffsetX");
-                        let end_offset_x = 0;
-                        if let Some(end_offset_x) = end_offset_x_opt {}
+                        let mut end_offset_x = 0;
+                        if let Some(end_offset_x2) = end_offset_x_opt {
+                            end_offset_x = end_offset_x2.parse()?;
+                        }
                         let end_offset_y_opt = route_element.get_attr("EndOffsetY");
-                        let end_offset_y = 0;
-                        if let Some(end_offset_y) = end_offset_y_opt {}
+                        let mut end_offset_y = 0;
+                        if let Some(end_offset_y2) = end_offset_y_opt {
+                            end_offset_y = end_offset_y2.parse()?;
+                        }
                         let start_sector_opt = location_to_sector.get(&(
                             self.location.0 + start_offset_x,
                             self.location.1 + start_offset_y,
@@ -682,7 +690,8 @@ impl Sector {
                                     {
                                         // Need to do these one at a time to avoid holding two
                                         // mutable references at once.
-                                        if let Some(start_world) = coords_to_world.get(start_coords)
+                                        if let Some(_start_world) =
+                                            coords_to_world.get(start_coords)
                                         {
                                             if let Some(end_world) =
                                                 coords_to_world.get_mut(end_coords)
@@ -690,7 +699,7 @@ impl Sector {
                                                 end_world.xboat_routes.insert(*start_coords);
                                             }
                                         }
-                                        if let Some(end_world) = coords_to_world.get(end_coords) {
+                                        if let Some(_end_world) = coords_to_world.get(end_coords) {
                                             if let Some(start_world) =
                                                 coords_to_world.get_mut(start_coords)
                                             {
