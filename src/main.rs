@@ -606,7 +606,9 @@ fn main() -> Result<()> {
     let output_dir = args.output_directory;
     let temp_dir = tempdir()?;
     let mut data_dir: PathBuf = temp_dir.path().to_path_buf();
-    if let Some(data_dir) = args.data_directory {};
+    if let Some(data_dir_override) = args.data_directory {
+        data_dir = data_dir_override;
+    };
     let sector_names = args.sector;
 
     create_dir_all(&output_dir)?;
