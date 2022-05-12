@@ -143,9 +143,9 @@ impl From<Coords> for (f64, f64) {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct World {
-    // sector: Sector,  TODO figure out this reference
+    sector_location: (i64, i64),
     hex: String,
     name: String,
     uwp: String,
@@ -160,20 +160,24 @@ struct World {
     worlds: u64,
     allegience: String,
     stars: Vec<String>,
-    xboat_routes: HashSet<World>,
-    major_routes: HashSet<World>,
-    main_routes: HashSet<World>,
-    intermediate_routes: HashSet<World>,
-    feeder_routes: HashSet<World>,
-    minor_routes: HashSet<World>,
-    neighbors1: HashSet<World>,
-    neighbors2: HashSet<World>,
-    neighbors3: HashSet<World>,
+    xboat_routes: HashSet<Coords>,
+    major_routes: HashSet<Coords>,
+    main_routes: HashSet<Coords>,
+    intermediate_routes: HashSet<Coords>,
+    feeder_routes: HashSet<Coords>,
+    minor_routes: HashSet<Coords>,
+    neighbors1: HashSet<Coords>,
+    neighbors2: HashSet<Coords>,
+    neighbors3: HashSet<Coords>,
     index: Option<u64>,
 }
 
 impl World {
-    fn new(line: String, fields: &HashMap<String, (usize, usize)>, sector: &Sector) -> World {
+    fn new(
+        line: String,
+        fields: &HashMap<String, (usize, usize)>,
+        sector_location: (i64, i64),
+    ) -> World {
         let mut hex = "".to_string();
         let mut name = "".to_string();
         let mut uwp = "".to_string();
@@ -269,10 +273,8 @@ impl World {
             }
         }
 
-        // TODO abs_coords_to_world[world.abs_coords] = world
-
         let world = World {
-            // sector, // TODO
+            sector_location,
             hex,
             name,
             uwp,
@@ -300,6 +302,81 @@ impl World {
         };
         world
     }
+
+    /// Find and cache all neighbors within 3 hexes.
+    ///
+    /// This must be run after all Sectors and Worlds are mostly initialized.
+    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>) {
+        if !self.can_refuel() {
+            return;
+        }
+        let (x, y) = <(f64, f64)>::from(self.get_coords());
+        let mut xx = x - 3.0;
+        while xx <= x + 3.0 {
+            let mut yy = y - 3.0;
+            while yy <= y + 3.0 {
+                let world_opt = coords_to_world.get(&Coords::new(xx, yy));
+                if let Some(world) = world_opt {
+                    if world != self && world.can_refuel() {
+                        let distance = self.straight_line_distance(world);
+                        match distance {
+                            1 => self.neighbors1.insert(world.get_coords()),
+                            2 => self.neighbors2.insert(world.get_coords()),
+                            3 => self.neighbors3.insert(world.get_coords()),
+                            _ => false,
+                        };
+                    }
+                }
+                yy += 0.5;
+            }
+            xx += 1.0;
+        }
+    }
+
+    fn starport(&self) -> String {
+        return self.uwp.substring(0, 1).to_string();
+    }
+
+    fn g_starport(&self) -> String {
+        let starport = self.starport();
+        let opt = STARPORT_TRAVELLER_TO_GURPS.get(&starport);
+        return opt.unwrap().to_string();
+    }
+
+    fn hydrosphere(&self) -> String {
+        return self.uwp.substring(3, 4).to_string();
+    }
+
+    fn gas_giants(&self) -> String {
+        return self.pbg.substring(2, 3).to_string();
+    }
+
+    fn can_refuel(&self) -> bool {
+        return self.gas_giants() != "0"
+            || (self.zone != "R" && (self.starport() != "E" && self.starport() != "X")
+                || self.hydrosphere() != "0");
+    }
+
+    /// Return double the actual coordinates, as we have half-hexes vertically.
+    fn get_coords(&self) -> Coords {
+        let hex = &self.hex;
+        let location = self.sector_location;
+        let x: i64 = hex.substring(0, 2).parse::<i64>().unwrap() + 32 * location.0;
+        let y: i64 = hex.substring(2, 4).parse::<i64>().unwrap() + 40 * location.1;
+        let half_y = x & 1 == 0;
+        return Coords { x, y, half_y };
+    }
+
+    fn straight_line_distance(&self, other: &World) -> u64 {
+        let (x1, y1) = <(f64, f64)>::from(self.get_coords());
+        let (x2, y2) = <(f64, f64)>::from(other.get_coords());
+        let xdelta = f64::abs(x2 - x1);
+        let mut ydelta = f64::abs(y2 - y1) - xdelta / 2.0;
+        if ydelta < 0.0 {
+            ydelta = 0.0;
+        }
+        return (f64::floor(xdelta + ydelta)) as u64;
+    }
 }
 
 impl Hash for World {
@@ -316,28 +393,32 @@ struct Sector {
     location: (i64, i64),
     subsector_letter_to_name: HashMap<String, String>,
     allegience_code_to_name: HashMap<String, String>,
-    hex_to_world: HashMap<String, World>,
+    hex_to_coords: HashMap<String, Coords>,
 }
 
 impl Sector {
-    fn new(data_dir: &PathBuf, sector_name: String) -> Sector {
+    fn new(
+        data_dir: &PathBuf,
+        sector_name: String,
+        coords_to_world: &mut HashMap<Coords, World>,
+    ) -> Sector {
         let names = Vec::new();
         let abbreviation = "".to_string();
         let location = (-1, -1);
         let subsector_letter_to_name = HashMap::new();
         let allegience_code_to_name = HashMap::new();
-        let hex_to_world = HashMap::new();
+        let hex_to_coords = HashMap::new();
         let mut sector = Sector {
             names,
             abbreviation,
             location,
             subsector_letter_to_name,
             allegience_code_to_name,
-            hex_to_world,
+            hex_to_coords,
         };
 
         sector.parse_xml_metadata(&data_dir, &sector_name);
-        sector.parse_column_data(&data_dir, &sector_name);
+        sector.parse_column_data(&data_dir, &sector_name, coords_to_world);
         sector
     }
 
@@ -406,7 +487,12 @@ impl Sector {
         Ok(())
     }
 
-    fn parse_column_data(&mut self, data_dir: &PathBuf, sector_name: &str) -> Result<()> {
+    fn parse_column_data(
+        &mut self,
+        data_dir: &PathBuf,
+        sector_name: &str,
+        coords_to_world: &mut HashMap<Coords, World>,
+    ) -> Result<()> {
         let mut data_path = data_dir.clone();
         data_path.push(sector_name.to_owned() + ".sec");
         let blob = read_to_string(data_path)?;
@@ -424,9 +510,10 @@ impl Sector {
                 separator = line;
                 fields = parse_header_and_separator(header, separator);
             } else {
-                let world = World::new(line.to_string(), &fields, self);
-                // TODO sort this out
-                // self.hex_to_world.insert(world.hex, world);
+                let world = World::new(line.to_string(), &fields, self.location);
+                self.hex_to_coords
+                    .insert(world.hex.clone(), world.get_coords());
+                coords_to_world.insert(world.get_coords(), world);
             }
         }
 
@@ -474,13 +561,13 @@ impl Sector {
                         ));
                         if let Some(start_sector) = start_sector_opt {
                             if let Some(end_sector) = end_sector_opt {
-                                let start_world_opt = start_sector.hex_to_world.get(start_hex);
-                                let end_world_opt = end_sector.hex_to_world.get(end_hex);
+                                let start_world_opt = start_sector.hex_to_coords.get(start_hex);
+                                let end_world_opt = end_sector.hex_to_coords.get(end_hex);
                                 if let Some(start_world) = start_world_opt {
                                     if let Some(end_world) = end_world_opt {
                                         // TODO sort these out
-                                        //start_world.xboat_routes.insert(end_world);
-                                        //end_world.xboat_routes.insert(start_world);
+                                        //start_world.xboat_routes.insert(end_world.get_coords());
+                                        //end_world.xboat_routes.insert(start_world.get_coords());
                                     }
                                 }
                             }
@@ -491,10 +578,6 @@ impl Sector {
         }
 
         Ok(())
-    }
-
-    fn populate_neighbors(&self) {
-        // TODO
     }
 
     fn name(&self) -> &str {
@@ -514,12 +597,20 @@ fn main() -> Result<()> {
     download_sector_data(&data_dir, &sector_names)?;
 
     let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+    let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
     for sector_name in sector_names {
-        let sector = Sector::new(&data_dir, sector_name);
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
         location_to_sector.insert(sector.location, sector);
     }
     for sector in location_to_sector.values() {
         sector.parse_xml_routes(&data_dir, &location_to_sector);
+    }
+    {
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
     }
 
     // TODO
