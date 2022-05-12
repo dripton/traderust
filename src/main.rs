@@ -6,7 +6,10 @@ use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
+#[macro_use]
+extern crate lazy_static;
 extern crate reqwest;
+use substring::Substring;
 use url::Url;
 
 #[derive(Debug, Parser)]

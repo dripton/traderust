@@ -10,6 +10,8 @@ anyhow = "1.0"
 clap = { version = "3.1.17", features = ["derive"] }
 clap-verbosity-flag = "1.0.0"
 elementtree = "0.7.0"
+lazy_static = "1.4.0"
 reqwest = { version = "0.11", features = ["blocking"] }
+substring = "1.4.5"
 tempfile = "3.3.0"
 url = "2.2.2"
