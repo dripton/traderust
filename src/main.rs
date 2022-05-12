@@ -111,6 +111,38 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
     return field_to_start_end;
 }
 
+/// Absolute coordinates
+/// x is an integer
+/// y is an integer
+/// half_y shows if y should actually be pushed down half a hex
+/// This is needed because floats can't be hash keys
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+struct Coords {
+    x: i64,
+    y: i64,
+    half_y: bool,
+}
+
+impl Coords {
+    fn new(xf: f64, yf: f64) -> Coords {
+        let x = xf as i64;
+        let y = yf as i64;
+        let half_y = yf - y as f64 != 0.0;
+        Coords { x, y, half_y }
+    }
+}
+
+impl From<Coords> for (f64, f64) {
+    fn from(coords: Coords) -> (f64, f64) {
+        let fx = coords.x as f64;
+        let mut fy = coords.y as f64;
+        if coords.half_y {
+            fy += 0.5;
+        }
+        (fx, fy)
+    }
+}
+
 #[derive(Debug, Eq, PartialEq)]
 struct World {
     // sector: Sector,  TODO figure out this reference
