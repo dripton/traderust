@@ -763,4 +763,84 @@ mod tests {
         temp_dir.close()?;
         Ok(())
     }
+
+    #[test]
+    fn test_sector_dene() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Deneb".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name(), "Deneb");
+        assert_eq!(sector.names, vec!["Deneb", "Nieklsdia"]);
+        assert_eq!(sector.abbreviation, "Dene");
+        assert_eq!(sector.location, (-3, -1));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("A").unwrap(),
+            "Pretoria".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("P").unwrap(),
+            "Vast Heavens".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 6);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("CsIm").unwrap(),
+            "Client state, Third Imperium".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 386);
+        let new_ramma_coords = sector.hex_to_coords.get("0108").unwrap();
+        let new_ramma = coords_to_world.get(new_ramma_coords).unwrap();
+        assert_eq!(new_ramma.name, "New Ramma");
+        let asharam_coords = sector.hex_to_coords.get("3031").unwrap();
+        let asharam = coords_to_world.get(asharam_coords).unwrap();
+        assert_eq!(asharam.name, "Asharam");
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_sector_gvur() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Gvurrdon".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name(), "Gvurrdon");
+        assert_eq!(sector.names, vec!["Gvurrdon", r"Briakqra'"]);
+        assert_eq!(sector.abbreviation, "Gvur");
+        assert_eq!(sector.location, (-4, -2));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("A").unwrap(),
+            "Ongvos".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get("P").unwrap(),
+            "Firgr".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 16);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("CsIm").unwrap(),
+            "Client state, Third Imperium".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 358);
+        let enjtodl_coords = sector.hex_to_coords.get("0104").unwrap();
+        let enjtodl = coords_to_world.get(enjtodl_coords).unwrap();
+        assert_eq!(enjtodl.name, "Enjtodl");
+        let oertsous_coords = sector.hex_to_coords.get("3238").unwrap();
+        let oertsous = coords_to_world.get(oertsous_coords).unwrap();
+        assert_eq!(oertsous.name, "Oertsous");
+
+        temp_dir.close()?;
+        Ok(())
+    }
 }
