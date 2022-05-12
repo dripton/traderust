@@ -31,6 +31,9 @@ struct Args {
     verbose: clap_verbosity_flag::Verbosity,
 }
 
+const MAX_TECH_LEVEL: u32 = 17;
+const MAX_POPULATION: u32 = 15;
+
 lazy_static! {
 
     static ref SQRT3: f64 = f64::powf(3.0, 0.5);
@@ -47,8 +50,9 @@ lazy_static! {
     };
 
 
-    static ref TECH_LEVEL_TRAVELLER_TO_GURPS: HashMap<u64, u64> = {
-        let mut tttg: HashMap<u64, u64> = HashMap::new();
+
+    static ref TECH_LEVEL_TRAVELLER_TO_GURPS: HashMap<u32, u64> = {
+        let mut tttg: HashMap<u32, u64> = HashMap::new();
         tttg.insert(0, 2); // actually 1-3
         tttg.insert(1, 4);
         tttg.insert(2, 5);
@@ -68,6 +72,59 @@ lazy_static! {
         tttg.insert(16, 13);
         tttg.insert(17, 13);
         tttg
+    };
+
+    static ref WTN_PORT_MODIFIER_TABLE: HashMap<(u64, String), f64> = {
+        let mut wpmt: HashMap<(u64, String), f64> = HashMap::new();
+        wpmt.insert((7, "V".to_string()), 0.0);
+        wpmt.insert((7, "IV".to_string()), -1.0);
+        wpmt.insert((7, "III".to_string()), -1.5);
+        wpmt.insert((7, "II".to_string()), -2.0);
+        wpmt.insert((7, "I".to_string()), -2.5);
+        wpmt.insert((7, "0".to_string()), -5.0);
+        wpmt.insert((6, "V".to_string()), 0.0);
+        wpmt.insert((6, "IV".to_string()), -0.5);
+        wpmt.insert((6, "III".to_string()), -1.0);
+        wpmt.insert((6, "II".to_string()), -1.5);
+        wpmt.insert((6, "I".to_string()), -2.0);
+        wpmt.insert((6, "0".to_string()), -4.5);
+        wpmt.insert((5, "V".to_string()), 0.0);
+        wpmt.insert((5, "IV".to_string()), 0.0);
+        wpmt.insert((5, "III".to_string()), -0.5);
+        wpmt.insert((5, "II".to_string()), -1.0);
+        wpmt.insert((5, "I".to_string()), -1.5);
+        wpmt.insert((5, "0".to_string()), -4.0);
+        wpmt.insert((4, "V".to_string()), 0.5);
+        wpmt.insert((4, "IV".to_string()), 0.0);
+        wpmt.insert((4, "III".to_string()), 0.0);
+        wpmt.insert((4, "II".to_string()), -0.5);
+        wpmt.insert((4, "I".to_string()), -1.0);
+        wpmt.insert((4, "0".to_string()), -3.5);
+        wpmt.insert((3, "V".to_string()), 0.5);
+        wpmt.insert((3, "IV".to_string()), 0.5);
+        wpmt.insert((3, "III".to_string()), 0.0);
+        wpmt.insert((3, "II".to_string()), 0.0);
+        wpmt.insert((3, "I".to_string()), -0.5);
+        wpmt.insert((3, "0".to_string()), -3.0);
+        wpmt.insert((2, "V".to_string()), 1.0);
+        wpmt.insert((2, "IV".to_string()), 0.5);
+        wpmt.insert((2, "III".to_string()), 0.5);
+        wpmt.insert((2, "II".to_string()), 0.0);
+        wpmt.insert((2, "I".to_string()), 0.0);
+        wpmt.insert((2, "0".to_string()), -2.5);
+        wpmt.insert((1, "V".to_string()), 1.0);
+        wpmt.insert((1, "IV".to_string()), 1.0);
+        wpmt.insert((1, "III".to_string()), 0.5);
+        wpmt.insert((1, "II".to_string()), 0.0);
+        wpmt.insert((1, "I".to_string()), 0.0);
+        wpmt.insert((1, "0".to_string()), 0.0);
+        wpmt.insert((0, "V".to_string()), 1.5);
+        wpmt.insert((0, "IV".to_string()), 1.0);
+        wpmt.insert((0, "III".to_string()), 1.0);
+        wpmt.insert((0, "II".to_string()), 0.5);
+        wpmt.insert((0, "I".to_string()), 0.5);
+        wpmt.insert((0, "0".to_string()), 0.0);
+        wpmt
     };
 }
 
@@ -343,8 +400,42 @@ impl World {
         return opt.unwrap().to_string();
     }
 
+    fn size(&self) -> String {
+        return self.uwp.substring(1, 2).to_string();
+    }
+
+    fn atmosphere(&self) -> String {
+        return self.uwp.substring(2, 3).to_string();
+    }
+
     fn hydrosphere(&self) -> String {
         return self.uwp.substring(3, 4).to_string();
+    }
+
+    fn population(&self) -> String {
+        return self.uwp.substring(4, 5).to_string();
+    }
+
+    fn government(&self) -> String {
+        return self.uwp.substring(5, 6).to_string();
+    }
+
+    fn law_level(&self) -> String {
+        return self.uwp.substring(6, 7).to_string();
+    }
+
+    fn tech_level(&self) -> String {
+        return self.uwp.substring(8, 9).to_string();
+    }
+
+    fn g_tech_level(&self) -> u64 {
+        let tech_level_string = self.tech_level();
+        let mut tech_level_int = 0;
+        for ch in tech_level_string.chars() {
+            tech_level_int = ch.to_digit(MAX_TECH_LEVEL + 1).unwrap();
+            break;
+        }
+        return *TECH_LEVEL_TRAVELLER_TO_GURPS.get(&tech_level_int).unwrap();
     }
 
     fn gas_giants(&self) -> String {
@@ -355,6 +446,29 @@ impl World {
         return self.gas_giants() != "0"
             || (self.zone != "R" && (self.starport() != "E" && self.starport() != "X")
                 || self.hydrosphere() != "0");
+    }
+
+    fn uwtn(&self) -> f64 {
+        let gt3 = self.g_tech_level() / 3;
+        let tl_mod = gt3 as f64 / 2.0 - 0.5;
+        let mut population_int = 0;
+        for ch in self.population().chars() {
+            population_int = ch.to_digit(MAX_POPULATION + 1).unwrap();
+            break;
+        }
+        let pop_mod = population_int as f64 / 2.0;
+        return tl_mod + pop_mod as f64;
+    }
+
+    fn wtn_port_modifier(&self) -> f64 {
+        let iuwtn = u64::max(0, self.uwtn() as u64);
+        return *WTN_PORT_MODIFIER_TABLE
+            .get(&(iuwtn, self.g_starport()))
+            .unwrap();
+    }
+
+    fn wtn(&self) -> f64 {
+        return self.uwtn() + self.wtn_port_modifier();
     }
 
     /// Return double the actual coordinates, as we have half-hexes vertically.
@@ -645,6 +759,8 @@ mod tests {
     use std::fs::read_dir;
     use std::io;
 
+    // TODO Write a test fixture to do repetitive setup and teardown
+
     #[test]
     fn test_download_sector_data() -> Result<()> {
         let mut expected_filenames = Vec::new();
@@ -838,6 +954,61 @@ mod tests {
         let oertsous_coords = sector.hex_to_coords.get("3238").unwrap();
         let oertsous = coords_to_world.get(oertsous_coords).unwrap();
         assert_eq!(oertsous.name, "Oertsous");
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_world_aramis() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let aramis_coords = sector.hex_to_coords.get("3110").unwrap();
+        let aramis = coords_to_world.get(aramis_coords).unwrap();
+        assert_eq!(aramis.name, "Aramis");
+        assert_eq!(aramis.sector_location, (-4, -1));
+        assert_eq!(aramis.hex, "3110");
+        assert_eq!(aramis.uwp, "A5A0556-B");
+
+        let mut tc = HashSet::new();
+        tc.insert("He".to_string());
+        tc.insert("Ni".to_string());
+        tc.insert("Cp".to_string());
+        assert_eq!(aramis.trade_classifications, tc);
+
+        assert_eq!(aramis.importance, 2);
+        assert_eq!(aramis.economic, "846+1");
+        assert_eq!(aramis.cultural, "474A");
+        assert_eq!(aramis.nobles, "BF");
+        let mut bases = HashSet::new();
+        bases.insert("N".to_string());
+        bases.insert("S".to_string());
+        assert_eq!(aramis.bases, bases);
+        assert_eq!(aramis.zone, "G");
+        assert_eq!(aramis.pbg, "710");
+        assert_eq!(aramis.worlds, 9);
+        assert_eq!(aramis.allegiance, "ImDd");
+        assert_eq!(aramis.stars, vec!["M2 V"]);
+        assert_eq!(aramis.starport(), "A");
+        assert_eq!(aramis.g_starport(), "V");
+        assert_eq!(aramis.size(), "5");
+        assert_eq!(aramis.atmosphere(), "A");
+        assert_eq!(aramis.hydrosphere(), "0");
+        assert_eq!(aramis.population(), "5");
+        assert_eq!(aramis.government(), "5");
+        assert_eq!(aramis.law_level(), "6");
+        assert_eq!(aramis.tech_level(), "B");
+        assert_eq!(aramis.g_tech_level(), 9);
+        assert_eq!(aramis.uwtn(), 3.5);
+        assert_eq!(aramis.wtn_port_modifier(), 0.5);
+        assert_eq!(aramis.wtn(), 4.0);
+        assert!(aramis.can_refuel());
 
         temp_dir.close()?;
         Ok(())
