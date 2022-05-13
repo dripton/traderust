@@ -444,8 +444,9 @@ impl World {
 
     fn can_refuel(&self) -> bool {
         return self.gas_giants() != "0"
-            || (self.zone != "R" && (self.starport() != "E" && self.starport() != "X")
-                || self.hydrosphere() != "0");
+            || (self.zone != "R"
+                && ((self.starport() != "E" && self.starport() != "X")
+                    || self.hydrosphere() != "0"));
     }
 
     fn uwtn(&self) -> f64 {
