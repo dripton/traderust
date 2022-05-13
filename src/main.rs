@@ -721,6 +721,18 @@ impl Sector {
     fn name(&self) -> &str {
         &self.names[0]
     }
+
+    fn hex_to_world<'a>(
+        &'a self,
+        hex: String,
+        coords_to_world: &'a HashMap<Coords, World>,
+    ) -> Option<&World> {
+        let coords_opt = self.hex_to_coords.get(&hex);
+        if let Some(coords) = coords_opt {
+            return coords_to_world.get(coords);
+        }
+        None
+    }
 }
 
 fn main() -> Result<()> {
@@ -1232,6 +1244,58 @@ mod tests {
         assert_eq!(candory.wtn(), 3.5);
         assert_eq!(candory.gas_giants(), "0");
         assert!(!candory.can_refuel());
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_abs_coords(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let reacher = spin
+            .hex_to_world("3210".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let margesi = spin
+            .hex_to_world("3212".to_string(), &coords_to_world)
+            .unwrap();
+        let saarinen = dene
+            .hex_to_world("0113".to_string(), &coords_to_world)
+            .unwrap();
+        let regina = spin
+            .hex_to_world("1910".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(<(f64, f64)>::from(aramis.get_coords()), (-97.0, -30.0));
+        assert_eq!(<(f64, f64)>::from(ldd.get_coords()), (-98.0, -29.5));
+        assert_eq!(<(f64, f64)>::from(natoko.get_coords()), (-96.0, -30.5));
+        assert_eq!(<(f64, f64)>::from(reacher.get_coords()), (-96.0, -29.5));
+        assert_eq!(<(f64, f64)>::from(vinorian.get_coords()), (-97.0, -29.0));
+        assert_eq!(<(f64, f64)>::from(nutema.get_coords()), (-97.0, -28.0));
+        assert_eq!(<(f64, f64)>::from(margesi.get_coords()), (-96.0, -27.5));
+        assert_eq!(<(f64, f64)>::from(saarinen.get_coords()), (-95.0, -27.0));
+        assert_eq!(<(f64, f64)>::from(regina.get_coords()), (-109.0, -30.0));
 
         Ok(())
     }
