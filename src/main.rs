@@ -207,7 +207,7 @@ struct World {
     name: String,
     uwp: String,
     trade_classifications: HashSet<String>,
-    importance: u64,
+    importance: i64,
     economic: String,
     cultural: String,
     nobles: String,
@@ -1021,7 +1021,234 @@ mod tests {
         assert_eq!(aramis.uwtn(), 3.5);
         assert_eq!(aramis.wtn_port_modifier(), 0.5);
         assert_eq!(aramis.wtn(), 4.0);
+        assert_eq!(aramis.gas_giants(), "0");
         assert!(aramis.can_refuel());
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_world_regina() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let regina_coords = sector.hex_to_coords.get("1910").unwrap();
+        let regina = coords_to_world.get(regina_coords).unwrap();
+        assert_eq!(regina.name, "Regina");
+        assert_eq!(regina.sector_location, (-4, -1));
+        assert_eq!(regina.hex, "1910");
+        assert_eq!(regina.uwp, "A788899-C");
+
+        let mut tc = HashSet::new();
+        tc.insert("Ri".to_string());
+        tc.insert("Pa".to_string());
+        tc.insert("Ph".to_string());
+        tc.insert("An".to_string());
+        tc.insert("Cp".to_string());
+        tc.insert("(Amindii)2".to_string());
+        tc.insert("Varg0".to_string());
+        tc.insert("Asla0".to_string());
+        tc.insert("Sa".to_string());
+        assert_eq!(regina.trade_classifications, tc);
+
+        assert_eq!(regina.importance, 4);
+        assert_eq!(regina.economic, "D7E+5");
+        assert_eq!(regina.cultural, "9C6D");
+        assert_eq!(regina.nobles, "BcCeF");
+        let mut bases = HashSet::new();
+        bases.insert("N".to_string());
+        bases.insert("S".to_string());
+        assert_eq!(regina.bases, bases);
+        assert_eq!(regina.zone, "G");
+        assert_eq!(regina.pbg, "703");
+        assert_eq!(regina.worlds, 8);
+        assert_eq!(regina.allegiance, "ImDd");
+        assert_eq!(regina.stars, vec!["F7 V", "BD", "M3 V"]);
+        assert_eq!(regina.starport(), "A");
+        assert_eq!(regina.g_starport(), "V");
+        assert_eq!(regina.size(), "7");
+        assert_eq!(regina.atmosphere(), "8");
+        assert_eq!(regina.hydrosphere(), "8");
+        assert_eq!(regina.population(), "8");
+        assert_eq!(regina.government(), "9");
+        assert_eq!(regina.law_level(), "9");
+        assert_eq!(regina.tech_level(), "C");
+        assert_eq!(regina.g_tech_level(), 10);
+        assert_eq!(regina.uwtn(), 5.0);
+        assert_eq!(regina.wtn_port_modifier(), 0.0);
+        assert_eq!(regina.wtn(), 5.0);
+        assert_eq!(regina.gas_giants(), "3");
+        assert!(regina.can_refuel());
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_world_bronze() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let bronze_coords = sector.hex_to_coords.get("1627").unwrap();
+        let bronze = coords_to_world.get(bronze_coords).unwrap();
+        assert_eq!(bronze.name, "Bronze");
+        assert_eq!(bronze.sector_location, (-4, -1));
+        assert_eq!(bronze.hex, "1627");
+        assert_eq!(bronze.uwp, "E201000-0");
+
+        let mut tc = HashSet::new();
+        tc.insert("Ba".to_string());
+        tc.insert("Ic".to_string());
+        tc.insert("Re".to_string());
+        tc.insert("Va".to_string());
+        assert_eq!(bronze.trade_classifications, tc);
+
+        assert_eq!(bronze.importance, -3);
+        assert_eq!(bronze.economic, "200-5");
+        assert_eq!(bronze.cultural, "0000");
+        assert_eq!(bronze.nobles, "");
+        let bases = HashSet::new();
+        assert_eq!(bronze.bases, bases);
+        assert_eq!(bronze.zone, "G");
+        assert_eq!(bronze.pbg, "010");
+        assert_eq!(bronze.worlds, 5);
+        assert_eq!(bronze.allegiance, "SwCf");
+        assert_eq!(bronze.stars, vec!["M3 V"]);
+        assert_eq!(bronze.starport(), "E");
+        assert_eq!(bronze.g_starport(), "I");
+        assert_eq!(bronze.size(), "2");
+        assert_eq!(bronze.atmosphere(), "0");
+        assert_eq!(bronze.hydrosphere(), "1");
+        assert_eq!(bronze.population(), "0");
+        assert_eq!(bronze.government(), "0");
+        assert_eq!(bronze.law_level(), "0");
+        assert_eq!(bronze.tech_level(), "0");
+        assert_eq!(bronze.g_tech_level(), 2);
+        assert_eq!(bronze.uwtn(), -0.5);
+        assert_eq!(bronze.wtn_port_modifier(), 0.5);
+        assert_eq!(bronze.wtn(), 0.0);
+        assert_eq!(bronze.gas_giants(), "0");
+        assert!(bronze.can_refuel());
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_world_callia() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let callia_coords = sector.hex_to_coords.get("1836").unwrap();
+        let callia = coords_to_world.get(callia_coords).unwrap();
+        assert_eq!(callia.name, "Callia");
+        assert_eq!(callia.sector_location, (-4, -1));
+        assert_eq!(callia.hex, "1836");
+        assert_eq!(callia.uwp, "E550852-6");
+
+        let mut tc = HashSet::new();
+        tc.insert("De".to_string());
+        tc.insert("Po".to_string());
+        tc.insert("Ph".to_string());
+        assert_eq!(callia.trade_classifications, tc);
+
+        assert_eq!(callia.importance, -2);
+        assert_eq!(callia.economic, "A75-5");
+        assert_eq!(callia.cultural, "4612");
+        assert_eq!(callia.nobles, "Be");
+        let bases = HashSet::new();
+        assert_eq!(callia.bases, bases);
+        assert_eq!(callia.zone, "G");
+        assert_eq!(callia.pbg, "810");
+        assert_eq!(callia.worlds, 11);
+        assert_eq!(callia.allegiance, "ImDd");
+        assert_eq!(callia.stars, vec!["M3 V"]);
+        assert_eq!(callia.starport(), "E");
+        assert_eq!(callia.g_starport(), "I");
+        assert_eq!(callia.size(), "5");
+        assert_eq!(callia.atmosphere(), "5");
+        assert_eq!(callia.hydrosphere(), "0");
+        assert_eq!(callia.population(), "8");
+        assert_eq!(callia.government(), "5");
+        assert_eq!(callia.law_level(), "2");
+        assert_eq!(callia.tech_level(), "6");
+        assert_eq!(callia.g_tech_level(), 6);
+        assert_eq!(callia.uwtn(), 4.5);
+        assert_eq!(callia.wtn_port_modifier(), -1.0);
+        assert_eq!(callia.wtn(), 3.5);
+        assert_eq!(callia.gas_giants(), "0");
+        assert!(!callia.can_refuel());
+
+        temp_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn test_world_candory() -> Result<()> {
+        let temp_dir = tempdir()?;
+        let data_dir = temp_dir.path().to_path_buf();
+        let sector_name = "Spinward Marches".to_string();
+        let sector_names = vec![sector_name.clone()];
+        download_sector_data(&data_dir, &sector_names)?;
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let candory_coords = sector.hex_to_coords.get("0336").unwrap();
+        let candory = coords_to_world.get(candory_coords).unwrap();
+        assert_eq!(candory.name, "Candory");
+        assert_eq!(candory.sector_location, (-4, -1));
+        assert_eq!(candory.hex, "0336");
+        assert_eq!(candory.uwp, "C593634-8");
+
+        let mut tc = HashSet::new();
+        tc.insert("Ni".to_string());
+        tc.insert("An".to_string());
+        tc.insert("Fo".to_string());
+        tc.insert("DroyW".to_string());
+        assert_eq!(candory.trade_classifications, tc);
+
+        assert_eq!(candory.importance, -2);
+        assert_eq!(candory.economic, "A52-4");
+        assert_eq!(candory.cultural, "4436");
+        assert_eq!(candory.nobles, "");
+        let bases = HashSet::new();
+        assert_eq!(candory.bases, bases);
+        assert_eq!(candory.zone, "R");
+        assert_eq!(candory.pbg, "920");
+        assert_eq!(candory.worlds, 5);
+        assert_eq!(candory.allegiance, "ImDd");
+        assert_eq!(candory.stars, vec!["F6 V", "M3 V"]);
+        assert_eq!(candory.starport(), "C");
+        assert_eq!(candory.g_starport(), "III");
+        assert_eq!(candory.size(), "5");
+        assert_eq!(candory.atmosphere(), "9");
+        assert_eq!(candory.hydrosphere(), "3");
+        assert_eq!(candory.population(), "6");
+        assert_eq!(candory.government(), "3");
+        assert_eq!(candory.law_level(), "4");
+        assert_eq!(candory.tech_level(), "8");
+        assert_eq!(candory.g_tech_level(), 8);
+        assert_eq!(candory.uwtn(), 3.5);
+        assert_eq!(candory.wtn_port_modifier(), 0.0);
+        assert_eq!(candory.wtn(), 3.5);
+        assert_eq!(candory.gas_giants(), "0");
+        assert!(!candory.can_refuel());
 
         temp_dir.close()?;
         Ok(())
