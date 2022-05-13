@@ -35,7 +35,6 @@ const MAX_TECH_LEVEL: u32 = 17;
 const MAX_POPULATION: u32 = 15;
 
 lazy_static! {
-
     static ref SQRT3: f64 = f64::powf(3.0, 0.5);
 
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
@@ -48,8 +47,6 @@ lazy_static! {
         sttg.insert("X".to_string(), "0".to_string());
         sttg
     };
-
-
 
     static ref TECH_LEVEL_TRAVELLER_TO_GURPS: HashMap<u32, u64> = {
         let mut tttg: HashMap<u32, u64> = HashMap::new();
