@@ -1377,4 +1377,134 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_xboat_routes(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let spin_location = spin.location;
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        let dene_location = dene.location;
+        location_to_sector.insert(spin.location, spin);
+        location_to_sector.insert(dene.location, dene);
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        let spin = location_to_sector.get(&spin_location).unwrap();
+        let dene = location_to_sector.get(&dene_location).unwrap();
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let reacher = spin
+            .hex_to_world("3210".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let saarinen = dene
+            .hex_to_world("0113".to_string(), &coords_to_world)
+            .unwrap();
+        let regina = spin
+            .hex_to_world("1910".to_string(), &coords_to_world)
+            .unwrap();
+        let corfu = spin
+            .hex_to_world("2602".to_string(), &coords_to_world)
+            .unwrap();
+        let lablon = spin
+            .hex_to_world("2701".to_string(), &coords_to_world)
+            .unwrap();
+        let junidy = spin
+            .hex_to_world("3202".to_string(), &coords_to_world)
+            .unwrap();
+        let marz = dene
+            .hex_to_world("0201".to_string(), &coords_to_world)
+            .unwrap();
+        let celepina = spin
+            .hex_to_world("2913".to_string(), &coords_to_world)
+            .unwrap();
+        let teh = dene
+            .hex_to_world("0208".to_string(), &coords_to_world)
+            .unwrap();
+        let ash = dene
+            .hex_to_world("0504".to_string(), &coords_to_world)
+            .unwrap();
+        let roup = spin
+            .hex_to_world("2007".to_string(), &coords_to_world)
+            .unwrap();
+        let jenghe = spin
+            .hex_to_world("1810".to_string(), &coords_to_world)
+            .unwrap();
+        let dinomn = spin
+            .hex_to_world("1912".to_string(), &coords_to_world)
+            .unwrap();
+        let towers = spin
+            .hex_to_world("3103".to_string(), &coords_to_world)
+            .unwrap();
+
+        let mut set = HashSet::new();
+        assert_eq!(reacher.xboat_routes, set);
+        assert_eq!(vinorian.xboat_routes, set);
+        assert_eq!(nutema.xboat_routes, set);
+        assert_eq!(saarinen.xboat_routes, set);
+        assert_eq!(corfu.xboat_routes, set);
+        assert_eq!(lablon.xboat_routes, set);
+
+        set.insert(ldd.get_coords());
+        set.insert(natoko.get_coords());
+        assert_eq!(aramis.xboat_routes, set);
+
+        set.clear();
+        set.insert(aramis.get_coords());
+        set.insert(celepina.get_coords());
+        assert_eq!(ldd.xboat_routes, set);
+
+        set.clear();
+        set.insert(aramis.get_coords());
+        set.insert(teh.get_coords());
+        assert_eq!(natoko.xboat_routes, set);
+
+        set.clear();
+        assert_eq!(reacher.xboat_routes, set);
+        assert_eq!(vinorian.xboat_routes, set);
+        assert_eq!(nutema.xboat_routes, set);
+        assert_eq!(saarinen.xboat_routes, set);
+        assert_eq!(corfu.xboat_routes, set);
+        assert_eq!(lablon.xboat_routes, set);
+
+        set.clear();
+        set.insert(marz.get_coords());
+        set.insert(towers.get_coords());
+        assert_eq!(junidy.xboat_routes, set);
+
+        set.clear();
+        set.insert(junidy.get_coords());
+        set.insert(ash.get_coords());
+        assert_eq!(marz.xboat_routes, set);
+
+        set.clear();
+        set.insert(roup.get_coords());
+        set.insert(jenghe.get_coords());
+        set.insert(dinomn.get_coords());
+        assert_eq!(regina.xboat_routes, set);
+
+        Ok(())
+    }
 }
