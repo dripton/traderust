@@ -10,7 +10,7 @@ use std::path::PathBuf;
 extern crate lazy_static;
 extern crate reqwest;
 use substring::Substring;
-use tempfile::{tempdir, TempDir};
+use tempfile::tempdir;
 use url::Url;
 
 #[derive(Debug, Parser)]
@@ -771,28 +771,32 @@ mod tests {
     use std::fs::read_dir;
     use std::io;
 
+    // Reuse a test directory and downloaded files to avoid overloading travellermap.com
+    const TEST_DATA_DIR: &'static str = "/var/tmp/traderust_tests";
+
     #[fixture]
     #[once]
-    fn temp_dir() -> TempDir {
-        let res = tempdir();
-        res.unwrap()
+    fn data_dir() -> PathBuf {
+        let data_dir = PathBuf::from(TEST_DATA_DIR);
+        create_dir_all(&data_dir).unwrap();
+        data_dir
     }
 
     #[fixture]
     #[once]
-    fn download(temp_dir: &TempDir) -> Result<Vec<String>> {
+    fn download(data_dir: &PathBuf) -> Result<Vec<String>> {
         let sector_names = vec![
             "Deneb".to_string(),
             "Gvurrdon".to_string(),
             "Spinward Marches".to_string(),
         ];
-        download_sector_data(&(temp_dir.path().to_path_buf()), &sector_names)?;
+        download_sector_data(&data_dir, &sector_names)?;
 
         Ok(sector_names)
     }
 
     #[rstest]
-    fn test_download_sector_data(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_download_sector_data(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         let mut expected_filenames = Vec::new();
         if let Ok(sector_names) = download {
             for sector_name in sector_names {
@@ -802,7 +806,7 @@ mod tests {
             expected_filenames.sort();
         }
 
-        let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&temp_dir)?
+        let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&data_dir)?
             .map(|res| res.map(|e| e.file_name()))
             .collect();
         let mut found_os_filenames: Vec<OsString> = Vec::new();
@@ -863,9 +867,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_sector_spin(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_sector_spin(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -900,9 +903,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_sector_dene(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_sector_dene(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Deneb".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -937,9 +939,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_sector_gvur(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_sector_gvur(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Gvurrdon".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -974,9 +975,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_world_aramis(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_world_aramis(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -1027,9 +1027,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_world_regina(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_world_regina(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -1086,9 +1085,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_world_bronze(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_world_bronze(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -1138,9 +1136,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_world_callia(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_world_callia(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
@@ -1189,9 +1186,8 @@ mod tests {
     }
 
     #[rstest]
-    fn test_world_candory(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_world_candory(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
-        let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
