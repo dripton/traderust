@@ -1299,4 +1299,82 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_straight_line_distance(
+        data_dir: &PathBuf,
+        download: &Result<Vec<String>>,
+    ) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let reacher = spin
+            .hex_to_world("3210".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let margesi = spin
+            .hex_to_world("3212".to_string(), &coords_to_world)
+            .unwrap();
+        let saarinen = dene
+            .hex_to_world("0113".to_string(), &coords_to_world)
+            .unwrap();
+        let regina = spin
+            .hex_to_world("1910".to_string(), &coords_to_world)
+            .unwrap();
+        let corfu = spin
+            .hex_to_world("2602".to_string(), &coords_to_world)
+            .unwrap();
+        let lablon = spin
+            .hex_to_world("2701".to_string(), &coords_to_world)
+            .unwrap();
+        let junidy = spin
+            .hex_to_world("3202".to_string(), &coords_to_world)
+            .unwrap();
+        let marz = dene
+            .hex_to_world("0201".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(aramis.straight_line_distance(aramis), 0);
+        assert_eq!(aramis.straight_line_distance(ldd), 1);
+        assert_eq!(ldd.straight_line_distance(aramis), 1);
+        assert_eq!(aramis.straight_line_distance(natoko), 1);
+        assert_eq!(aramis.straight_line_distance(reacher), 1);
+        assert_eq!(natoko.straight_line_distance(reacher), 1);
+        assert_eq!(aramis.straight_line_distance(vinorian), 1);
+        assert_eq!(vinorian.straight_line_distance(nutema), 1);
+        assert_eq!(nutema.straight_line_distance(margesi), 1);
+        assert_eq!(margesi.straight_line_distance(saarinen), 1);
+        assert_eq!(ldd.straight_line_distance(natoko), 2);
+        assert_eq!(ldd.straight_line_distance(reacher), 2);
+        assert_eq!(ldd.straight_line_distance(nutema), 2);
+        assert_eq!(ldd.straight_line_distance(margesi), 3);
+        assert_eq!(ldd.straight_line_distance(saarinen), 4);
+        assert_eq!(aramis.straight_line_distance(corfu), 10);
+        assert_eq!(aramis.straight_line_distance(lablon), 11);
+        assert_eq!(aramis.straight_line_distance(junidy), 8);
+        assert_eq!(aramis.straight_line_distance(marz), 10);
+        assert_eq!(aramis.straight_line_distance(regina), 12);
+
+        Ok(())
+    }
 }
