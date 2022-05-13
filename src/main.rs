@@ -10,7 +10,7 @@ use std::path::PathBuf;
 extern crate lazy_static;
 extern crate reqwest;
 use substring::Substring;
-use tempfile::tempdir;
+use tempfile::{tempdir, TempDir};
 use url::Url;
 
 #[derive(Debug, Parser)]
@@ -766,28 +766,42 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
     use std::ffi::OsString;
     use std::fs::read_dir;
     use std::io;
 
-    // TODO Write a test fixture to do repetitive setup and teardown
+    #[fixture]
+    #[once]
+    fn temp_dir() -> TempDir {
+        let res = tempdir();
+        res.unwrap()
+    }
 
-    #[test]
-    fn test_download_sector_data() -> Result<()> {
-        let mut expected_filenames = Vec::new();
+    #[fixture]
+    #[once]
+    fn download(temp_dir: &TempDir) -> Result<Vec<String>> {
         let sector_names = vec![
             "Deneb".to_string(),
             "Gvurrdon".to_string(),
             "Spinward Marches".to_string(),
         ];
-        for sector_name in &sector_names {
-            expected_filenames.push(sector_name.to_owned() + ".sec");
-            expected_filenames.push(sector_name.to_owned() + ".xml");
-        }
-        expected_filenames.sort();
-
-        let temp_dir = tempdir()?;
         download_sector_data(&(temp_dir.path().to_path_buf()), &sector_names)?;
+
+        Ok(sector_names)
+    }
+
+    #[rstest]
+    fn test_download_sector_data(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        let mut expected_filenames = Vec::new();
+        if let Ok(sector_names) = download {
+            for sector_name in sector_names {
+                expected_filenames.push(sector_name.to_owned() + ".sec");
+                expected_filenames.push(sector_name.to_owned() + ".xml");
+            }
+            expected_filenames.sort();
+        }
+
         let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&temp_dir)?
             .map(|res| res.map(|e| e.file_name()))
             .collect();
@@ -809,12 +823,10 @@ mod tests {
 
         assert_eq!(expected_filenames, found_filenames);
 
-        temp_dir.close()?;
-
         Ok(())
     }
 
-    #[test]
+    #[rstest]
     fn test_parse_header_and_separator() -> Result<()> {
         let header = concat!(
             r"Hex  Name                 UWP       ",
@@ -850,13 +862,11 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn test_sector_spin() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_sector_spin(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -886,17 +896,14 @@ mod tests {
         let hazel = coords_to_world.get(hazel_coords).unwrap();
         assert_eq!(hazel.name, "Hazel");
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_sector_dene() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_sector_dene(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Deneb".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -926,17 +933,14 @@ mod tests {
         let asharam = coords_to_world.get(asharam_coords).unwrap();
         assert_eq!(asharam.name, "Asharam");
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_sector_gvur() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_sector_gvur(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Gvurrdon".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -966,17 +970,14 @@ mod tests {
         let oertsous = coords_to_world.get(oertsous_coords).unwrap();
         assert_eq!(oertsous.name, "Oertsous");
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_world_aramis() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_world_aramis(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -1022,17 +1023,14 @@ mod tests {
         assert_eq!(aramis.gas_giants(), "0");
         assert!(aramis.can_refuel());
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_world_regina() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_world_regina(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -1084,17 +1082,14 @@ mod tests {
         assert_eq!(regina.gas_giants(), "3");
         assert!(regina.can_refuel());
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_world_bronze() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_world_bronze(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -1139,17 +1134,14 @@ mod tests {
         assert_eq!(bronze.gas_giants(), "0");
         assert!(bronze.can_refuel());
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_world_callia() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_world_callia(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -1193,17 +1185,14 @@ mod tests {
         assert_eq!(callia.gas_giants(), "0");
         assert!(!callia.can_refuel());
 
-        temp_dir.close()?;
         Ok(())
     }
 
-    #[test]
-    fn test_world_candory() -> Result<()> {
-        let temp_dir = tempdir()?;
+    #[rstest]
+    fn test_world_candory(temp_dir: &TempDir, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
         let data_dir = temp_dir.path().to_path_buf();
         let sector_name = "Spinward Marches".to_string();
-        let sector_names = vec![sector_name.clone()];
-        download_sector_data(&data_dir, &sector_names)?;
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
@@ -1248,7 +1237,6 @@ mod tests {
         assert_eq!(candory.gas_giants(), "0");
         assert!(!candory.can_refuel());
 
-        temp_dir.close()?;
         Ok(())
     }
 }
