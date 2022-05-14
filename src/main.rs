@@ -9,10 +9,14 @@ use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 #[macro_use]
 extern crate lazy_static;
+extern crate ndarray;
+use ndarray::prelude::*;
 extern crate reqwest;
 use substring::Substring;
 use tempfile::tempdir;
 use url::Url;
+
+mod apsp;
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -166,6 +170,57 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
     return field_to_start_end;
 }
 
+/// Find minimum distances between all worlds, and predecessor paths.
+/// Only use jumps of up to max_jump hexes, except along xboat routes.
+/// Must be run after all neighbors are built.
+fn populate_navigable_distances(
+    sorted_worlds: &Vec<World>,
+    coords_to_world: &HashMap<Coords, World>,
+    max_jump: u64,
+) -> (Array2<f64>, Array2<i64>) {
+    let num_worlds = sorted_worlds.len();
+    let mut np = Array2::<f64>::zeros((num_worlds, num_worlds));
+    for (ii, world) in sorted_worlds.iter().enumerate() {
+        if max_jump >= 3 {
+            for coords in &world.neighbors3 {
+                if let Some(neighbor) = coords_to_world.get(&coords) {
+                    if let Some(jj) = neighbor.index {
+                        np[[ii, jj]] = 3.0;
+                    }
+                }
+            }
+        }
+        if max_jump >= 2 {
+            for coords in &world.neighbors2 {
+                if let Some(neighbor) = coords_to_world.get(&coords) {
+                    if let Some(jj) = neighbor.index {
+                        np[[ii, jj]] = 2.0;
+                    }
+                }
+            }
+        }
+        if max_jump >= 1 {
+            for coords in &world.neighbors1 {
+                if let Some(neighbor) = coords_to_world.get(&coords) {
+                    if let Some(jj) = neighbor.index {
+                        np[[ii, jj]] = 1.0;
+                    }
+                }
+            }
+        }
+        for coords in &world.xboat_routes {
+            if let Some(neighbor) = coords_to_world.get(&coords) {
+                if let Some(jj) = neighbor.index {
+                    np[[ii, jj]] = world.straight_line_distance(neighbor) as f64;
+                }
+            }
+        }
+    }
+
+    let pred = apsp::dijkstra(&mut np);
+    return (np, pred);
+}
+
 /// Absolute coordinates
 /// x is an integer
 /// y2 is an integer, equal to 2 * y
@@ -218,7 +273,7 @@ struct World {
     neighbors1: HashSet<Coords>,
     neighbors2: HashSet<Coords>,
     neighbors3: HashSet<Coords>,
-    index: Option<u64>,
+    index: Option<usize>,
 }
 
 impl World {
@@ -485,6 +540,51 @@ impl World {
             ydelta = 0.0;
         }
         return (f64::floor(xdelta + ydelta)) as u64;
+    }
+
+    fn navigable_distance(&self, other: &World, dist: Array2<f64>) -> f64 {
+        if let Some(ii) = self.index {
+            if let Some(jj) = other.index {
+                return dist[[ii, jj]];
+            }
+        }
+        panic!("navigable_distance without index set");
+    }
+
+    fn navigable_path(
+        &self,
+        other: &World,
+        sorted_worlds: &Vec<World>,
+        dist: Array2<f64>,
+        pred: Array2<i64>,
+    ) -> Option<Vec<World>> {
+        if self == other {
+            return Some(vec![self.clone()]);
+        }
+        if self.navigable_distance(other, dist) == apsp::INFINITY {
+            return None;
+        }
+        let mut path = vec![self.clone()];
+        let world2 = self.clone();
+        loop {
+            if let Some(ii) = other.index {
+                if let Some(jj) = world2.index {
+                    let index = pred[[ii, jj]];
+                    let world2 = sorted_worlds[index as usize].clone();
+                    if world2 == *other {
+                        path.push(world2);
+                        break;
+                    } else {
+                        path.push(world2);
+                    }
+                } else {
+                    panic!("navigable_path without index set");
+                }
+            } else {
+                panic!("navigable_path without index set");
+            }
+        }
+        return Some(path);
     }
 }
 
@@ -770,13 +870,25 @@ fn main() -> Result<()> {
             .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
             .unwrap();
     }
+    let mut sorted_worlds: Vec<World> = Vec::new();
     {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
             world.populate_neighbors(&coords_to_world2);
         }
+        sorted_worlds = coords_to_world2.into_values().collect();
+        sorted_worlds.sort();
     }
+    for (ii, world) in sorted_worlds.iter_mut().enumerate() {
+        world.index = Some(ii);
+        let world2_opt = coords_to_world.get_mut(&world.get_coords());
+        if let Some(world2) = world2_opt {
+            world2.index = Some(ii);
+        }
+    }
+    let (dist2, pred2) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 2);
+    let (dist3, pred3) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 3);
 
     temp_dir.close()?;
 
