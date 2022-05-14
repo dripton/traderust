@@ -175,18 +175,58 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
 /// Only use jumps of up to max_jump hexes, except along xboat routes.
 /// Must be run after all neighbors are built.
 fn populate_navigable_distances(
-    sorted_worlds: &Vec<World>,
+    sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
 ) -> (Array2<i64>, Array2<i64>) {
-    let num_worlds = sorted_worlds.len();
+    let num_worlds = sorted_coords.len();
     let mut np = Array2::<i64>::zeros((num_worlds, num_worlds));
-    for (ii, world) in sorted_worlds.iter().enumerate() {
-        if max_jump >= 3 {
-            for coords in &world.neighbors3 {
+    for (ii, coords) in sorted_coords.iter().enumerate() {
+        let world_opt = coords_to_world.get(coords);
+        if let Some(world) = world_opt {
+            if max_jump >= 3 {
+                for coords in &world.neighbors3 {
+                    if let Some(neighbor) = coords_to_world.get(&coords) {
+                        if let Some(jj) = neighbor.index {
+                            np[[ii, jj]] = 3;
+                        } else {
+                            panic!("neighbor with no index");
+                        }
+                    } else {
+                        panic!("missing neighbor at index");
+                    }
+                }
+            }
+            if max_jump >= 2 {
+                for coords in &world.neighbors2 {
+                    if let Some(neighbor) = coords_to_world.get(&coords) {
+                        if let Some(jj) = neighbor.index {
+                            np[[ii, jj]] = 2;
+                        } else {
+                            panic!("neighbor with no index");
+                        }
+                    } else {
+                        panic!("missing neighbor at index");
+                    }
+                }
+            }
+            if max_jump >= 1 {
+                for coords in &world.neighbors1 {
+                    if let Some(neighbor) = coords_to_world.get(&coords) {
+                        if let Some(jj) = neighbor.index {
+                            np[[ii, jj]] = 1;
+                        } else {
+                            panic!("neighbor with no index");
+                        }
+                    } else {
+                        panic!("missing neighbor at index");
+                    }
+                }
+            }
+            for coords in &world.xboat_routes {
                 if let Some(neighbor) = coords_to_world.get(&coords) {
                     if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 3;
+                        np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
                     } else {
                         panic!("neighbor with no index");
                     }
@@ -194,43 +234,8 @@ fn populate_navigable_distances(
                     panic!("missing neighbor at index");
                 }
             }
-        }
-        if max_jump >= 2 {
-            for coords in &world.neighbors2 {
-                if let Some(neighbor) = coords_to_world.get(&coords) {
-                    if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 2;
-                    } else {
-                        panic!("neighbor with no index");
-                    }
-                } else {
-                    panic!("missing neighbor at index");
-                }
-            }
-        }
-        if max_jump >= 1 {
-            for coords in &world.neighbors1 {
-                if let Some(neighbor) = coords_to_world.get(&coords) {
-                    if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 1;
-                    } else {
-                        panic!("neighbor with no index");
-                    }
-                } else {
-                    panic!("missing neighbor at index");
-                }
-            }
-        }
-        for coords in &world.xboat_routes {
-            if let Some(neighbor) = coords_to_world.get(&coords) {
-                if let Some(jj) = neighbor.index {
-                    np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
-                } else {
-                    panic!("neighbor with no index");
-                }
-            } else {
-                panic!("missing neighbor at index");
-            }
+        } else {
+            panic!("Failed to get world");
         }
     }
 
@@ -574,28 +579,29 @@ impl World {
     fn navigable_path(
         &self,
         other: &World,
-        sorted_worlds: &Vec<World>,
+        sorted_coords: &Vec<Coords>,
+        coords_to_index: &HashMap<Coords, usize>,
         dist: &Array2<i64>,
         pred: &Array2<i64>,
-    ) -> Option<Vec<World>> {
+    ) -> Option<Vec<Coords>> {
         if self == other {
-            return Some(vec![self.clone()]);
+            return Some(vec![self.get_coords()]);
         }
         if self.navigable_distance(other, dist) == INFINITY {
             return None;
         }
-        let mut path = vec![self.clone()];
-        let world2 = self.clone();
+        let mut path = vec![self.get_coords()];
+        let mut coords2 = self.get_coords();
         loop {
             if let Some(ii) = other.index {
-                if let Some(jj) = world2.index {
-                    let index = pred[[ii, jj]];
-                    let world2 = sorted_worlds[index as usize].clone();
-                    if world2 == *other {
-                        path.push(world2);
+                if let Some(jj) = coords_to_index.get(&coords2) {
+                    let index = pred[[ii, *jj]];
+                    coords2 = sorted_coords[index as usize].clone();
+                    if coords2 == other.get_coords() {
+                        path.push(coords2);
                         break;
                     } else {
-                        path.push(world2);
+                        path.push(coords2);
                     }
                 } else {
                     panic!("navigable_path without index set");
@@ -897,21 +903,21 @@ fn main() -> Result<()> {
             world.populate_neighbors(&coords_to_world2);
         }
     }
-    let mut sorted_worlds: Vec<World>;
-    sorted_worlds = coords_to_world.values().cloned().collect();
-    assert_eq!(sorted_worlds.len(), 825);
-    sorted_worlds.sort();
-    for (ii, world) in sorted_worlds.iter_mut().enumerate() {
-        world.index = Some(ii);
-        let world2_opt = coords_to_world.get_mut(&world.get_coords());
-        if let Some(world2) = world2_opt {
-            world2.index = Some(ii);
+    let mut sorted_coords: Vec<Coords>;
+    sorted_coords = coords_to_world.keys().cloned().collect();
+    sorted_coords.sort();
+    let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+    for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+        coords_to_index.insert(coords.clone(), ii);
+        let world_opt = coords_to_world.get_mut(coords);
+        if let Some(world) = world_opt {
+            world.index = Some(ii);
         } else {
             panic!("World not found at expected coords");
         }
     }
-    let (dist2, pred2) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 2);
-    let (dist3, pred3) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 3);
+    let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+    let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
 
     // TODO
 
@@ -1829,19 +1835,22 @@ mod tests {
         for world in coords_to_world.values_mut() {
             world.populate_neighbors(&coords_to_world2);
         }
-        let mut sorted_worlds: Vec<World>;
-        sorted_worlds = coords_to_world.values().cloned().collect();
-        assert_eq!(sorted_worlds.len(), 825);
-        sorted_worlds.sort();
-        for (ii, world) in sorted_worlds.iter_mut().enumerate() {
-            world.index = Some(ii);
-            let world2_opt = coords_to_world.get_mut(&world.get_coords());
-            if let Some(world2) = world2_opt {
-                world2.index = Some(ii);
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        assert_eq!(sorted_coords.len(), 825);
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
             }
         }
-        let (dist2, _) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 2);
-        let (dist3, _) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 3);
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist3, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
