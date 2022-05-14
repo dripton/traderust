@@ -167,32 +167,26 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
 
 /// Absolute coordinates
 /// x is an integer
-/// y is an integer
-/// half_y shows if y should actually be pushed down half a hex
-/// This is needed because floats can't be hash keys
+/// y2 is an integer, equal to 2 * y
+/// This is needed because y is sometimes a float and floats can't be hash keys
 #[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 struct Coords {
     x: i64,
-    y: i64,
-    half_y: bool,
+    y2: i64,
 }
 
 impl Coords {
     fn new(xf: f64, yf: f64) -> Coords {
         let x = xf as i64;
-        let y = f64::floor(yf) as i64;
-        let half_y = yf - y as f64 != 0.0;
-        Coords { x, y, half_y }
+        let y2 = (yf * 2.0) as i64;
+        Coords { x, y2 }
     }
 }
 
 impl From<Coords> for (f64, f64) {
     fn from(coords: Coords) -> (f64, f64) {
         let fx = coords.x as f64;
-        let mut fy = coords.y as f64;
-        if coords.half_y {
-            fy += 0.5;
-        }
+        let fy = coords.y2 as f64 / 2.0;
         (fx, fy)
     }
 }
@@ -474,8 +468,11 @@ impl World {
         let location = self.sector_location;
         let x: i64 = hex.substring(0, 2).parse::<i64>().unwrap() + 32 * location.0;
         let y: i64 = hex.substring(2, 4).parse::<i64>().unwrap() + 40 * location.1;
-        let half_y = x & 1 == 0;
-        return Coords { x, y, half_y };
+        let mut y2 = 2 * y;
+        if x & 1 == 0 {
+            y2 += 1;
+        }
+        return Coords { x, y2 };
     }
 
     fn straight_line_distance(&self, other: &World) -> u64 {
