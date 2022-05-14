@@ -1511,4 +1511,114 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_neighbors(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let spin_location = spin.location;
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        let dene_location = dene.location;
+        location_to_sector.insert(spin.location, spin);
+        location_to_sector.insert(dene.location, dene);
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+
+        let spin = location_to_sector.get(&spin_location).unwrap();
+        let dene = location_to_sector.get(&dene_location).unwrap();
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let reacher = spin
+            .hex_to_world("3210".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let teh = dene
+            .hex_to_world("0208".to_string(), &coords_to_world)
+            .unwrap();
+        let pysadi = spin
+            .hex_to_world("3008".to_string(), &coords_to_world)
+            .unwrap();
+        let margesi = spin
+            .hex_to_world("3212".to_string(), &coords_to_world)
+            .unwrap();
+        let zila = spin
+            .hex_to_world("2908".to_string(), &coords_to_world)
+            .unwrap();
+        let lewis = spin
+            .hex_to_world("3107".to_string(), &coords_to_world)
+            .unwrap();
+        let patinir = spin
+            .hex_to_world("3207".to_string(), &coords_to_world)
+            .unwrap();
+        let henoz = spin
+            .hex_to_world("2912".to_string(), &coords_to_world)
+            .unwrap();
+        let suvfoto = dene
+            .hex_to_world("0211".to_string(), &coords_to_world)
+            .unwrap();
+        let kretikaa = dene
+            .hex_to_world("0209".to_string(), &coords_to_world)
+            .unwrap();
+        let new_ramma = dene
+            .hex_to_world("0108".to_string(), &coords_to_world)
+            .unwrap();
+        let valhalla = spin
+            .hex_to_world("2811".to_string(), &coords_to_world)
+            .unwrap();
+
+        let mut set = HashSet::new();
+        set.insert(ldd.get_coords());
+        set.insert(natoko.get_coords());
+        set.insert(reacher.get_coords());
+        set.insert(vinorian.get_coords());
+        assert_eq!(aramis.neighbors1, set);
+
+        set.clear();
+        set.insert(nutema.get_coords());
+        set.insert(pysadi.get_coords());
+        assert_eq!(aramis.neighbors2, set);
+
+        set.clear();
+        set.insert(margesi.get_coords());
+        set.insert(teh.get_coords());
+        set.insert(zila.get_coords());
+        set.insert(lewis.get_coords());
+        set.insert(patinir.get_coords());
+        set.insert(henoz.get_coords());
+        set.insert(suvfoto.get_coords());
+        set.insert(kretikaa.get_coords());
+        set.insert(new_ramma.get_coords());
+        set.insert(valhalla.get_coords());
+        assert_eq!(aramis.neighbors3, set);
+
+        Ok(())
+    }
 }
