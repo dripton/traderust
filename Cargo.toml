@@ -13,7 +13,6 @@ clap-verbosity-flag = "1.0.0"
 elementtree = "0.7.0"
 lazy_static = "1.4.0"
 ndarray = { version = "0.15.4", features = ["serde", "rayon"] }
-ndarray-npy = "0.8.1"
 rand = "0.8.5"
 rayon = "1.0"
 reqwest = { version = "0.11", features = ["blocking"] }

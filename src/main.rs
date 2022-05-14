@@ -17,6 +17,7 @@ use tempfile::tempdir;
 use url::Url;
 
 mod apsp;
+use apsp::{dijkstra, INFINITY};
 
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -177,16 +178,20 @@ fn populate_navigable_distances(
     sorted_worlds: &Vec<World>,
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
-) -> (Array2<f64>, Array2<i64>) {
+) -> (Array2<i64>, Array2<i64>) {
     let num_worlds = sorted_worlds.len();
-    let mut np = Array2::<f64>::zeros((num_worlds, num_worlds));
+    let mut np = Array2::<i64>::zeros((num_worlds, num_worlds));
     for (ii, world) in sorted_worlds.iter().enumerate() {
         if max_jump >= 3 {
             for coords in &world.neighbors3 {
                 if let Some(neighbor) = coords_to_world.get(&coords) {
                     if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 3.0;
+                        np[[ii, jj]] = 3;
+                    } else {
+                        panic!("neighbor with no index");
                     }
+                } else {
+                    panic!("missing neighbor at index");
                 }
             }
         }
@@ -194,8 +199,12 @@ fn populate_navigable_distances(
             for coords in &world.neighbors2 {
                 if let Some(neighbor) = coords_to_world.get(&coords) {
                     if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 2.0;
+                        np[[ii, jj]] = 2;
+                    } else {
+                        panic!("neighbor with no index");
                     }
+                } else {
+                    panic!("missing neighbor at index");
                 }
             }
         }
@@ -203,21 +212,29 @@ fn populate_navigable_distances(
             for coords in &world.neighbors1 {
                 if let Some(neighbor) = coords_to_world.get(&coords) {
                     if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = 1.0;
+                        np[[ii, jj]] = 1;
+                    } else {
+                        panic!("neighbor with no index");
                     }
+                } else {
+                    panic!("missing neighbor at index");
                 }
             }
         }
         for coords in &world.xboat_routes {
             if let Some(neighbor) = coords_to_world.get(&coords) {
                 if let Some(jj) = neighbor.index {
-                    np[[ii, jj]] = world.straight_line_distance(neighbor) as f64;
+                    np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
+                } else {
+                    panic!("neighbor with no index");
                 }
+            } else {
+                panic!("missing neighbor at index");
             }
         }
     }
 
-    let pred = apsp::dijkstra(&mut np);
+    let pred = dijkstra(&mut np);
     return (np, pred);
 }
 
@@ -542,26 +559,29 @@ impl World {
         return (f64::floor(xdelta + ydelta)) as u64;
     }
 
-    fn navigable_distance(&self, other: &World, dist: Array2<f64>) -> f64 {
+    fn navigable_distance(&self, other: &World, dist: &Array2<i64>) -> i64 {
         if let Some(ii) = self.index {
             if let Some(jj) = other.index {
                 return dist[[ii, jj]];
+            } else {
+                panic!("navigable_distance without index set");
             }
+        } else {
+            panic!("navigable_distance without index set");
         }
-        panic!("navigable_distance without index set");
     }
 
     fn navigable_path(
         &self,
         other: &World,
         sorted_worlds: &Vec<World>,
-        dist: Array2<f64>,
-        pred: Array2<i64>,
+        dist: &Array2<i64>,
+        pred: &Array2<i64>,
     ) -> Option<Vec<World>> {
         if self == other {
             return Some(vec![self.clone()]);
         }
-        if self.navigable_distance(other, dist) == apsp::INFINITY {
+        if self.navigable_distance(other, dist) == INFINITY {
             return None;
         }
         let mut path = vec![self.clone()];
@@ -870,29 +890,33 @@ fn main() -> Result<()> {
             .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
             .unwrap();
     }
-    let mut sorted_worlds: Vec<World> = Vec::new();
     {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
             world.populate_neighbors(&coords_to_world2);
         }
-        sorted_worlds = coords_to_world2.into_values().collect();
-        sorted_worlds.sort();
     }
+    let mut sorted_worlds: Vec<World>;
+    sorted_worlds = coords_to_world.values().cloned().collect();
+    assert_eq!(sorted_worlds.len(), 825);
+    sorted_worlds.sort();
     for (ii, world) in sorted_worlds.iter_mut().enumerate() {
         world.index = Some(ii);
         let world2_opt = coords_to_world.get_mut(&world.get_coords());
         if let Some(world2) = world2_opt {
             world2.index = Some(ii);
+        } else {
+            panic!("World not found at expected coords");
         }
     }
     let (dist2, pred2) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 2);
     let (dist3, pred3) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 3);
 
+    // TODO
+
     temp_dir.close()?;
 
-    // TODO
     Ok(())
 }
 
@@ -1720,6 +1744,15 @@ mod tests {
         let valhalla = spin
             .hex_to_world("2811".to_string(), &coords_to_world)
             .unwrap();
+        let saarinen = dene
+            .hex_to_world("0113".to_string(), &coords_to_world)
+            .unwrap();
+        let celepina = spin
+            .hex_to_world("2913".to_string(), &coords_to_world)
+            .unwrap();
+        let zivije = spin
+            .hex_to_world("2812".to_string(), &coords_to_world)
+            .unwrap();
 
         let mut set = HashSet::new();
         set.insert(ldd.get_coords());
@@ -1745,6 +1778,141 @@ mod tests {
         set.insert(new_ramma.get_coords());
         set.insert(valhalla.get_coords());
         assert_eq!(aramis.neighbors3, set);
+
+        set.clear();
+        set.insert(aramis.get_coords());
+        set.insert(ldd.get_coords());
+        set.insert(reacher.get_coords());
+        set.insert(nutema.get_coords());
+        assert_eq!(vinorian.neighbors1, set);
+
+        set.clear();
+        set.insert(natoko.get_coords());
+        set.insert(margesi.get_coords());
+        set.insert(henoz.get_coords());
+        assert_eq!(vinorian.neighbors2, set);
+
+        set.clear();
+        set.insert(kretikaa.get_coords());
+        set.insert(suvfoto.get_coords());
+        set.insert(saarinen.get_coords());
+        // set.insert(huderu.get_coords()); // Can't refuel
+        set.insert(celepina.get_coords());
+        set.insert(zivije.get_coords());
+        set.insert(valhalla.get_coords());
+        set.insert(pysadi.get_coords());
+        assert_eq!(vinorian.neighbors3, set);
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_navigable_distance(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_worlds: Vec<World>;
+        sorted_worlds = coords_to_world.values().cloned().collect();
+        assert_eq!(sorted_worlds.len(), 825);
+        sorted_worlds.sort();
+        for (ii, world) in sorted_worlds.iter_mut().enumerate() {
+            world.index = Some(ii);
+            let world2_opt = coords_to_world.get_mut(&world.get_coords());
+            if let Some(world2) = world2_opt {
+                world2.index = Some(ii);
+            }
+        }
+        let (dist2, _) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 2);
+        let (dist3, _) = populate_navigable_distances(&sorted_worlds, &coords_to_world, 3);
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let margesi = spin
+            .hex_to_world("3212".to_string(), &coords_to_world)
+            .unwrap();
+        let corfu = spin
+            .hex_to_world("2602".to_string(), &coords_to_world)
+            .unwrap();
+        let andor = spin
+            .hex_to_world("0236".to_string(), &coords_to_world)
+            .unwrap();
+        let candory = spin
+            .hex_to_world("0336".to_string(), &coords_to_world)
+            .unwrap();
+        let reno = spin
+            .hex_to_world("0102".to_string(), &coords_to_world)
+            .unwrap();
+        let regina = spin
+            .hex_to_world("1910".to_string(), &coords_to_world)
+            .unwrap();
+        let mongo = spin
+            .hex_to_world("1204".to_string(), &coords_to_world)
+            .unwrap();
+        let collace = spin
+            .hex_to_world("1237".to_string(), &coords_to_world)
+            .unwrap();
+        let pavanne = spin
+            .hex_to_world("2905".to_string(), &coords_to_world)
+            .unwrap();
+        let raweh = spin
+            .hex_to_world("0139".to_string(), &coords_to_world)
+            .unwrap();
+        let javan = dene
+            .hex_to_world("2131".to_string(), &coords_to_world)
+            .unwrap();
+        let salaam = dene
+            .hex_to_world("3213".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(aramis.navigable_distance(aramis, &dist2), 0);
+        assert_eq!(aramis.navigable_distance(aramis, &dist3), 0);
+        assert_eq!(aramis.navigable_distance(ldd, &dist2), 1);
+        assert_eq!(aramis.navigable_distance(ldd, &dist3), 1);
+        assert_eq!(aramis.navigable_distance(vinorian, &dist2), 1);
+        assert_eq!(aramis.navigable_distance(vinorian, &dist3), 1);
+        assert_eq!(aramis.navigable_distance(corfu, &dist2), 16);
+        assert_eq!(aramis.navigable_distance(corfu, &dist3), 13);
+        assert_eq!(aramis.navigable_distance(andor, &dist2), INFINITY);
+        assert_eq!(aramis.navigable_distance(andor, &dist3), 45);
+        assert_eq!(aramis.navigable_distance(margesi, &dist2), 3);
+        assert_eq!(aramis.navigable_distance(pavanne, &dist2), 6);
+        assert_eq!(aramis.navigable_distance(regina, &dist2), 12);
+        assert_eq!(aramis.navigable_distance(mongo, &dist2), 22);
+        assert_eq!(aramis.navigable_distance(collace, &dist2), 37);
+        assert_eq!(reno.navigable_distance(javan, &dist2), 61);
+        assert_eq!(andor.navigable_distance(candory, &dist2), INFINITY);
+        assert_eq!(candory.navigable_distance(andor, &dist2), INFINITY);
+        assert_eq!(ldd.navigable_distance(natoko, &dist2), 2);
+        assert_eq!(collace.navigable_distance(salaam, &dist2), 59);
+        assert_eq!(raweh.navigable_distance(salaam, &dist2), 70);
 
         Ok(())
     }
