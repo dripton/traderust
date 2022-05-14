@@ -180,7 +180,7 @@ struct Coords {
 impl Coords {
     fn new(xf: f64, yf: f64) -> Coords {
         let x = xf as i64;
-        let y = yf as i64;
+        let y = f64::floor(yf) as i64;
         let half_y = yf - y as f64 != 0.0;
         Coords { x, y, half_y }
     }
