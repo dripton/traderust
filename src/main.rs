@@ -1925,4 +1925,390 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_navigable_path(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        assert_eq!(sorted_coords.len(), 825);
+        sorted_coords.sort();
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
+            }
+        }
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let corfu = spin
+            .hex_to_world("2602".to_string(), &coords_to_world)
+            .unwrap();
+        let andor = spin
+            .hex_to_world("0236".to_string(), &coords_to_world)
+            .unwrap();
+        let candory = spin
+            .hex_to_world("0336".to_string(), &coords_to_world)
+            .unwrap();
+        let reno = spin
+            .hex_to_world("0102".to_string(), &coords_to_world)
+            .unwrap();
+        let mongo = spin
+            .hex_to_world("1204".to_string(), &coords_to_world)
+            .unwrap();
+        let collace = spin
+            .hex_to_world("1237".to_string(), &coords_to_world)
+            .unwrap();
+        let javan = dene
+            .hex_to_world("2131".to_string(), &coords_to_world)
+            .unwrap();
+        let pysadi = spin
+            .hex_to_world("3008".to_string(), &coords_to_world)
+            .unwrap();
+        let lewis = spin
+            .hex_to_world("3107".to_string(), &coords_to_world)
+            .unwrap();
+        let yebab = spin
+            .hex_to_world("3002".to_string(), &coords_to_world)
+            .unwrap();
+        let lablon = spin
+            .hex_to_world("2701".to_string(), &coords_to_world)
+            .unwrap();
+        let violante = spin
+            .hex_to_world("2708".to_string(), &coords_to_world)
+            .unwrap();
+        let focaline = spin
+            .hex_to_world("2607".to_string(), &coords_to_world)
+            .unwrap();
+        let moughas = spin
+            .hex_to_world("2406".to_string(), &coords_to_world)
+            .unwrap();
+        let enope = spin
+            .hex_to_world("2205".to_string(), &coords_to_world)
+            .unwrap();
+        let becks_world = spin
+            .hex_to_world("2204".to_string(), &coords_to_world)
+            .unwrap();
+        let yorbund = spin
+            .hex_to_world("2303".to_string(), &coords_to_world)
+            .unwrap();
+        let heya = spin
+            .hex_to_world("2402".to_string(), &coords_to_world)
+            .unwrap();
+        let zila = spin
+            .hex_to_world("2908".to_string(), &coords_to_world)
+            .unwrap();
+        let zykoca = spin
+            .hex_to_world("3004".to_string(), &coords_to_world)
+            .unwrap();
+        let feri = spin
+            .hex_to_world("2005".to_string(), &coords_to_world)
+            .unwrap();
+        let uakye = spin
+            .hex_to_world("1805".to_string(), &coords_to_world)
+            .unwrap();
+        let efate = spin
+            .hex_to_world("1705".to_string(), &coords_to_world)
+            .unwrap();
+        let lysen = spin
+            .hex_to_world("1307".to_string(), &coords_to_world)
+            .unwrap();
+        let nakege = spin
+            .hex_to_world("1305".to_string(), &coords_to_world)
+            .unwrap();
+
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let celepina = spin
+            .hex_to_world("2913".to_string(), &coords_to_world)
+            .unwrap();
+        let jae_tellona = spin
+            .hex_to_world("2814".to_string(), &coords_to_world)
+            .unwrap();
+        let rhylanor = spin
+            .hex_to_world("2716".to_string(), &coords_to_world)
+            .unwrap();
+        let equus = spin
+            .hex_to_world("2417".to_string(), &coords_to_world)
+            .unwrap();
+        let ivendo = spin
+            .hex_to_world("2319".to_string(), &coords_to_world)
+            .unwrap();
+        let quiru = spin
+            .hex_to_world("2321".to_string(), &coords_to_world)
+            .unwrap();
+        let resten = spin
+            .hex_to_world("2323".to_string(), &coords_to_world)
+            .unwrap();
+        let lunion = spin
+            .hex_to_world("2124".to_string(), &coords_to_world)
+            .unwrap();
+        let derchon = spin
+            .hex_to_world("2024".to_string(), &coords_to_world)
+            .unwrap();
+        let zaibon = spin
+            .hex_to_world("1825".to_string(), &coords_to_world)
+            .unwrap();
+        let iron = spin
+            .hex_to_world("1626".to_string(), &coords_to_world)
+            .unwrap();
+        let mithril = spin
+            .hex_to_world("1628".to_string(), &coords_to_world)
+            .unwrap();
+        let steel = spin
+            .hex_to_world("1529".to_string(), &coords_to_world)
+            .unwrap();
+        let dawnworld = spin
+            .hex_to_world("1531".to_string(), &coords_to_world)
+            .unwrap();
+        let forine = spin
+            .hex_to_world("1533".to_string(), &coords_to_world)
+            .unwrap();
+        let tarkine = spin
+            .hex_to_world("1434".to_string(), &coords_to_world)
+            .unwrap();
+        let talos = spin
+            .hex_to_world("1436".to_string(), &coords_to_world)
+            .unwrap();
+
+        let path_opt =
+            aramis.navigable_path(aramis, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 1);
+            assert_eq!(path[0], aramis.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(aramis, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 1);
+            assert_eq!(path[0], aramis.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 2);
+            assert_eq!(path[0], aramis.get_coords());
+            assert_eq!(path[1], ldd.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 2);
+            assert_eq!(path[0], aramis.get_coords());
+            assert_eq!(path[1], ldd.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 2);
+            assert_eq!(path[0], aramis.get_coords());
+            assert_eq!(path[1], vinorian.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 2);
+            assert_eq!(path[0], aramis.get_coords());
+            assert_eq!(path[1], vinorian.get_coords());
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(corfu, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            assert_eq!(path.len(), 11);
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(
+                path,
+                vec![
+                    aramis.get_coords(),
+                    pysadi.get_coords(),
+                    zila.get_coords(),
+                    violante.get_coords(),
+                    focaline.get_coords(),
+                    moughas.get_coords(),
+                    enope.get_coords(),
+                    becks_world.get_coords(),
+                    yorbund.get_coords(),
+                    heya.get_coords(),
+                    corfu.get_coords(),
+                ]
+            );
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(corfu, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        if let Some(path) = path_opt {
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(path.len(), 6);
+            assert_eq!(
+                path,
+                vec![
+                    aramis.get_coords(),
+                    lewis.get_coords(),
+                    zykoca.get_coords(),
+                    yebab.get_coords(),
+                    lablon.get_coords(),
+                    corfu.get_coords(),
+                ]
+            );
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(mongo, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(path.len(), 13);
+            assert_eq!(
+                path,
+                vec![
+                    aramis.get_coords(),
+                    pysadi.get_coords(),
+                    zila.get_coords(),
+                    violante.get_coords(),
+                    focaline.get_coords(),
+                    moughas.get_coords(),
+                    enope.get_coords(),
+                    feri.get_coords(),
+                    uakye.get_coords(),
+                    efate.get_coords(),
+                    lysen.get_coords(),
+                    nakege.get_coords(),
+                    mongo.get_coords(),
+                ]
+            );
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            aramis.navigable_path(collace, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(path.len(), 20);
+            assert_eq!(
+                path,
+                vec![
+                    aramis.get_coords(),
+                    nutema.get_coords(),
+                    celepina.get_coords(),
+                    jae_tellona.get_coords(),
+                    rhylanor.get_coords(),
+                    equus.get_coords(),
+                    ivendo.get_coords(),
+                    quiru.get_coords(),
+                    resten.get_coords(),
+                    lunion.get_coords(),
+                    derchon.get_coords(),
+                    zaibon.get_coords(),
+                    iron.get_coords(),
+                    mithril.get_coords(),
+                    steel.get_coords(),
+                    dawnworld.get_coords(),
+                    forine.get_coords(),
+                    tarkine.get_coords(),
+                    talos.get_coords(),
+                    collace.get_coords(),
+                ]
+            );
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt = reno.navigable_path(javan, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        if let Some(path) = path_opt {
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(path.len(), 33);
+        } else {
+            panic!("No navigable path");
+        }
+
+        let path_opt =
+            andor.navigable_path(candory, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        assert_eq!(path_opt, None);
+
+        let path_opt =
+            candory.navigable_path(andor, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        assert_eq!(path_opt, None);
+
+        let path_opt =
+            aramis.navigable_path(andor, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        assert_eq!(path_opt, None);
+
+        let path_opt =
+            aramis.navigable_path(andor, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        if let Some(path) = path_opt {
+            for coords in &path {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+            assert_eq!(path.len(), 17);
+        } else {
+            panic!("No navigable path");
+        }
+
+        Ok(())
+    }
 }
