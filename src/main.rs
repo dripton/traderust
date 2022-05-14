@@ -807,6 +807,22 @@ mod tests {
     }
 
     #[rstest]
+    fn test_coords() {
+        let mut x = -101.0;
+        let mut y = -101.0;
+        while x <= 101.0 {
+            while y <= 101.0 {
+                let coords = Coords::new(x, y);
+                let (x2, y2) = <(f64, f64)>::from(coords);
+                assert_eq!(x, x2);
+                assert_eq!(y, y2);
+                y += 0.5;
+            }
+            x += 1.0;
+        }
+    }
+
+    #[rstest]
     fn test_download_sector_data(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         let mut expected_filenames = Vec::new();
         if let Ok(sector_names) = download {
