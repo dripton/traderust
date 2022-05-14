@@ -2,6 +2,7 @@ use anyhow::Result;
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
@@ -169,7 +170,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, 
 /// x is an integer
 /// y2 is an integer, equal to 2 * y
 /// This is needed because y is sometimes a float and floats can't be hash keys
-#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 struct Coords {
     x: i64,
     y2: i64,
@@ -491,6 +492,18 @@ impl Hash for World {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.hex.hash(state);
         self.name.hash(state);
+    }
+}
+
+impl Ord for World {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.get_coords().cmp(&other.get_coords())
+    }
+}
+
+impl PartialOrd for World {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.get_coords().partial_cmp(&other.get_coords())
     }
 }
 
