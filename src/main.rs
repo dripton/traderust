@@ -1335,6 +1335,9 @@ mod tests {
         let margesi = spin
             .hex_to_world("3212".to_string(), &coords_to_world)
             .unwrap();
+        let patinir = spin
+            .hex_to_world("3207".to_string(), &coords_to_world)
+            .unwrap();
         let saarinen = dene
             .hex_to_world("0113".to_string(), &coords_to_world)
             .unwrap();
@@ -1368,6 +1371,7 @@ mod tests {
         assert_eq!(ldd.straight_line_distance(reacher), 2);
         assert_eq!(ldd.straight_line_distance(nutema), 2);
         assert_eq!(ldd.straight_line_distance(margesi), 3);
+        assert_eq!(aramis.straight_line_distance(patinir), 3);
         assert_eq!(ldd.straight_line_distance(saarinen), 4);
         assert_eq!(aramis.straight_line_distance(corfu), 10);
         assert_eq!(aramis.straight_line_distance(lablon), 11);
