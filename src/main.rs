@@ -497,7 +497,7 @@ impl Hash for World {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct Sector {
     names: Vec<String>,
     abbreviation: String,
@@ -1391,19 +1391,14 @@ mod tests {
             "Spinward Marches".to_string(),
             &mut coords_to_world,
         );
-        let spin_location = spin.location;
         let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
-        let dene_location = dene.location;
-        location_to_sector.insert(spin.location, spin);
-        location_to_sector.insert(dene.location, dene);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
         for sector in location_to_sector.values() {
             sector
                 .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
                 .unwrap();
         }
-        let spin = location_to_sector.get(&spin_location).unwrap();
-        let dene = location_to_sector.get(&dene_location).unwrap();
-
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
             .unwrap();
@@ -1521,11 +1516,9 @@ mod tests {
             "Spinward Marches".to_string(),
             &mut coords_to_world,
         );
-        let spin_location = spin.location;
         let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
-        let dene_location = dene.location;
-        location_to_sector.insert(spin.location, spin);
-        location_to_sector.insert(dene.location, dene);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
         for sector in location_to_sector.values() {
             sector
                 .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
@@ -1537,9 +1530,6 @@ mod tests {
         for world in coords_to_world.values_mut() {
             world.populate_neighbors(&coords_to_world2);
         }
-
-        let spin = location_to_sector.get(&spin_location).unwrap();
-        let dene = location_to_sector.get(&dene_location).unwrap();
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
