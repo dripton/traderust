@@ -469,7 +469,6 @@ impl World {
         return self.uwtn() + self.wtn_port_modifier();
     }
 
-    /// Return double the actual coordinates, as we have half-hexes vertically.
     fn get_coords(&self) -> Coords {
         let hex = &self.hex;
         let location = self.sector_location;
