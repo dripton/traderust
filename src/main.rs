@@ -154,21 +154,21 @@ fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Resul
     Ok(())
 }
 
-/// Parse header and separator and return {field: (start, end)}
-fn parse_header_and_separator(header: &str, separator: &str) -> HashMap<String, (usize, usize)> {
+/// Parse header and separator and return [(start, end, field)]
+fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usize, String)> {
     let headers: Vec<&str> = header.split_whitespace().collect();
     let separators = separator.split_whitespace();
-    let mut field_to_start_end: HashMap<String, (usize, usize)> = HashMap::new();
+    let mut fields: Vec<(usize, usize, String)> = Vec::new();
     let mut column = 0;
     for (ii, hyphens) in separators.enumerate() {
         let field = headers[ii];
         let start = column;
         let width = hyphens.len();
         let end = column + width;
-        field_to_start_end.insert(field.to_string(), (start, end));
-        column += width + 1
+        fields.push((start, end, field.to_string()));
+        column += width + 1;
     }
-    return field_to_start_end;
+    return fields;
 }
 
 /// Find minimum distances between all worlds, and predecessor paths.
@@ -301,7 +301,7 @@ struct World {
 impl World {
     fn new(
         line: String,
-        fields: &HashMap<String, (usize, usize)>,
+        fields: &Vec<(usize, usize, String)>,
         sector_location: (i64, i64),
     ) -> World {
         let mut hex = "".to_string();
@@ -329,73 +329,88 @@ impl World {
         let neighbors3 = HashSet::new();
         let index = None;
 
-        for (field, (start, end)) in fields.iter() {
-            let value_opt = line.get(*start..*end);
-            if let Some(value) = value_opt {
-                match field.as_str() {
-                    "Hex" => hex = value.to_string(),
-                    "Name" => name = value.trim().to_string(),
-                    "UWP" => uwp = value.to_string(),
-                    "Remarks" => {
-                        for tc in value.trim().split_whitespace() {
-                            trade_classifications.insert(tc.to_string());
-                        }
+        let mut iter = line.chars().enumerate();
+        for (start, end, field) in fields.iter() {
+            // This intricate loop is to handle the occasional multi-byte
+            // UTF-8 character like in Khiinra Ash/Core
+            let mut value: String = "".to_string();
+            loop {
+                let tup_opt: Option<(usize, char)> = iter.next();
+                if let Some((ii, ch)) = tup_opt {
+                    if ii >= *start && ii < *end {
+                        value.push(ch);
+                    } else if ii >= *end {
+                        break;
                     }
-                    "{Ix}" => {
-                        let trimmed = value
-                            .trim_matches(|c| c == '{' || c == '}' || c == ' ')
-                            .to_string();
-                        if trimmed.len() > 0 {
-                            if let Ok(val) = trimmed.parse() {
-                                importance = val;
-                            }
-                        }
-                    }
-                    "(Ex)" => economic = value.trim_matches(|c| c == '(' || c == ')').to_string(),
-                    "[Cx]" => cultural = value.trim_matches(|c| c == '[' || c == ']').to_string(),
-                    "N" => nobles = value.trim_matches(|c| c == ' ' || c == '-').to_string(),
-                    "B" => {
-                        let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
-                        if trimmed.len() > 0 {
-                            for ch in trimmed.chars() {
-                                bases.insert(ch.to_string());
-                            }
-                        }
-                    }
-                    "Z" => {
-                        let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
-                        if trimmed.len() > 0 {
-                            zone = trimmed;
-                        }
-                    }
-                    "PBG" => pbg = value.trim().to_string(),
-                    "W" => {
-                        let trimmed = value
-                            .trim_matches(|c| c == '{' || c == '}' || c == ' ')
-                            .to_string();
-                        if trimmed.len() > 0 {
-                            if let Ok(val) = trimmed.parse() {
-                                worlds = val;
-                            }
-                        }
-                    }
-                    "A" => allegiance = value.to_string(),
-                    "Stellar" => {
-                        let parts: Vec<&str> = value.trim().split_whitespace().collect();
-                        let mut ii = 0;
-                        while ii < parts.len() {
-                            let star = parts[ii];
-                            if star == "BD" || star == "D" {
-                                stars.push(star.to_owned());
-                                ii += 1;
-                            } else {
-                                stars.push(star.to_owned() + " " + &parts[ii + 1]);
-                                ii += 2;
-                            }
-                        }
-                    }
-                    &_ => (),
+                } else {
+                    // end of line
+                    break;
                 }
+            }
+
+            match field.as_str() {
+                "Hex" => hex = value.to_string(),
+                "Name" => name = value.trim().to_string(),
+                "UWP" => uwp = value.to_string(),
+                "Remarks" => {
+                    for tc in value.trim().split_whitespace() {
+                        trade_classifications.insert(tc.to_string());
+                    }
+                }
+                "{Ix}" => {
+                    let trimmed = value
+                        .trim_matches(|c| c == '{' || c == '}' || c == ' ')
+                        .to_string();
+                    if trimmed.len() > 0 {
+                        if let Ok(val) = trimmed.parse() {
+                            importance = val;
+                        }
+                    }
+                }
+                "(Ex)" => economic = value.trim_matches(|c| c == '(' || c == ')').to_string(),
+                "[Cx]" => cultural = value.trim_matches(|c| c == '[' || c == ']').to_string(),
+                "N" => nobles = value.trim_matches(|c| c == ' ' || c == '-').to_string(),
+                "B" => {
+                    let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
+                    if trimmed.len() > 0 {
+                        for ch in trimmed.chars() {
+                            bases.insert(ch.to_string());
+                        }
+                    }
+                }
+                "Z" => {
+                    let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
+                    if trimmed.len() > 0 {
+                        zone = trimmed;
+                    }
+                }
+                "PBG" => pbg = value.trim().to_string(),
+                "W" => {
+                    let trimmed = value
+                        .trim_matches(|c| c == '{' || c == '}' || c == ' ')
+                        .to_string();
+                    if trimmed.len() > 0 {
+                        if let Ok(val) = trimmed.parse() {
+                            worlds = val;
+                        }
+                    }
+                }
+                "A" => allegiance = value.to_string(),
+                "Stellar" => {
+                    let parts: Vec<&str> = value.trim().split_whitespace().collect();
+                    let mut ii = 0;
+                    while ii < parts.len() {
+                        let star = parts[ii];
+                        if star == "BD" || star == "D" {
+                            stars.push(star.to_owned());
+                            ii += 1;
+                        } else {
+                            stars.push(star.to_owned() + " " + &parts[ii + 1]);
+                            ii += 2;
+                        }
+                    }
+                }
+                &_ => (),
             }
         }
 
@@ -747,7 +762,7 @@ impl Sector {
         let blob = read_to_string(data_path)?;
         let mut header = "";
         // We initialize fields here to make rustc happy, then overwrite it.
-        let mut fields: HashMap<String, (usize, usize)> = HashMap::new();
+        let mut fields: Vec<(usize, usize, String)> = Vec::new();
         for line in blob.lines() {
             if line.len() == 0 || line.starts_with("#") {
                 continue;
@@ -952,6 +967,7 @@ mod tests {
             "Deneb".to_string(),
             "Gvurrdon".to_string(),
             "Spinward Marches".to_string(),
+            "Core".to_string(),
         ];
         download_sector_data(&data_dir, &sector_names)?;
 
@@ -1027,20 +1043,20 @@ mod tests {
 
         let fields = parse_header_and_separator(&header, &separator);
         assert_eq!(fields.len(), 14);
-        assert_eq!(fields.get("Hex"), Some(&(0, 4)));
-        assert_eq!(fields.get("Name"), Some(&(5, 25)));
-        assert_eq!(fields.get("UWP"), Some(&(26, 35)));
-        assert_eq!(fields.get("Remarks"), Some(&(36, 76)));
-        assert_eq!(fields.get("{Ix}"), Some(&(77, 83)));
-        assert_eq!(fields.get("(Ex)"), Some(&(84, 91)));
-        assert_eq!(fields.get("[Cx]"), Some(&(92, 98)));
-        assert_eq!(fields.get("N"), Some(&(99, 104)));
-        assert_eq!(fields.get("B"), Some(&(105, 107)));
-        assert_eq!(fields.get("Z"), Some(&(108, 109)));
-        assert_eq!(fields.get("PBG"), Some(&(110, 113)));
-        assert_eq!(fields.get("W"), Some(&(114, 116)));
-        assert_eq!(fields.get("A"), Some(&(117, 121)));
-        assert_eq!(fields.get("Stellar"), Some(&(122, 136)));
+        assert_eq!(fields[0], (0, 4, "Hex".to_string()));
+        assert_eq!(fields[1], (5, 25, "Name".to_string()));
+        assert_eq!(fields[2], (26, 35, "UWP".to_string()));
+        assert_eq!(fields[3], (36, 76, "Remarks".to_string()));
+        assert_eq!(fields[4], (77, 83, "{Ix}".to_string()));
+        assert_eq!(fields[5], (84, 91, "(Ex)".to_string()));
+        assert_eq!(fields[6], (92, 98, "[Cx]".to_string()));
+        assert_eq!(fields[7], (99, 104, "N".to_string()));
+        assert_eq!(fields[8], (105, 107, "B".to_string()));
+        assert_eq!(fields[9], (108, 109, "Z".to_string()));
+        assert_eq!(fields[10], (110, 113, "PBG".to_string()));
+        assert_eq!(fields[11], (114, 116, "W".to_string()));
+        assert_eq!(fields[12], (117, 121, "A".to_string()));
+        assert_eq!(fields[13], (122, 136, "Stellar".to_string()));
 
         Ok(())
     }
@@ -1411,6 +1427,50 @@ mod tests {
         assert_eq!(candory.wtn(), 3.5);
         assert_eq!(candory.gas_giants(), "0");
         assert!(!candory.can_refuel());
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_world_khiinra_ash(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Core".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let khiinra_ash_coords = sector.hex_to_coords.get("2916").unwrap();
+        let khiinra_ash = coords_to_world.get(khiinra_ash_coords).unwrap();
+        assert_eq!(khiinra_ash.name, "Khiinra Ash");
+        assert_eq!(khiinra_ash.sector_location, (0, 0));
+        assert_eq!(khiinra_ash.hex, "2916");
+        assert_eq!(khiinra_ash.uwp, "BAE6362-8");
+        // No test for trade classifications to avoid UTF-8 in the code
+        assert_eq!(khiinra_ash.importance, -1);
+        assert_eq!(khiinra_ash.economic, "920-5");
+        assert_eq!(khiinra_ash.cultural, "1214");
+        assert_eq!(khiinra_ash.nobles, "B");
+        let bases = HashSet::new();
+        assert_eq!(khiinra_ash.bases, bases);
+        assert_eq!(khiinra_ash.zone, "G");
+        assert_eq!(khiinra_ash.pbg, "704");
+        assert_eq!(khiinra_ash.worlds, 7);
+        assert_eq!(khiinra_ash.allegiance, "ImSy");
+        assert_eq!(khiinra_ash.stars, vec!["M1 V", "M2 V"]);
+        assert_eq!(khiinra_ash.starport(), "B");
+        assert_eq!(khiinra_ash.g_starport(), "IV");
+        assert_eq!(khiinra_ash.size(), "A");
+        assert_eq!(khiinra_ash.atmosphere(), "E");
+        assert_eq!(khiinra_ash.hydrosphere(), "6");
+        assert_eq!(khiinra_ash.population(), "3");
+        assert_eq!(khiinra_ash.government(), "6");
+        assert_eq!(khiinra_ash.law_level(), "2");
+        assert_eq!(khiinra_ash.tech_level(), "8");
+        assert_eq!(khiinra_ash.g_tech_level(), 8);
+        assert_eq!(khiinra_ash.uwtn(), 2.0);
+        assert_eq!(khiinra_ash.wtn_port_modifier(), 0.5);
+        assert_eq!(khiinra_ash.wtn(), 2.5);
+        assert_eq!(khiinra_ash.gas_giants(), "4");
+        assert!(khiinra_ash.can_refuel());
 
         Ok(())
     }
