@@ -1508,11 +1508,41 @@ mod tests {
             .hex_to_world("2840".to_string(), &coords_to_world)
             .unwrap();
 
+        fn set_to_worlds(
+            set: &HashSet<Coords>,
+            coords_to_world: &HashMap<Coords, World>,
+        ) -> Vec<String> {
+            set.iter()
+                .map(|&c| coords_to_world.get(&c).unwrap().name.clone())
+                .collect()
+        }
+
         assert_eq!(aramis.major_routes.len(), 0);
         assert_eq!(aramis.main_routes.len(), 0);
         assert_eq!(aramis.intermediate_routes.len(), 5); // py 4
         assert_eq!(aramis.feeder_routes.len(), 7); // py 9
         assert_eq!(aramis.minor_routes.len(), 1); // py 0
+
+        println!(
+            "aramis major {:?}",
+            set_to_worlds(&aramis.major_routes, &coords_to_world)
+        );
+        println!(
+            "aramis main {:?}",
+            set_to_worlds(&aramis.main_routes, &coords_to_world)
+        );
+        println!(
+            "aramis intermediate {:?}",
+            set_to_worlds(&aramis.intermediate_routes, &coords_to_world)
+        );
+        println!(
+            "aramis feeder {:?}",
+            set_to_worlds(&aramis.feeder_routes, &coords_to_world)
+        );
+        println!(
+            "aramis minor {:?}",
+            set_to_worlds(&aramis.minor_routes, &coords_to_world)
+        );
 
         assert_eq!(mora.major_routes.len(), 1);
         assert_eq!(mora.main_routes.len(), 8);
@@ -1520,17 +1550,80 @@ mod tests {
         assert_eq!(mora.feeder_routes.len(), 1); // py 0
         assert_eq!(mora.minor_routes.len(), 0);
 
+        println!(
+            "mora major {:?}",
+            set_to_worlds(&mora.major_routes, &coords_to_world)
+        );
+        println!(
+            "mora main {:?}",
+            set_to_worlds(&mora.main_routes, &coords_to_world)
+        );
+        println!(
+            "mora intermediate {:?}",
+            set_to_worlds(&mora.intermediate_routes, &coords_to_world)
+        );
+        println!(
+            "mora feeder {:?}",
+            set_to_worlds(&mora.feeder_routes, &coords_to_world)
+        );
+        println!(
+            "mora minor {:?}",
+            set_to_worlds(&mora.minor_routes, &coords_to_world)
+        );
+
         assert_eq!(jesedipere.major_routes.len(), 0);
         assert_eq!(jesedipere.main_routes.len(), 0);
         assert_eq!(jesedipere.intermediate_routes.len(), 2); // py 0
         assert_eq!(jesedipere.feeder_routes.len(), 2); // py 3
         assert_eq!(jesedipere.minor_routes.len(), 2);
 
+        println!(
+            "jesedipere major {:?}",
+            set_to_worlds(&jesedipere.major_routes, &coords_to_world)
+        );
+        println!(
+            "jesedipere main {:?}",
+            set_to_worlds(&jesedipere.main_routes, &coords_to_world)
+        );
+        println!(
+            "jesedipere intermediate {:?}",
+            set_to_worlds(&jesedipere.intermediate_routes, &coords_to_world)
+        );
+        println!(
+            "jesedipere feeder {:?}",
+            set_to_worlds(&jesedipere.feeder_routes, &coords_to_world)
+        );
+        println!(
+            "jesedipere minor {:?}",
+            set_to_worlds(&jesedipere.minor_routes, &coords_to_world)
+        );
+
         assert_eq!(rruthaekuksu.major_routes.len(), 0);
         assert_eq!(rruthaekuksu.main_routes.len(), 0);
         assert_eq!(rruthaekuksu.intermediate_routes.len(), 0);
         assert_eq!(rruthaekuksu.feeder_routes.len(), 4);
         assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
+
+        println!(
+            "rruthaekuksu major {:?}",
+            set_to_worlds(&rruthaekuksu.major_routes, &coords_to_world)
+        );
+        println!(
+            "rruthaekuksu main {:?}",
+            set_to_worlds(&rruthaekuksu.main_routes, &coords_to_world)
+        );
+        println!(
+            "rruthaekuksu intermediate {:?}",
+            set_to_worlds(&rruthaekuksu.intermediate_routes, &coords_to_world)
+        );
+        println!(
+            "rruthaekuksu feeder {:?}",
+            set_to_worlds(&rruthaekuksu.feeder_routes, &coords_to_world)
+        );
+        println!(
+            "rruthaekuksu minor {:?}",
+            set_to_worlds(&rruthaekuksu.minor_routes, &coords_to_world)
+        );
 
         Ok(())
     }
