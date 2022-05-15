@@ -4,7 +4,10 @@ use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 use crate::apsp::INFINITY;
-use crate::{download_sector_data, parse_header_and_separator, populate_navigable_distances};
+use crate::{
+    download_sector_data, parse_header_and_separator, populate_navigable_distances,
+    populate_trade_routes,
+};
 use crate::{Coords, Sector, World};
 
 #[cfg(test)]
@@ -1434,6 +1437,100 @@ mod tests {
         } else {
             panic!("No navigable path");
         }
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_populate_trade_routes(
+        data_dir: &PathBuf,
+        download: &Result<Vec<String>>,
+    ) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        let gvur = Sector::new(&data_dir, "Gvurrdon".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        location_to_sector.insert(gvur.location, gvur.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
+            }
+        }
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+
+        populate_trade_routes(
+            &mut coords_to_world,
+            &coords_to_index,
+            &sorted_coords,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let mora = spin
+            .hex_to_world("3124".to_string(), &coords_to_world)
+            .unwrap();
+        let jesedipere = spin
+            .hex_to_world("3001".to_string(), &coords_to_world)
+            .unwrap();
+        let rruthaekuksu = gvur
+            .hex_to_world("2840".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(aramis.major_routes.len(), 0);
+        assert_eq!(aramis.main_routes.len(), 0);
+        assert_eq!(aramis.intermediate_routes.len(), 5); // py 4
+        assert_eq!(aramis.feeder_routes.len(), 7); // py 9
+        assert_eq!(aramis.minor_routes.len(), 1); // py 0
+
+        assert_eq!(mora.major_routes.len(), 1);
+        assert_eq!(mora.main_routes.len(), 8);
+        assert_eq!(mora.intermediate_routes.len(), 4); // py 5
+        assert_eq!(mora.feeder_routes.len(), 1); // py 0
+        assert_eq!(mora.minor_routes.len(), 0);
+
+        assert_eq!(jesedipere.major_routes.len(), 0);
+        assert_eq!(jesedipere.main_routes.len(), 0);
+        assert_eq!(jesedipere.intermediate_routes.len(), 2); // py 0
+        assert_eq!(jesedipere.feeder_routes.len(), 2); // py 3
+        assert_eq!(jesedipere.minor_routes.len(), 2);
+
+        assert_eq!(rruthaekuksu.major_routes.len(), 0);
+        assert_eq!(rruthaekuksu.main_routes.len(), 0);
+        assert_eq!(rruthaekuksu.intermediate_routes.len(), 0);
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 4);
+        assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
 
         Ok(())
     }
