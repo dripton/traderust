@@ -435,7 +435,7 @@ fn populate_trade_routes(
     let mut feeder_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
     let mut minor_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
 
-    for (_, coords) in dwtn_coords {
+    for (_, coords) in dwtn_coords.iter() {
         let world = coords_to_world.get(&coords).unwrap();
         world.find_route_paths(
             &mut major_route_paths,
@@ -506,7 +506,178 @@ fn populate_trade_routes(
         promote_routes(intermediate_route_paths, main_route_paths);
     (main_route_paths, major_route_paths) = promote_routes(main_route_paths, major_route_paths);
 
-    // TODO Keep only the largest route for each pair of coords
+
+    // Clear out existing routes from all worlds
+    for (_, coords) in dwtn_coords {
+        let world = coords_to_world.get_mut(&coords).unwrap();
+        world.major_routes.clear();
+        world.main_routes.clear();
+        world.intermediate_routes.clear();
+        world.feeder_routes.clear();
+        world.minor_routes.clear();
+    }
+
+    // Keep only the largest route for each pair of coords
+    for (coords1, coords2) in minor_route_paths.keys() {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .minor_routes
+            .insert(*coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .minor_routes
+            .insert(*coords1);
+    }
+    for (coords1, coords2) in feeder_route_paths.keys() {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .feeder_routes
+            .insert(*coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .feeder_routes
+            .insert(*coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .minor_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .minor_routes
+            .remove(coords1);
+    }
+    for (coords1, coords2) in intermediate_route_paths.keys() {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .intermediate_routes
+            .insert(*coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .intermediate_routes
+            .insert(*coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .feeder_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .feeder_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .minor_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .minor_routes
+            .remove(coords1);
+    }
+    for (coords1, coords2) in main_route_paths.keys() {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .main_routes
+            .insert(*coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .main_routes
+            .insert(*coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .intermediate_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .intermediate_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .feeder_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .feeder_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .minor_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .minor_routes
+            .remove(coords1);
+    }
+    for (coords1, coords2) in major_route_paths.keys() {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .major_routes
+            .insert(*coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .major_routes
+            .insert(*coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .main_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .main_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .intermediate_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .intermediate_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .feeder_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .feeder_routes
+            .remove(coords1);
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .minor_routes
+            .remove(coords2);
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .minor_routes
+            .remove(coords1);
+    }
 }
 
 /// Absolute coordinates
