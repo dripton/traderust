@@ -284,6 +284,29 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
+/// Promote 3 or more routes to one route of the next larger type
+fn promote_routes(
+    smaller_route_paths: HashMap<(Coords, Coords), u64>,
+    bigger_route_paths: HashMap<(Coords, Coords), u64>,
+) -> (
+    HashMap<(Coords, Coords), u64>,
+    HashMap<(Coords, Coords), u64>,
+) {
+    let mut smaller_route_paths2: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut bigger_route_paths2 = bigger_route_paths.clone();
+    for ((coords1, coords2), count) in smaller_route_paths {
+        if count >= 3 {
+            bigger_route_paths2
+                .entry((coords1, coords2))
+                .and_modify(|count2| *count2 += 1)
+                .or_insert(1);
+        } else {
+            smaller_route_paths2.insert((coords1, coords2), count);
+        }
+    }
+    (smaller_route_paths2, bigger_route_paths2)
+}
+
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
 /// and feeder_routes for all Worlds.
 ///
@@ -406,9 +429,16 @@ fn populate_trade_routes(
         }
     }
 
+    let mut major_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut main_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut intermediate_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut feeder_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut minor_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+
     for (_, coords) in dwtn_coords {
         let world = coords_to_world.get(&coords).unwrap();
-        let major_route_paths = world.find_route_paths(
+        world.find_route_paths(
+            &mut major_route_paths,
             &world.major_routes,
             3,
             &sorted_coords,
@@ -419,7 +449,8 @@ fn populate_trade_routes(
             &dist3,
             &pred3,
         );
-        let main_route_paths = world.find_route_paths(
+        world.find_route_paths(
+            &mut main_route_paths,
             &world.main_routes,
             3,
             &sorted_coords,
@@ -430,7 +461,8 @@ fn populate_trade_routes(
             &dist3,
             &pred3,
         );
-        let intermediate_route_paths = world.find_route_paths(
+        world.find_route_paths(
+            &mut intermediate_route_paths,
             &world.intermediate_routes,
             3,
             &sorted_coords,
@@ -441,7 +473,8 @@ fn populate_trade_routes(
             &dist3,
             &pred3,
         );
-        let feeder_route_paths = world.find_route_paths(
+        world.find_route_paths(
+            &mut feeder_route_paths,
             &world.feeder_routes,
             3,
             &sorted_coords,
@@ -452,7 +485,8 @@ fn populate_trade_routes(
             &dist3,
             &pred3,
         );
-        let minor_route_paths = world.find_route_paths(
+        world.find_route_paths(
+            &mut minor_route_paths,
             &world.minor_routes,
             2,
             &sorted_coords,
@@ -465,7 +499,13 @@ fn populate_trade_routes(
         );
     }
 
-    // TODO Promote routes
+    (minor_route_paths, feeder_route_paths) = promote_routes(minor_route_paths, feeder_route_paths);
+    (feeder_route_paths, intermediate_route_paths) =
+        promote_routes(feeder_route_paths, intermediate_route_paths);
+    (intermediate_route_paths, main_route_paths) =
+        promote_routes(intermediate_route_paths, main_route_paths);
+    (main_route_paths, major_route_paths) = promote_routes(main_route_paths, major_route_paths);
+
     // TODO Keep only the largest route for each pair of coords
 }
 
@@ -906,6 +946,7 @@ impl World {
 
     fn find_route_paths(
         &self,
+        route_paths: &mut HashMap<(Coords, Coords), u64>,
         routes: &HashSet<Coords>,
         max_jump: u64,
         sorted_coords: &Vec<Coords>,
@@ -915,8 +956,7 @@ impl World {
         pred2: &Array2<i64>,
         dist3: &Array2<i64>,
         pred3: &Array2<i64>,
-    ) -> HashMap<(Coords, Coords), u64> {
-        let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    ) {
         for coords2 in routes {
             let world2 = coords_to_world.get(&coords2).unwrap();
             let mut path: Vec<Coords> = Vec::new();
@@ -954,7 +994,6 @@ impl World {
                 }
             }
         }
-        route_paths
     }
 }
 
