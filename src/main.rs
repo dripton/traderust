@@ -46,7 +46,7 @@ lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
         let mut sttg: HashMap<String, String> = HashMap::new();
         sttg.insert("A".to_string(), "V".to_string());
-
+        sttg.insert("B".to_string(), "IV".to_string());
         sttg.insert("C".to_string(), "III".to_string());
         sttg.insert("D".to_string(), "II".to_string());
         sttg.insert("E".to_string(), "I".to_string());
