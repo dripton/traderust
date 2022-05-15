@@ -294,10 +294,12 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
 /// The wiki version is more fun so we'll use that.
 fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
+    coords_to_index: &HashMap<Coords, usize>,
+    sorted_coords: &Vec<Coords>,
     dist2: &Array2<i64>,
-    _pred2: &Array2<i64>,
-    _dist3: &Array2<i64>,
-    _pred3: &Array2<i64>,
+    pred2: &Array2<i64>,
+    dist3: &Array2<i64>,
+    pred3: &Array2<i64>,
 ) {
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
     for (coords, world) in coords_to_world.iter() {
@@ -404,7 +406,67 @@ fn populate_trade_routes(
         }
     }
 
-    // TODO Find all the route paths
+    for (_, coords) in dwtn_coords {
+        let world = coords_to_world.get(&coords).unwrap();
+        let major_route_paths = world.find_route_paths(
+            &world.major_routes,
+            3,
+            &sorted_coords,
+            &coords_to_world,
+            &coords_to_index,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+        let main_route_paths = world.find_route_paths(
+            &world.main_routes,
+            3,
+            &sorted_coords,
+            &coords_to_world,
+            &coords_to_index,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+        let intermediate_route_paths = world.find_route_paths(
+            &world.intermediate_routes,
+            3,
+            &sorted_coords,
+            &coords_to_world,
+            &coords_to_index,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+        let feeder_route_paths = world.find_route_paths(
+            &world.feeder_routes,
+            3,
+            &sorted_coords,
+            &coords_to_world,
+            &coords_to_index,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+        let minor_route_paths = world.find_route_paths(
+            &world.minor_routes,
+            2,
+            &sorted_coords,
+            &coords_to_world,
+            &coords_to_index,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+    }
+
+    // TODO Promote routes
+    // TODO Keep only the largest route for each pair of coords
 }
 
 /// Absolute coordinates
@@ -841,6 +903,59 @@ impl World {
         let btn = base_btn - self.distance_modifier(other, dist2);
         f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
+
+    fn find_route_paths(
+        &self,
+        routes: &HashSet<Coords>,
+        max_jump: u64,
+        sorted_coords: &Vec<Coords>,
+        coords_to_world: &HashMap<Coords, World>,
+        coords_to_index: &HashMap<Coords, usize>,
+        dist2: &Array2<i64>,
+        pred2: &Array2<i64>,
+        dist3: &Array2<i64>,
+        pred3: &Array2<i64>,
+    ) -> HashMap<(Coords, Coords), u64> {
+        let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+        for coords2 in routes {
+            let world2 = coords_to_world.get(&coords2).unwrap();
+            let mut path: Vec<Coords> = Vec::new();
+            let possible_path2 =
+                self.navigable_path(world2, sorted_coords, coords_to_index, dist2, pred2);
+            let mut possible_path3 = None;
+            if max_jump == 3 {
+                possible_path3 =
+                    self.navigable_path(world2, sorted_coords, coords_to_index, dist3, pred3);
+            }
+            if let Some(path2) = possible_path2 {
+                path = path2;
+                if let Some(path3) = possible_path3 {
+                    if path3.len() < path.len() {
+                        path = path3;
+                    }
+                }
+            } else if let Some(path3) = possible_path3 {
+                path = path3;
+            }
+            if path.len() >= 2 {
+                for ii in 0..path.len() - 1 {
+                    let first = path.get(ii).unwrap();
+                    let second = path.get(ii + 1).unwrap();
+                    let coord_tup: (Coords, Coords);
+                    if first <= second {
+                        coord_tup = (*first, *second);
+                    } else {
+                        coord_tup = (*second, *first);
+                    }
+                    route_paths
+                        .entry(coord_tup)
+                        .and_modify(|count| *count += 1)
+                        .or_insert(1);
+                }
+            }
+        }
+        route_paths
+    }
 }
 
 impl Hash for World {
@@ -1148,7 +1263,15 @@ fn main() -> Result<()> {
     let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
     let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
 
-    populate_trade_routes(&mut coords_to_world, &dist2, &pred2, &dist3, &pred3);
+    populate_trade_routes(
+        &mut coords_to_world,
+        &coords_to_index,
+        &sorted_coords,
+        &dist2,
+        &pred2,
+        &dist3,
+        &pred3,
+    );
 
     // TODO Generate PDFs
 
