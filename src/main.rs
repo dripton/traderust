@@ -205,63 +205,34 @@ fn populate_navigable_distances(
     let num_worlds = sorted_coords.len();
     let mut np = Array2::<i64>::zeros((num_worlds, num_worlds));
     for (ii, coords) in sorted_coords.iter().enumerate() {
-        let world_opt = coords_to_world.get(coords);
-        if let Some(world) = world_opt {
-            if max_jump >= 3 {
-                for coords in &world.neighbors3 {
-                    if let Some(neighbor) = coords_to_world.get(&coords) {
-                        if let Some(jj) = neighbor.index {
-                            np[[ii, jj]] = 3;
-                        } else {
-                            panic!("neighbor with no index");
-                        }
-                    } else {
-                        panic!("missing neighbor at index");
-                    }
-                }
+        let world = coords_to_world.get(coords).unwrap();
+        if max_jump >= 3 {
+            for coords in &world.neighbors3 {
+                let neighbor = coords_to_world.get(&coords).unwrap();
+                let jj = neighbor.index.unwrap();
+                np[[ii, jj]] = 3;
             }
-            if max_jump >= 2 {
-                for coords in &world.neighbors2 {
-                    if let Some(neighbor) = coords_to_world.get(&coords) {
-                        if let Some(jj) = neighbor.index {
-                            np[[ii, jj]] = 2;
-                        } else {
-                            panic!("neighbor with no index");
-                        }
-                    } else {
-                        panic!("missing neighbor at index");
-                    }
-                }
+        }
+        if max_jump >= 2 {
+            for coords in &world.neighbors2 {
+                let neighbor = coords_to_world.get(&coords).unwrap();
+                let jj = neighbor.index.unwrap();
+                np[[ii, jj]] = 2;
             }
-            if max_jump >= 1 {
-                for coords in &world.neighbors1 {
-                    if let Some(neighbor) = coords_to_world.get(&coords) {
-                        if let Some(jj) = neighbor.index {
-                            np[[ii, jj]] = 1;
-                        } else {
-                            panic!("neighbor with no index");
-                        }
-                    } else {
-                        panic!("missing neighbor at index");
-                    }
-                }
+        }
+        if max_jump >= 1 {
+            for coords in &world.neighbors1 {
+                let neighbor = coords_to_world.get(&coords).unwrap();
+                let jj = neighbor.index.unwrap();
+                np[[ii, jj]] = 1;
             }
-            for coords in &world.xboat_routes {
-                if let Some(neighbor) = coords_to_world.get(&coords) {
-                    if let Some(jj) = neighbor.index {
-                        np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
-                    } else {
-                        panic!("neighbor with no index");
-                    }
-                } else {
-                    panic!("missing neighbor at index");
-                }
-            }
-        } else {
-            panic!("Failed to get world");
+        }
+        for coords in &world.xboat_routes {
+            let neighbor = coords_to_world.get(&coords).unwrap();
+            let jj = neighbor.index.unwrap();
+            np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
         }
     }
-
     let pred = dijkstra(&mut np);
     return (np, pred);
 }
@@ -505,7 +476,6 @@ fn populate_trade_routes(
     (intermediate_route_paths, main_route_paths) =
         promote_routes(intermediate_route_paths, main_route_paths);
     (main_route_paths, major_route_paths) = promote_routes(main_route_paths, major_route_paths);
-
 
     // Clear out existing routes from all worlds
     for (_, coords) in dwtn_coords {
@@ -1053,15 +1023,9 @@ impl World {
     }
 
     fn navigable_distance(&self, other: &World, dist: &Array2<i64>) -> i64 {
-        if let Some(ii) = self.index {
-            if let Some(jj) = other.index {
-                return dist[[ii, jj]];
-            } else {
-                panic!("navigable_distance without index set");
-            }
-        } else {
-            panic!("navigable_distance without index set");
-        }
+        let ii = self.index.unwrap();
+        let jj = other.index.unwrap();
+        return dist[[ii, jj]];
     }
 
     fn navigable_path(
@@ -1081,21 +1045,15 @@ impl World {
         let mut path = vec![self.get_coords()];
         let mut coords2 = self.get_coords();
         loop {
-            if let Some(ii) = other.index {
-                if let Some(jj) = coords_to_index.get(&coords2) {
-                    let index = pred[[ii, *jj]];
-                    coords2 = sorted_coords[index as usize].clone();
-                    if coords2 == other.get_coords() {
-                        path.push(coords2);
-                        break;
-                    } else {
-                        path.push(coords2);
-                    }
-                } else {
-                    panic!("navigable_path without index set");
-                }
+            let ii = other.index.unwrap();
+            let jj = coords_to_index.get(&coords2).unwrap();
+            let index = pred[[ii, *jj]];
+            coords2 = sorted_coords[index as usize].clone();
+            if coords2 == other.get_coords() {
+                path.push(coords2);
+                break;
             } else {
-                panic!("navigable_path without index set");
+                path.push(coords2);
             }
         }
         return Some(path);
@@ -1463,12 +1421,8 @@ fn main() -> Result<()> {
     let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
     for (ii, coords) in sorted_coords.iter_mut().enumerate() {
         coords_to_index.insert(coords.clone(), ii);
-        let world_opt = coords_to_world.get_mut(coords);
-        if let Some(world) = world_opt {
-            world.index = Some(ii);
-        } else {
-            panic!("World not found at expected coords");
-        }
+        let world = coords_to_world.get_mut(coords).unwrap();
+        world.index = Some(ii);
     }
     let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
     let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
