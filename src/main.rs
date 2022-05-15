@@ -1,4 +1,5 @@
 use anyhow::Result;
+use bisection::bisect_left;
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
@@ -41,6 +42,26 @@ struct Args {
 
 const MAX_TECH_LEVEL: u32 = 17;
 const MAX_POPULATION: u32 = 15;
+
+// Rules don't say BTN can't be negative but it seems reasonable to me.
+const MIN_BTN: f64 = 0.0;
+const MAX_BTN_WTN_DELTA: f64 = 5.0;
+
+const _RI_PBTN_BONUS: f64 = 0.5;
+const _CP_PBTN_BONUS: f64 = 0.5;
+const _CS_PBTN_BONUS: f64 = 0.5;
+
+const AG_WTCM_BONUS: f64 = 0.5;
+const IN_WTCM_BONUS: f64 = 0.5;
+const MAX_WTCM_BONUS: f64 = AG_WTCM_BONUS + IN_WTCM_BONUS;
+const DIFFERENT_ALLEGIANCE_WTCM_PENALTY: f64 = 0.5;
+const MAX_WTCM_PENALTY: f64 = DIFFERENT_ALLEGIANCE_WTCM_PENALTY;
+
+const MAJOR_ROUTE_THRESHOLD: f64 = 12.0;
+const MAIN_ROUTE_THRESHOLD: f64 = 11.0;
+const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
+const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
+const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 
 lazy_static! {
     static ref SQRT3: f64 = f64::powf(3.0, 0.5);
@@ -245,6 +266,147 @@ fn populate_navigable_distances(
     return (np, pred);
 }
 
+fn distance_modifier_table(distance: i64) -> f64 {
+    let table: Vec<i64> = vec![1, 2, 5, 9, 19, 29, 59, 99, 199, 299, 599, 999, INFINITY];
+    let index = bisect_left(&table, &distance);
+    index as f64 / 2.0
+}
+
+fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
+    if allegiance1 != allegiance2 {
+        return false;
+    }
+    if allegiance1.starts_with("Na") || allegiance1.starts_with("Cs") {
+        // Non-aligned worlds and client states with the same code are not
+        // necessarily the same allegiance
+        return false;
+    }
+    true
+}
+
+/// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
+/// and feeder_routes for all Worlds.
+///
+/// This must be called after all Sectors and Worlds are mostly built.
+/// The rules say: main: 10+  feeder: 9-9.5  minor: 8-8.5
+/// The wiki says: blue major 12, cyan main 11, green intermediate 10,
+///                yellow feeder 9, red minor 8, no line 1-7
+/// The wiki version is more fun so we'll use that.
+fn populate_trade_routes(
+    coords_to_world: &mut HashMap<Coords, World>,
+    dist2: &Array2<i64>,
+    _pred2: &Array2<i64>,
+    _dist3: &Array2<i64>,
+    _pred3: &Array2<i64>,
+) {
+    let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
+    for (coords, world) in coords_to_world.iter() {
+        // wtn can have 0.5 so double it to make a sortable integer
+        let dwtn = (world.wtn() * 2.0) as u64;
+        dwtn_coords.push((dwtn, *coords));
+    }
+    dwtn_coords.sort();
+    dwtn_coords.reverse();
+
+    // Add initial endpoint-only routes to both endpoints
+    for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
+        let wtn1 = *dwtn1 as f64 / 2.0;
+        for jj in ii + 1..dwtn_coords.len() {
+            let (dwtn2, coords2) = dwtn_coords[jj];
+            let wtn2 = dwtn2 as f64 / 2.0;
+            if wtn2 < MINOR_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
+                || wtn1 + wtn2 < MINOR_ROUTE_THRESHOLD - MAX_WTCM_BONUS
+            {
+                // BTN can't be more than the lower WTN + 5, or the sum of
+                // the WTNs plus 1.  So if the lower WTN is less than 3 or
+                // the sum of the WTNs is less than 7, we know that world2
+                // and later worlds won't form any trade routes with
+                // world1.
+                break;
+            }
+            let sld = coords1.straight_line_distance(&coords2) as i64;
+            let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
+            if max_btn1 < MINOR_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
+                // BTN can't be more than the sum of the WTNs plus 1, so if
+                // even the straight line distance modifier puts us below 7,
+                // we can't form any trade routes with world2.
+                continue;
+            }
+            let world1 = coords_to_world.get(&coords1).unwrap();
+            let world2 = coords_to_world.get(&coords2).unwrap();
+            if max_btn1 < MINOR_ROUTE_THRESHOLD + MAX_WTCM_PENALTY {
+                // Computing the wtcm is cheaper than finding the full BTN
+                let wtcm = world1.wtcm(&world2);
+                let max_btn2 = max_btn1 + wtcm;
+                if max_btn2 < MINOR_ROUTE_THRESHOLD {
+                    continue;
+                }
+            }
+            // At this point we have exhausted ways to skip world2 without
+            // computing the BTN.
+            let btn = world1.btn(&world2, dist2);
+            if btn >= MAJOR_ROUTE_THRESHOLD {
+                coords_to_world
+                    .get_mut(&coords1)
+                    .unwrap()
+                    .major_routes
+                    .insert(coords2);
+                coords_to_world
+                    .get_mut(&coords2)
+                    .unwrap()
+                    .major_routes
+                    .insert(*coords1);
+            } else if btn >= MAIN_ROUTE_THRESHOLD {
+                coords_to_world
+                    .get_mut(&coords1)
+                    .unwrap()
+                    .main_routes
+                    .insert(coords2);
+                coords_to_world
+                    .get_mut(&coords2)
+                    .unwrap()
+                    .main_routes
+                    .insert(*coords1);
+            } else if btn >= INTERMEDIATE_ROUTE_THRESHOLD {
+                coords_to_world
+                    .get_mut(&coords1)
+                    .unwrap()
+                    .intermediate_routes
+                    .insert(coords2);
+                coords_to_world
+                    .get_mut(&coords2)
+                    .unwrap()
+                    .intermediate_routes
+                    .insert(*coords1);
+            } else if btn >= FEEDER_ROUTE_THRESHOLD {
+                coords_to_world
+                    .get_mut(&coords1)
+                    .unwrap()
+                    .feeder_routes
+                    .insert(coords2);
+                coords_to_world
+                    .get_mut(&coords2)
+                    .unwrap()
+                    .feeder_routes
+                    .insert(*coords1);
+            } else if btn >= MINOR_ROUTE_THRESHOLD {
+                coords_to_world
+                    .get_mut(&coords1)
+                    .unwrap()
+                    .minor_routes
+                    .insert(coords2);
+                coords_to_world
+                    .get_mut(&coords2)
+                    .unwrap()
+                    .minor_routes
+                    .insert(*coords1);
+            }
+        }
+    }
+
+    // TODO Find all the route paths
+}
+
 /// Absolute coordinates
 /// x is an integer
 /// y2 is an integer, equal to 2 * y
@@ -260,6 +422,17 @@ impl Coords {
         let x = xf as i64;
         let y2 = (yf * 2.0) as i64;
         Coords { x, y2 }
+    }
+
+    fn straight_line_distance(&self, other: &Coords) -> u64 {
+        let (x1, y1) = <(f64, f64)>::from(*self);
+        let (x2, y2) = <(f64, f64)>::from(*other);
+        let xdelta = f64::abs(x2 - x1);
+        let mut ydelta = f64::abs(y2 - y1) - xdelta / 2.0;
+        if ydelta < 0.0 {
+            ydelta = 0.0;
+        }
+        return (f64::floor(xdelta + ydelta)) as u64;
     }
 }
 
@@ -558,6 +731,31 @@ impl World {
         return self.uwtn() + self.wtn_port_modifier();
     }
 
+    fn wtcm(&self, other: &World) -> f64 {
+        let mut result = 0.0;
+
+        if (self.trade_classifications.contains("Ag")
+            && (other.trade_classifications.contains("Ex")
+                || other.trade_classifications.contains("Na")))
+            || (other.trade_classifications.contains("Ag")
+                && (self.trade_classifications.contains("Ex")
+                    || self.trade_classifications.contains("Na")))
+        {
+            result += AG_WTCM_BONUS;
+        }
+
+        if (self.trade_classifications.contains("In") && other.trade_classifications.contains("Ni"))
+            || (other.trade_classifications.contains("In")
+                && self.trade_classifications.contains("Ni"))
+        {
+            result += IN_WTCM_BONUS;
+        }
+        if !same_allegiance(&self.allegiance, &other.allegiance) {
+            result -= DIFFERENT_ALLEGIANCE_WTCM_PENALTY;
+        }
+        result
+    }
+
     fn get_coords(&self) -> Coords {
         let hex = &self.hex;
         let location = self.sector_location;
@@ -628,6 +826,20 @@ impl World {
             }
         }
         return Some(path);
+    }
+
+    fn distance_modifier(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+        let distance = self.navigable_distance(other, dist2);
+        distance_modifier_table(distance)
+    }
+
+    fn btn(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+        let wtn1 = self.wtn();
+        let wtn2 = other.wtn();
+        let min_wtn = f64::min(wtn1, wtn2);
+        let base_btn = wtn1 + wtn2 + self.wtcm(other);
+        let btn = base_btn - self.distance_modifier(other, dist2);
+        f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 }
 
@@ -936,7 +1148,9 @@ fn main() -> Result<()> {
     let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
     let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
 
-    // TODO
+    populate_trade_routes(&mut coords_to_world, &dist2, &pred2, &dist3, &pred3);
+
+    // TODO Generate PDFs
 
     temp_dir.close()?;
 
