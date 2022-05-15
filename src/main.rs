@@ -1,5 +1,7 @@
 use anyhow::Result;
 use bisection::bisect_left;
+extern crate cairo;
+use cairo::{PdfSurface, Context};
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
@@ -63,9 +65,11 @@ const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
 const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 
-lazy_static! {
-    static ref SQRT3: f64 = f64::powf(3.0, 0.5);
+const SCALE: f64 = 15.0;
+const SECTOR_HEX_WIDTH: f64 = 32.0;
+const SECTOR_HEX_HEIGHT: f64 = 40.0;
 
+lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
         let mut sttg: HashMap<String, String> = HashMap::new();
         sttg.insert("A".to_string(), "V".to_string());
@@ -647,6 +651,35 @@ fn populate_trade_routes(
             .unwrap()
             .minor_routes
             .remove(coords1);
+    }
+}
+
+fn generate_pdf(
+    sector: &Sector,
+    output_dir: &PathBuf,
+    location_to_sector: &HashMap<(i64, i64), Sector>,
+    coords_to_world: &HashMap<Coords, World>,
+) {
+    let sqrt3: f64 = f64::powf(3.0, 0.5);
+    let width = 60.0 * SECTOR_HEX_WIDTH * SCALE;
+    let height = 35.0 * sqrt3 * SECTOR_HEX_HEIGHT * SCALE;
+    let output_filename = sector.name().to_owned() + ".pdf";
+    let output_path = sector.name().to_owned() + ".pdf";
+    let mut output_path = output_dir.clone();
+    output_path.push(output_filename);
+
+    let surface = PdfSurface::new(width, height, output_path).unwrap();
+    let ctx = Context::new(&surface).unwrap();
+    ctx.scale(SCALE, SCALE);
+}
+
+fn generate_pdfs(
+    output_dir: &PathBuf,
+    location_to_sector: &HashMap<(i64, i64), Sector>,
+    coords_to_world: &HashMap<Coords, World>,
+) {
+    for sector in location_to_sector.values() {
+        generate_pdf(sector, output_dir, location_to_sector, coords_to_world);
     }
 }
 
@@ -1457,7 +1490,7 @@ fn main() -> Result<()> {
         &pred3,
     );
 
-    // TODO Generate PDFs
+    generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
 
     temp_dir.close()?;
 
