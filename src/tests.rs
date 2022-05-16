@@ -545,7 +545,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_abs_coords(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+    fn test_get_coords(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let spin = Sector::new(
