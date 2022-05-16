@@ -1580,6 +1580,115 @@ mod tests {
     }
 
     #[rstest]
+    fn test_btn(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        assert_eq!(sorted_coords.len(), 825);
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
+            }
+        }
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let ldd = spin
+            .hex_to_world("3010".to_string(), &coords_to_world)
+            .unwrap();
+        let natoko = spin
+            .hex_to_world("3209".to_string(), &coords_to_world)
+            .unwrap();
+        let vinorian = spin
+            .hex_to_world("3111".to_string(), &coords_to_world)
+            .unwrap();
+        let corfu = spin
+            .hex_to_world("2602".to_string(), &coords_to_world)
+            .unwrap();
+        let andor = spin
+            .hex_to_world("0236".to_string(), &coords_to_world)
+            .unwrap();
+        let candory = spin
+            .hex_to_world("0336".to_string(), &coords_to_world)
+            .unwrap();
+        let regina = spin
+            .hex_to_world("1910".to_string(), &coords_to_world)
+            .unwrap();
+        let reacher = spin
+            .hex_to_world("3210".to_string(), &coords_to_world)
+            .unwrap();
+        let nutema = spin
+            .hex_to_world("3112".to_string(), &coords_to_world)
+            .unwrap();
+        let margesi = spin
+            .hex_to_world("3212".to_string(), &coords_to_world)
+            .unwrap();
+        let saarinen = dene
+            .hex_to_world("0113".to_string(), &coords_to_world)
+            .unwrap();
+        let lablon = spin
+            .hex_to_world("2701".to_string(), &coords_to_world)
+            .unwrap();
+        let junidy = spin
+            .hex_to_world("3202".to_string(), &coords_to_world)
+            .unwrap();
+        let marz = dene
+            .hex_to_world("0201".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(aramis.btn(ldd, &dist2), 8.0);
+        assert_eq!(aramis.btn(natoko, &dist2), 6.5);
+        assert_eq!(aramis.btn(reacher, &dist2), 7.0);
+        assert_eq!(aramis.btn(vinorian, &dist2), 8.0);
+        assert_eq!(aramis.btn(corfu, &dist2), 5.5);
+        assert_eq!(aramis.btn(lablon, &dist2), 6.0);
+        assert_eq!(aramis.btn(junidy, &dist2), 7.5);
+        assert_eq!(aramis.btn(marz, &dist2), 7.5);
+        assert_eq!(aramis.btn(regina, &dist2), 7.0);
+        assert_eq!(ldd.btn(aramis, &dist2), 8.0);
+        assert_eq!(ldd.btn(natoko, &dist2), 6.0);
+        assert_eq!(ldd.btn(reacher, &dist2), 6.5);
+        assert_eq!(ldd.btn(nutema, &dist2), 6.0);
+        assert_eq!(ldd.btn(margesi, &dist2), 6.0);
+        assert_eq!(ldd.btn(saarinen, &dist2), 5.5);
+        assert_eq!(natoko.btn(reacher, &dist2), 5.5);
+        assert_eq!(vinorian.btn(nutema, &dist2), 6.5);
+        assert_eq!(nutema.btn(margesi, &dist2), 5.5);
+        assert_eq!(margesi.btn(saarinen, &dist2), 5.5);
+        assert_eq!(aramis.btn(andor, &dist2), 2.5);
+        assert_eq!(andor.btn(candory, &dist2), 2.0);
+        Ok(())
+    }
+
+    #[rstest]
     fn test_populate_trade_routes(
         data_dir: &PathBuf,
         download: &Result<Vec<String>>,
