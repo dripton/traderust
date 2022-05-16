@@ -5,8 +5,8 @@ use std::path::PathBuf;
 
 use crate::apsp::INFINITY;
 use crate::{
-    download_sector_data, parse_header_and_separator, populate_navigable_distances,
-    populate_trade_routes,
+    distance_modifier_table, download_sector_data, parse_header_and_separator,
+    populate_navigable_distances, populate_trade_routes,
 };
 use crate::{Coords, Sector, World};
 
@@ -676,6 +676,36 @@ mod tests {
         assert_eq!(aramis.straight_line_distance(regina), 12);
 
         Ok(())
+    }
+
+    #[rstest]
+    fn test_distance_modifier_table() {
+        assert_eq!(distance_modifier_table(0), 0.0);
+        assert_eq!(distance_modifier_table(1), 0.0);
+        assert_eq!(distance_modifier_table(2), 0.5);
+        assert_eq!(distance_modifier_table(3), 1.0);
+        assert_eq!(distance_modifier_table(5), 1.0);
+        assert_eq!(distance_modifier_table(6), 1.5);
+        assert_eq!(distance_modifier_table(9), 1.5);
+        assert_eq!(distance_modifier_table(10), 2.0);
+        assert_eq!(distance_modifier_table(19), 2.0);
+        assert_eq!(distance_modifier_table(20), 2.5);
+        assert_eq!(distance_modifier_table(29), 2.5);
+        assert_eq!(distance_modifier_table(30), 3.0);
+        assert_eq!(distance_modifier_table(59), 3.0);
+        assert_eq!(distance_modifier_table(60), 3.5);
+        assert_eq!(distance_modifier_table(99), 3.5);
+        assert_eq!(distance_modifier_table(100), 4.0);
+        assert_eq!(distance_modifier_table(199), 4.0);
+        assert_eq!(distance_modifier_table(200), 4.5);
+        assert_eq!(distance_modifier_table(299), 4.5);
+        assert_eq!(distance_modifier_table(300), 5.0);
+        assert_eq!(distance_modifier_table(599), 5.0);
+        assert_eq!(distance_modifier_table(600), 5.5);
+        assert_eq!(distance_modifier_table(999), 5.5);
+        assert_eq!(distance_modifier_table(1000), 6.0);
+        assert_eq!(distance_modifier_table(999999), 6.0);
+        assert_eq!(distance_modifier_table(INFINITY), 6.0);
     }
 
     #[rstest]
