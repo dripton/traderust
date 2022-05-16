@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use crate::apsp::INFINITY;
 use crate::{
     distance_modifier_table, download_sector_data, parse_header_and_separator,
-    populate_navigable_distances, populate_trade_routes,
+    populate_navigable_distances, populate_trade_routes, same_allegiance,
 };
 use crate::{Coords, Sector, World};
 
@@ -706,6 +706,22 @@ mod tests {
         assert_eq!(distance_modifier_table(1000), 6.0);
         assert_eq!(distance_modifier_table(999999), 6.0);
         assert_eq!(distance_modifier_table(INFINITY), 6.0);
+    }
+
+    #[rstest]
+    fn test_same_allegiance() {
+        assert!(!(same_allegiance("CsIm", "CsIm")));
+        assert!(!(same_allegiance("CsZh", "CsZh")));
+        assert!(!(same_allegiance("CsIm", "CsZh")));
+        assert!(!(same_allegiance("NaHu", "NaHu")));
+        assert!(!(same_allegiance("NaXX", "NaXX")));
+        assert!(!(same_allegiance("NaHu", "NaXX")));
+        assert!(!(same_allegiance("DaCf", "ImDd")));
+        assert!(!(same_allegiance("ImDd", "ZhIN")));
+        assert!((same_allegiance("DaCf", "DaCf")));
+        assert!((same_allegiance("ImDd", "ImDd")));
+        assert!((same_allegiance("SwCf", "SwCf")));
+        assert!((same_allegiance("ZhIN", "ZhIN")));
     }
 
     #[rstest]
