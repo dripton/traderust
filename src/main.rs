@@ -47,9 +47,9 @@ const MAX_POPULATION: u32 = 15;
 const MIN_BTN: f64 = 0.0;
 const MAX_BTN_WTN_DELTA: f64 = 5.0;
 
-const _RI_PBTN_BONUS: f64 = 0.5;
-const _CP_PBTN_BONUS: f64 = 0.5;
-const _CS_PBTN_BONUS: f64 = 0.5;
+const RI_PBTN_BONUS: f64 = 0.5;
+const CP_PBTN_BONUS: f64 = 0.5;
+const CS_PBTN_BONUS: f64 = 0.5;
 
 const AG_WTCM_BONUS: f64 = 0.5;
 const IN_WTCM_BONUS: f64 = 0.5;
@@ -1071,6 +1071,26 @@ impl World {
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
         let btn = base_btn - self.distance_modifier(other, dist2);
         f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
+    }
+
+    fn passenger_btn(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+        let wtn1 = self.wtn();
+        let wtn2 = other.wtn();
+        let min_wtn = f64::min(wtn1, wtn2);
+        let base_btn = wtn1 + wtn2 + self.wtcm(other);
+        let mut pbtn = base_btn - self.distance_modifier(other, dist2);
+        for world in vec![self, other] {
+            if world.trade_classifications.contains("Ri") {
+                pbtn += RI_PBTN_BONUS;
+            }
+            if world.trade_classifications.contains("Cp") {
+                pbtn += CP_PBTN_BONUS;
+            }
+            if world.trade_classifications.contains("Cs") {
+                pbtn += CS_PBTN_BONUS;
+            }
+        }
+        f64::max(MIN_BTN, f64::min(pbtn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
     fn find_route_paths(
