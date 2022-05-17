@@ -894,6 +894,67 @@ fn generate_pdf(
         }
     }
 
+    // trade routes
+    for x in 1..SECTOR_HEX_WIDTH + 1 {
+        for y in 1..SECTOR_HEX_HEIGHT + 1 {
+            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            if let Some(coords) = coords_opt {
+                if let Some(world) = coords_to_world.get(&coords) {
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.major_routes,
+                        0.09 * SCALE,
+                        (0.0, 0.0, 1.0, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.main_routes,
+                        0.08 * SCALE,
+                        (0.0, 0.8, 1.8, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.intermediate_routes,
+                        0.07 * SCALE,
+                        (0.0, 1.0, 0.0, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.feeder_routes,
+                        0.06 * SCALE,
+                        (1.0, 1.0, 0.0, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.minor_routes,
+                        0.05 * SCALE,
+                        (1.0, 0.0, 0.0, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                }
+            }
+        }
+    }
+
     // TODO
 
     surface.finish();
