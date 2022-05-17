@@ -669,7 +669,7 @@ fn draw_neighboring_sector_name(
     ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
     let extents = ctx.text_extents(name).unwrap();
     ctx.move_to(x_pos - extents.width / 2.0, y_pos - extents.height / 2.0);
-    ctx.show_text(name);
+    ctx.show_text(name).unwrap();
 }
 
 fn generate_pdf(
@@ -692,7 +692,7 @@ fn generate_pdf(
     // background
     ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0); // black
     ctx.rectangle(0.0, 0.0, width, height);
-    ctx.fill();
+    ctx.fill().unwrap();
 
     let normal_font_face =
         FontFace::toy_create("Sans", FontSlant::Normal, FontWeight::Normal).unwrap();
@@ -705,7 +705,7 @@ fn generate_pdf(
     let text = sector.name();
     let extents = ctx.text_extents(text).unwrap();
     ctx.move_to(width / SCALE / 4.0 - extents.width / 2.0, 3.0 * SCALE);
-    ctx.show_text(text);
+    ctx.show_text(text).unwrap();
 
     // neighboring sector names, if known
 
@@ -774,7 +774,7 @@ fn generate_pdf(
         let cy2 = (3.0 + y * 2.0) * SQRT3 * SCALE;
         ctx.move_to(cx, cy1);
         ctx.line_to(cx, cy2);
-        ctx.stroke();
+        ctx.stroke().unwrap();
     }
     // horizontal lines
     for y in vec![1.0, 11.0, 21.0, 31.0, 41.0] {
@@ -785,7 +785,7 @@ fn generate_pdf(
         let cx2 = (25.0 / 6.0 + x) * 3.0 * SCALE;
         ctx.move_to(cx1, cy);
         ctx.line_to(cx2, cy);
-        ctx.stroke();
+        ctx.stroke().unwrap();
     }
 
     // subsector names
