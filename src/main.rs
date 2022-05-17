@@ -760,6 +760,56 @@ fn generate_pdf(
         );
     }
 
+    // subsector borders
+    ctx.set_line_width(0.03 * SCALE);
+    ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
+
+    // vertical lines
+    for x in vec![1.0, 9.0, 17.0, 25.0, 33.0] {
+        let cx = (25.0 / 6.0 + x) * 3.0 * SCALE; // halfway between leftmost 2 points
+        let y = 1.0;
+        let cy1 = (3.0 + y * 2.0) * sqrt3 * SCALE;
+        let y = 41.0;
+        let cy2 = (3.0 + y * 2.0) * sqrt3 * SCALE;
+        ctx.move_to(cx, cy1);
+        ctx.line_to(cx, cy2);
+        ctx.stroke();
+    }
+    // horizontal lines
+    for y in vec![1.0, 11.0, 21.0, 31.0, 41.0] {
+        let x = 1.0;
+        let cy = (3.0 + y * 2.0) * sqrt3 * SCALE;
+        let cx1 = (25.0 / 6.0 + x) * 3.0 * SCALE;
+        let x = 33.0;
+        let cx2 = (25.0 / 6.0 + x) * 3.0 * SCALE;
+        ctx.move_to(cx1, cy);
+        ctx.line_to(cx2, cy);
+        ctx.stroke();
+    }
+
+    // subsector names
+    for row in 0..4 {
+        for col in 0..4 {
+            let letter = (char::from_u32(4 * row + col + u32::from('A'))).unwrap();
+            let subsector_name = sector.subsector_letter_to_name.get(&letter).unwrap();
+            ctx.set_font_size(3.0 * SCALE);
+            ctx.set_font_face(&normal_font_face);
+            ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
+            let text = subsector_name;
+            let extents = ctx.text_extents(text).unwrap();
+            let x = 8.0 * col as f64 + 5.0;
+            let yy = 10.0 * row as f64 + 5.5;
+            let cx = (4.0 + x) * 3.0 * SCALE; // leftmost point
+            let cy = (5.0 + yy * 2.0) * sqrt3 * SCALE; // topmost point
+            ctx.move_to(
+                cx - extents.width / 2.0,
+                cy - extents.height / 2.0,
+            );
+            ctx.show_text(text);
+
+        }
+    }
+
     // TODO
 }
 
@@ -1367,8 +1417,7 @@ impl Sector {
                     let letter = index.chars().nth(0).unwrap();
                     let subsector_name = subsector_element.text().to_string();
                     if subsector_name.len() > 0 {
-                        self.subsector_letter_to_name
-                            .insert(letter, subsector_name);
+                        self.subsector_letter_to_name.insert(letter, subsector_name);
                     }
                 }
             }
