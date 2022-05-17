@@ -676,7 +676,14 @@ fn init_vars(
     sector: &Sector,
     x: i64,
     y: i64,
-) -> (String, f64, f64, Vec<(f64, f64)>, (f64, f64), Coords) {
+) -> (
+    String,
+    f64,
+    f64,
+    Vec<(f64, f64)>,
+    (f64, f64),
+    Option<&Coords>,
+) {
     let hex = format!("{:02}{:02}", x, y);
     let cx = (4.0 + x as f64) * 3.0 * SCALE; // leftmost point
     let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE; // topmost point
@@ -688,8 +695,34 @@ fn init_vars(
     vertexes.push((cx + SCALE, cy + 2.0 * SQRT3 * SCALE));
     vertexes.push((cx, cy + SQRT3 * SCALE));
     let center = (cx + 2.0 * SCALE, cy + SQRT3 * SCALE);
-    let coords = sector.hex_to_coords.get(&hex).unwrap();
-    return (hex, cx, cy, vertexes, center, *coords);
+    let coords_opt = sector.hex_to_coords.get(&hex);
+    return (hex, cx, cy, vertexes, center, coords_opt);
+}
+
+fn draw_route(
+    ctx: &Context,
+    coords1: Coords,
+    coords_set: &HashSet<Coords>,
+    line_width: f64,
+    rgba: (f64, f64, f64, f64),
+    cx: f64,
+    cy: f64,
+    center: (f64, f64),
+) {
+    let (x1, y1) = <(f64, f64)>::from(coords1);
+    for coords2 in coords_set.iter() {
+        let (x2, y2) = <(f64, f64)>::from(*coords2);
+        let delta_x = x2 - x1;
+        let delta_y = y2 - y1;
+        let cx2 = cx + delta_x * 3.0 * SCALE;
+        let cy2 = cy + delta_y * 2.0 * SQRT3 * SCALE;
+        let center2 = (cx2 + 2.0 * SCALE, cy2 + SQRT3 * SCALE);
+        ctx.set_line_width(line_width);
+        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+        ctx.move_to(center.0, center.1);
+        ctx.line_to(center2.0, center2.1);
+        ctx.stroke().unwrap();
+    }
 }
 
 fn generate_pdf(
@@ -837,7 +870,16 @@ fn generate_pdf(
             for ii in vec![1, 2, 3, 4, 5, 0] {
                 ctx.line_to(vertexes[ii].0, vertexes[ii].1);
             }
-            ctx.stroke();
+            ctx.stroke().unwrap();
+        }
+    }
+    // Xboat routes
+    for x in 1..(SECTOR_HEX_WIDTH + 1) {
+        for y in 1..(SECTOR_HEX_HEIGHT + 1) {
+            let (_hex, cx, cy, _vertexes, center, coords) = init_vars(&sector, x, y);
+            if let Some(world) = coords_to_world.get(&coords) {
+                draw_route(&ctx, coords, &world.xboat_routes, 0.3 * SCALE, (0.5, 0.0, 0.5, 1.0), cx, cy, center);
+            }
         }
     }
 
