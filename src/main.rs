@@ -734,7 +734,6 @@ fn generate_pdf(
     let width = 60.0 * SECTOR_HEX_WIDTH as f64 * SCALE;
     let height = 35.0 * SQRT3 * SECTOR_HEX_HEIGHT as f64 * SCALE;
     let output_filename = sector.name().to_owned() + ".pdf";
-    let output_path = sector.name().to_owned() + ".pdf";
     let mut output_path = output_dir.clone();
     output_path.push(output_filename);
 
