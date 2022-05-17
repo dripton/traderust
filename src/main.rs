@@ -1,7 +1,7 @@
 use anyhow::Result;
 use bisection::bisect_left;
 extern crate cairo;
-use cairo::{PdfSurface, Context};
+use cairo::{Context, FontFace, FontSlant, FontWeight, PdfSurface};
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
@@ -654,6 +654,22 @@ fn populate_trade_routes(
     }
 }
 
+fn draw_neighboring_sector_name(
+    ctx: &Context,
+    font_face: &FontFace,
+    name: &str,
+    x_pos: f64,
+    y_pos: f64,
+) {
+    // TODO Vertical text on the left and right sides would save space
+    ctx.set_font_size(SCALE);
+    ctx.set_font_face(font_face);
+    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+    let extents = ctx.text_extents(name).unwrap();
+    ctx.move_to(x_pos - extents.width / 2.0, y_pos - extents.height / 2.0);
+    ctx.show_text(name);
+}
+
 fn generate_pdf(
     sector: &Sector,
     output_dir: &PathBuf,
@@ -671,6 +687,80 @@ fn generate_pdf(
     let surface = PdfSurface::new(width, height, output_path).unwrap();
     let ctx = Context::new(&surface).unwrap();
     ctx.scale(SCALE, SCALE);
+
+    // background
+    ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0); // black
+    ctx.rectangle(0.0, 0.0, width, height);
+    ctx.fill();
+
+    let normal_font_face =
+        FontFace::toy_create("Sans", FontSlant::Normal, FontWeight::Normal).unwrap();
+    let bold_font_face = FontFace::toy_create("Sans", FontSlant::Normal, FontWeight::Bold).unwrap();
+
+    // sector name
+    ctx.set_font_size(3.0 * SCALE);
+    ctx.set_font_face(&bold_font_face);
+    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+    let text = sector.name();
+    let extents = ctx.text_extents(text).unwrap();
+    ctx.move_to(width / SCALE / 4.0 - extents.width / 2.0, 3.0 * SCALE);
+    ctx.show_text(text);
+
+    // neighboring sector names, if known
+
+    // coreward (up)
+    if let Some(neighbor_sector) =
+        location_to_sector.get(&(sector.location.0, sector.location.1 - 1))
+    {
+        draw_neighboring_sector_name(
+            &ctx,
+            &normal_font_face,
+            neighbor_sector.name(),
+            width / SCALE / 2.0,
+            6.0 * SCALE,
+        );
+    }
+
+    // spinward (left)
+    if let Some(neighbor_sector) =
+        location_to_sector.get(&(sector.location.0 - 1, sector.location.1))
+    {
+        draw_neighboring_sector_name(
+            &ctx,
+            &normal_font_face,
+            neighbor_sector.name(),
+            5.0 * SCALE,
+            height / SCALE / 2.0,
+        );
+    }
+
+    // trailing (right)
+    if let Some(neighbor_sector) =
+        location_to_sector.get(&(sector.location.0 + 1, sector.location.1))
+    {
+        draw_neighboring_sector_name(
+            &ctx,
+            &normal_font_face,
+            neighbor_sector.name(),
+            width / SCALE - 2.0 * SCALE,
+            height / SCALE / 2.0,
+        );
+    }
+
+    // rimward (down)
+    if let Some(neighbor_sector) =
+        location_to_sector.get(&(sector.location.0, sector.location.1 + 1))
+    {
+        draw_neighboring_sector_name(
+            &ctx,
+            &normal_font_face,
+            neighbor_sector.name(),
+            width / SCALE / 2.0,
+            height / SCALE - 6.0 * SCALE,
+        );
+    }
+
+    // TODO
 }
 
 fn generate_pdfs(
