@@ -1293,7 +1293,7 @@ struct Sector {
     names: Vec<String>,
     abbreviation: String,
     location: (i64, i64),
-    subsector_letter_to_name: HashMap<String, String>,
+    subsector_letter_to_name: HashMap<char, String>,
     allegiance_code_to_name: HashMap<String, String>,
     hex_to_coords: HashMap<String, Coords>,
 }
@@ -1362,12 +1362,13 @@ impl Sector {
         if let Some(subsectors_element) = subsectors_opt {
             let subsector_elements = subsectors_element.find_all("Subsector");
             for subsector_element in subsector_elements {
-                let letter_opt = subsector_element.get_attr("Index");
-                if let Some(letter) = letter_opt {
+                let index_opt = subsector_element.get_attr("Index");
+                if let Some(index) = index_opt {
+                    let letter = index.chars().nth(0).unwrap();
                     let subsector_name = subsector_element.text().to_string();
                     if subsector_name.len() > 0 {
                         self.subsector_letter_to_name
-                            .insert(letter.to_string(), subsector_name);
+                            .insert(letter, subsector_name);
                     }
                 }
             }

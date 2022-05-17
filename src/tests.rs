@@ -143,11 +143,11 @@ mod tests {
         assert_eq!(sector.location, (-4, -1));
         assert_eq!(sector.subsector_letter_to_name.len(), 16);
         assert_eq!(
-            *sector.subsector_letter_to_name.get("A").unwrap(),
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
             "Cronor".to_string()
         );
         assert_eq!(
-            *sector.subsector_letter_to_name.get("P").unwrap(),
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
             "Trin's Veil".to_string()
         );
         assert_eq!(sector.allegiance_code_to_name.len(), 8);
@@ -179,11 +179,11 @@ mod tests {
         assert_eq!(sector.location, (-3, -1));
         assert_eq!(sector.subsector_letter_to_name.len(), 16);
         assert_eq!(
-            *sector.subsector_letter_to_name.get("A").unwrap(),
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
             "Pretoria".to_string()
         );
         assert_eq!(
-            *sector.subsector_letter_to_name.get("P").unwrap(),
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
             "Vast Heavens".to_string()
         );
         assert_eq!(sector.allegiance_code_to_name.len(), 6);
@@ -215,11 +215,11 @@ mod tests {
         assert_eq!(sector.location, (-4, -2));
         assert_eq!(sector.subsector_letter_to_name.len(), 16);
         assert_eq!(
-            *sector.subsector_letter_to_name.get("A").unwrap(),
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
             "Ongvos".to_string()
         );
         assert_eq!(
-            *sector.subsector_letter_to_name.get("P").unwrap(),
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
             "Firgr".to_string()
         );
         assert_eq!(sector.allegiance_code_to_name.len(), 16);
