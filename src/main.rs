@@ -68,8 +68,8 @@ const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 
 const SCALE: f64 = 15.0;
-const SECTOR_HEX_WIDTH: f64 = 32.0;
-const SECTOR_HEX_HEIGHT: f64 = 40.0;
+const SECTOR_HEX_WIDTH: i64 = 32;
+const SECTOR_HEX_HEIGHT: i64 = 40;
 
 lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
@@ -672,14 +672,34 @@ fn draw_neighboring_sector_name(
     ctx.show_text(name).unwrap();
 }
 
+fn init_vars(
+    sector: &Sector,
+    x: i64,
+    y: i64,
+) -> (String, f64, f64, Vec<(f64, f64)>, (f64, f64), Coords) {
+    let hex = format!("{:02}{:02}", x, y);
+    let cx = (4.0 + x as f64) * 3.0 * SCALE; // leftmost point
+    let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE; // topmost point
+    let mut vertexes: Vec<(f64, f64)> = Vec::new();
+    vertexes.push((cx + SCALE, cy));
+    vertexes.push((cx + 3.0 * SCALE, cy));
+    vertexes.push((cx + 4.0 * SCALE, cy + SQRT3 * SCALE));
+    vertexes.push((cx + 3.0 * SCALE, cy + 2.0 * SQRT3 * SCALE));
+    vertexes.push((cx + SCALE, cy + 2.0 * SQRT3 * SCALE));
+    vertexes.push((cx, cy + SQRT3 * SCALE));
+    let center = (cx + 2.0 * SCALE, cy + SQRT3 * SCALE);
+    let coords = sector.hex_to_coords.get(&hex).unwrap();
+    return (hex, cx, cy, vertexes, center, *coords);
+}
+
 fn generate_pdf(
     sector: &Sector,
     output_dir: &PathBuf,
     location_to_sector: &HashMap<(i64, i64), Sector>,
     coords_to_world: &HashMap<Coords, World>,
 ) {
-    let width = 60.0 * SECTOR_HEX_WIDTH * SCALE;
-    let height = 35.0 * SQRT3 * SECTOR_HEX_HEIGHT * SCALE;
+    let width = 60.0 * SECTOR_HEX_WIDTH as f64 * SCALE;
+    let height = 35.0 * SQRT3 * SECTOR_HEX_HEIGHT as f64 * SCALE;
     let output_filename = sector.name().to_owned() + ".pdf";
     let output_path = sector.name().to_owned() + ".pdf";
     let mut output_path = output_dir.clone();
@@ -803,7 +823,21 @@ fn generate_pdf(
             let cx = (4.0 + x) * 3.0 * SCALE; // leftmost point
             let cy = (5.0 + yy * 2.0) * SQRT3 * SCALE; // topmost point
             ctx.move_to(cx - extents.width / 2.0, cy - extents.height / 2.0);
-            ctx.show_text(text);
+            ctx.show_text(text).unwrap();
+        }
+    }
+
+    // hexsides
+    for x in 1..(SECTOR_HEX_WIDTH + 1) {
+        for y in 1..(SECTOR_HEX_HEIGHT + 1) {
+            let (_hex, _cx, _cy, vertexes, _center, _coords) = init_vars(&sector, x, y);
+            ctx.set_line_width(0.03 * SCALE);
+            ctx.move_to(vertexes[0].0, vertexes[0].1);
+            ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+            for ii in vec![1, 2, 3, 4, 5, 0] {
+                ctx.line_to(vertexes[ii].0, vertexes[ii].1);
+            }
+            ctx.stroke();
         }
     }
 
