@@ -860,8 +860,8 @@ fn generate_pdf(
     }
 
     // hexsides
-    for x in 1..(SECTOR_HEX_WIDTH + 1) {
-        for y in 1..(SECTOR_HEX_HEIGHT + 1) {
+    for x in 1..SECTOR_HEX_WIDTH + 1 {
+        for y in 1..SECTOR_HEX_HEIGHT + 1 {
             let (_hex, _cx, _cy, vertexes, _center, _coords) = init_vars(&sector, x, y);
             ctx.set_line_width(0.03 * SCALE);
             ctx.move_to(vertexes[0].0, vertexes[0].1);
@@ -872,9 +872,10 @@ fn generate_pdf(
             ctx.stroke().unwrap();
         }
     }
+
     // Xboat routes
-    for x in 1..(SECTOR_HEX_WIDTH + 1) {
-        for y in 1..(SECTOR_HEX_HEIGHT + 1) {
+    for x in 1..SECTOR_HEX_WIDTH + 1 {
+        for y in 1..SECTOR_HEX_HEIGHT + 1 {
             let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
             if let Some(coords) = coords_opt {
                 if let Some(world) = coords_to_world.get(&coords) {
