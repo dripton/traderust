@@ -875,14 +875,27 @@ fn generate_pdf(
     // Xboat routes
     for x in 1..(SECTOR_HEX_WIDTH + 1) {
         for y in 1..(SECTOR_HEX_HEIGHT + 1) {
-            let (_hex, cx, cy, _vertexes, center, coords) = init_vars(&sector, x, y);
-            if let Some(world) = coords_to_world.get(&coords) {
-                draw_route(&ctx, coords, &world.xboat_routes, 0.3 * SCALE, (0.5, 0.0, 0.5, 1.0), cx, cy, center);
+            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            if let Some(coords) = coords_opt {
+                if let Some(world) = coords_to_world.get(&coords) {
+                    draw_route(
+                        &ctx,
+                        *coords,
+                        &world.xboat_routes,
+                        0.3 * SCALE,
+                        (0.5, 0.0, 0.5, 1.0),
+                        cx,
+                        cy,
+                        center,
+                    );
+                }
             }
         }
     }
 
     // TODO
+
+    surface.finish();
 }
 
 fn generate_pdfs(
