@@ -7,6 +7,7 @@ use clap_verbosity_flag;
 use elementtree::Element;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
+use std::f64::consts::TAU;
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
@@ -14,6 +15,8 @@ use std::path::PathBuf;
 extern crate lazy_static;
 extern crate ndarray;
 use ndarray::prelude::*;
+extern crate rand;
+use rand::prelude::*;
 extern crate reqwest;
 use substring::Substring;
 use tempfile::tempdir;
@@ -955,10 +958,12 @@ fn generate_pdf(
         }
     }
 
+    let mut rng = thread_rng();
+
     // World, gas giants, text
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (_hex, cx, cy, _vertexes, _center, coords_opt) = init_vars(&sector, x, y);
+            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
             if let Some(coords) = coords_opt {
                 if let Some(world) = coords_to_world.get(&coords) {
                     // UWP
@@ -997,6 +1002,53 @@ fn generate_pdf(
                         cy + SQRT3 * SCALE * 1.8,
                     );
                     ctx.show_text(&name).unwrap();
+
+                    // World circle
+                    if world.size() == "0" {
+                        // Asteroid belt
+                        let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+                        let num_asteroids = rng.gen_range(5..=20);
+                        for _ in 0..num_asteroids {
+                            let x_pos = center.0 - 0.25 * SCALE + random::<f64>() * 0.5 * SCALE;
+                            let y_pos = center.1 - 0.25 * SCALE + random::<f64>() * 0.5 * SCALE;
+                            ctx.new_sub_path();
+                            ctx.arc(x_pos, y_pos, random::<f64>() * 0.04 * SCALE, 0.0, TAU);
+                            ctx.stroke_preserve().unwrap();
+                            ctx.fill().unwrap();
+                        }
+                    } else {
+                        let mut rgba = (1.0, 1.0, 1.0, 1.0); // white
+                        let mut fill_rgba = rgba;
+                        if world.trade_classifications.contains("Ri")
+                            && world.trade_classifications.contains("Ag")
+                        {
+                            rgba = (1.0, 1.0, 0.0, 1.0); // yellow
+                            fill_rgba = rgba;
+                        } else if world.trade_classifications.contains("Ri") {
+                            rgba = (0.5, 0.0, 0.5, 1.0); // purple
+                            fill_rgba = rgba;
+                        } else if world.trade_classifications.contains("Ag") {
+                            rgba = (0.5, 0.5, 0.5, 1.0); // green
+                            fill_rgba = rgba;
+                        } else if world.atmosphere() == "B" || world.atmosphere() == "C" {
+                            rgba = (1.0, 0.65, 0.0, 1.0); // orange
+                            fill_rgba = rgba;
+                        } else if world.atmosphere() == "0" {
+                            fill_rgba = (0.0, 0.0, 0.0, 1.0); // black
+                        } else if world.hydrosphere() != "0" {
+                            rgba = (0.0, 0.0, 1.0, 1.0); // blue
+                            fill_rgba = rgba;
+                        }
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+                        ctx.new_sub_path();
+                        ctx.arc(center.0, center.1, 0.3 * SCALE, 0.0, TAU);
+                        ctx.stroke_preserve().unwrap();
+                        if fill_rgba != rgba {
+                            ctx.set_source_rgba(fill_rgba.0, fill_rgba.1, fill_rgba.2, fill_rgba.3);
+                        }
+                        ctx.fill().unwrap();
+                    }
                 }
             }
         }
