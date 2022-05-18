@@ -687,8 +687,10 @@ fn init_vars(
     Option<&Coords>,
 ) {
     let hex = format!("{:02}{:02}", x, y);
-    let cx = (4.0 + x as f64) * 3.0 * SCALE; // leftmost point
-    let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE; // topmost point
+    // leftmost point
+    let cx = (4.0 + x as f64) * 3.0 * SCALE;
+    // topmost point
+    let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE;
     let mut vertexes: Vec<(f64, f64)> = Vec::new();
     vertexes.push((cx + SCALE, cy));
     vertexes.push((cx + 3.0 * SCALE, cy));
