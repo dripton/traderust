@@ -7,7 +7,7 @@ use clap_verbosity_flag;
 use elementtree::Element;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
-use std::f64::consts::TAU;
+use std::f64::consts::{PI, TAU};
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
@@ -1065,6 +1065,19 @@ fn generate_pdf(
                         ctx.set_line_width(0.03 * SCALE);
                         ctx.stroke_preserve().unwrap();
                         ctx.fill().unwrap();
+                    }
+
+                    // Red and amber zones
+                    if world.zone == "R" || world.zone == "A" {
+                        let mut rgba = (1.0, 0.0, 0.0, 1.0); // red
+                        if world.zone == "A" {
+                            rgba = (1.0, 1.0, 0.0, 1.0); // yellow
+                        }
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+                        ctx.new_sub_path();
+                        ctx.arc(center.0, center.1, 1.5 * SCALE, 0.7 * PI, 2.3 * PI);
+                        ctx.set_line_width(0.03 * SCALE);
+                        ctx.stroke().unwrap();
                     }
                 }
             }
