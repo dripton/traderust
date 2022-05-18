@@ -7,7 +7,7 @@ extern crate bucket_queue;
 use bucket_queue::*;
 
 extern crate ndarray;
-use ndarray::prelude::*;
+use ndarray::Array2;
 
 pub const NO_PRED_NODE: i64 = -9999;
 pub const INFINITY: i64 = i64::MAX;

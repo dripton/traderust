@@ -14,9 +14,9 @@ use std::path::PathBuf;
 #[macro_use]
 extern crate lazy_static;
 extern crate ndarray;
-use ndarray::prelude::*;
+use ndarray::Array2;
 extern crate rand;
-use rand::prelude::*;
+use rand::{random, Rng, thread_rng};
 extern crate reqwest;
 use tempfile::tempdir;
 use url::Url;
