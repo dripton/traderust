@@ -1049,6 +1049,23 @@ fn generate_pdf(
                         }
                         ctx.fill().unwrap();
                     }
+
+                    // Gas giant
+                    if world.gas_giants() != "0" {
+                        let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+                        ctx.new_sub_path();
+                        ctx.arc(
+                            center.0 + 0.8 * SCALE,
+                            center.1 - 0.8 * SCALE,
+                            0.1 * SCALE,
+                            0.0,
+                            TAU,
+                        );
+                        ctx.set_line_width(0.03 * SCALE);
+                        ctx.stroke_preserve().unwrap();
+                        ctx.fill().unwrap();
+                    }
                 }
             }
         }
