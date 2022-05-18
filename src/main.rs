@@ -75,14 +75,14 @@ const SECTOR_HEX_WIDTH: i64 = 32;
 const SECTOR_HEX_HEIGHT: i64 = 40;
 
 lazy_static! {
-    static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<String, String> = {
-        let mut sttg: HashMap<String, String> = HashMap::new();
-        sttg.insert("A".to_string(), "V".to_string());
-        sttg.insert("B".to_string(), "IV".to_string());
-        sttg.insert("C".to_string(), "III".to_string());
-        sttg.insert("D".to_string(), "II".to_string());
-        sttg.insert("E".to_string(), "I".to_string());
-        sttg.insert("X".to_string(), "0".to_string());
+    static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<char, String> = {
+        let mut sttg: HashMap<char, String> = HashMap::new();
+        sttg.insert('A', "V".to_string());
+        sttg.insert('B', "IV".to_string());
+        sttg.insert('C', "III".to_string());
+        sttg.insert('D', "II".to_string());
+        sttg.insert('E', "I".to_string());
+        sttg.insert('X', "0".to_string());
         sttg
     };
 
@@ -1004,7 +1004,7 @@ fn generate_pdf(
                     ctx.show_text(&name).unwrap();
 
                     // World circle
-                    if world.size() == "0" {
+                    if world.size() == '0' {
                         // Asteroid belt
                         let rgba = (1.0, 1.0, 1.0, 1.0); // white
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
@@ -1031,12 +1031,12 @@ fn generate_pdf(
                         } else if world.trade_classifications.contains("Ag") {
                             rgba = (0.5, 0.5, 0.5, 1.0); // green
                             fill_rgba = rgba;
-                        } else if world.atmosphere() == "B" || world.atmosphere() == "C" {
+                        } else if world.atmosphere() == 'B' || world.atmosphere() == 'C' {
                             rgba = (1.0, 0.65, 0.0, 1.0); // orange
                             fill_rgba = rgba;
-                        } else if world.atmosphere() == "0" {
+                        } else if world.atmosphere() == '0' {
                             fill_rgba = (0.0, 0.0, 0.0, 1.0); // black
-                        } else if world.hydrosphere() != "0" {
+                        } else if world.hydrosphere() != '0' {
                             rgba = (0.0, 0.0, 1.0, 1.0); // blue
                             fill_rgba = rgba;
                         }
@@ -1051,7 +1051,7 @@ fn generate_pdf(
                     }
 
                     // Gas giant
-                    if world.gas_giants() != "0" {
+                    if world.gas_giants() != '0' {
                         let rgba = (1.0, 1.0, 1.0, 1.0); // white
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                         ctx.new_sub_path();
@@ -1068,9 +1068,9 @@ fn generate_pdf(
                     }
 
                     // Red and amber zones
-                    if world.zone == "R" || world.zone == "A" {
+                    if world.zone == 'R' || world.zone == 'A' {
                         let mut rgba = (1.0, 0.0, 0.0, 1.0); // red
-                        if world.zone == "A" {
+                        if world.zone == 'A' {
                             rgba = (1.0, 1.0, 0.0, 1.0); // yellow
                         }
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
@@ -1159,7 +1159,7 @@ struct World {
     cultural: String,
     nobles: String,
     bases: HashSet<String>,
-    zone: String,
+    zone: char,
     pbg: String,
     worlds: u64,
     allegiance: String,
@@ -1191,7 +1191,7 @@ impl World {
         let mut cultural = "".to_string();
         let mut nobles = "".to_string();
         let mut bases = HashSet::new();
-        let mut zone = "G".to_string();
+        let mut zone = 'G';
         let mut pbg = "".to_string();
         let mut worlds = 0;
         let mut allegiance = "".to_string();
@@ -1259,7 +1259,7 @@ impl World {
                 "Z" => {
                     let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
                     if trimmed.len() > 0 {
-                        zone = trimmed;
+                        zone = trimmed.chars().nth(0).unwrap();
                     }
                 }
                 "PBG" => pbg = value.trim().to_string(),
@@ -1352,69 +1352,65 @@ impl World {
         }
     }
 
-    fn starport(&self) -> String {
-        return self.uwp.substring(0, 1).to_string();
+    fn starport(&self) -> char {
+        return self.uwp.chars().nth(0).unwrap() as char;
     }
 
     fn g_starport(&self) -> String {
         let mut starport = self.starport();
-        if starport == "?" {
-            starport = "X".to_string();
+        if starport == '?' {
+            starport = 'X';
         }
         let opt = STARPORT_TRAVELLER_TO_GURPS.get(&starport);
         return opt.unwrap().to_string();
     }
 
-    fn size(&self) -> String {
-        return self.uwp.substring(1, 2).to_string();
+    fn size(&self) -> char {
+        return self.uwp.chars().nth(1).unwrap() as char;
     }
 
-    fn atmosphere(&self) -> String {
-        return self.uwp.substring(2, 3).to_string();
+    fn atmosphere(&self) -> char {
+        return self.uwp.chars().nth(2).unwrap() as char;
     }
 
-    fn hydrosphere(&self) -> String {
-        return self.uwp.substring(3, 4).to_string();
+    fn hydrosphere(&self) -> char {
+        return self.uwp.chars().nth(3).unwrap() as char;
     }
 
     fn population(&self) -> char {
         return self.uwp.chars().nth(4).unwrap() as char;
     }
 
-    fn government(&self) -> String {
-        return self.uwp.substring(5, 6).to_string();
+    fn government(&self) -> char {
+        return self.uwp.chars().nth(5).unwrap() as char;
     }
 
-    fn law_level(&self) -> String {
-        return self.uwp.substring(6, 7).to_string();
+    fn law_level(&self) -> char {
+        return self.uwp.chars().nth(6).unwrap() as char;
     }
 
-    fn tech_level(&self) -> String {
-        return self.uwp.substring(8, 9).to_string();
+    fn tech_level(&self) -> char {
+        return self.uwp.chars().nth(8).unwrap() as char;
     }
 
     fn g_tech_level(&self) -> u64 {
-        let mut tech_level_string = self.tech_level();
-        if tech_level_string == "?" {
-            tech_level_string = "0".to_string();
+        let mut tech_level_char = self.tech_level();
+        if tech_level_char == '?' {
+            tech_level_char = '0';
         }
-        let mut tech_level_int = 0;
-        for ch in tech_level_string.chars() {
-            tech_level_int = ch.to_digit(MAX_TECH_LEVEL + 1).unwrap();
-            break;
-        }
+        let tech_level_int = tech_level_char.to_digit(MAX_TECH_LEVEL + 1).unwrap();
         return *TECH_LEVEL_TRAVELLER_TO_GURPS.get(&tech_level_int).unwrap();
     }
 
-    fn gas_giants(&self) -> String {
-        return self.pbg.substring(2, 3).to_string();
+    fn gas_giants(&self) -> char {
+        return self.pbg.chars().nth(2).unwrap();
     }
 
     fn can_refuel(&self) -> bool {
-        return self.gas_giants() != "0"
-            || (self.zone != "R"
-                && ((self.starport() != "E" && self.starport() != "X")
-                    || self.hydrosphere() != "0"));
+        return self.gas_giants() != '0'
+            || (self.zone != 'R'
+                && ((self.starport() != 'E' && self.starport() != 'X')
+                    || self.hydrosphere() != '0'));
     }
 
     fn uwtn(&self) -> f64 {
@@ -1422,7 +1418,8 @@ impl World {
         let tl_mod = gt3 as f64 / 2.0 - 0.5;
         let pop_char = self.population();
         let mut pop_mod = 0.0;
-        if pop_char.is_alphanumeric() {  // ignore '?'
+        if pop_char.is_alphanumeric() {
+            // ignore '?'
             let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
             pop_mod = pop_int as f64 / 2.0;
         }
