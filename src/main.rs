@@ -1357,7 +1357,10 @@ impl World {
     }
 
     fn g_starport(&self) -> String {
-        let starport = self.starport();
+        let mut starport = self.starport();
+        if starport == "?" {
+            starport = "X".to_string();
+        }
         let opt = STARPORT_TRAVELLER_TO_GURPS.get(&starport);
         return opt.unwrap().to_string();
     }
@@ -1391,7 +1394,10 @@ impl World {
     }
 
     fn g_tech_level(&self) -> u64 {
-        let tech_level_string = self.tech_level();
+        let mut tech_level_string = self.tech_level();
+        if tech_level_string == "?" {
+            tech_level_string = "0".to_string();
+        }
         let mut tech_level_int = 0;
         for ch in tech_level_string.chars() {
             tech_level_int = ch.to_digit(MAX_TECH_LEVEL + 1).unwrap();
@@ -1415,8 +1421,11 @@ impl World {
         let gt3 = self.g_tech_level() / 3;
         let tl_mod = gt3 as f64 / 2.0 - 0.5;
         let pop_char = self.population();
-        let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
-        let pop_mod = pop_int as f64 / 2.0;
+        let mut pop_mod = 0.0;
+        if pop_char.is_alphanumeric() {  // ignore '?'
+            let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
+            pop_mod = pop_int as f64 / 2.0;
+        }
         return tl_mod + pop_mod as f64;
     }
 
