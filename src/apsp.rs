@@ -92,16 +92,13 @@ fn dijkstra_one_row(
             if priority == dist_row[u as usize] as u64 {
                 if let Some(neighbors) = neighbors_map.get(&u) {
                     for v in neighbors {
-                        if let Some(weight) = weights.get(&(u, *v)) {
-                            let alt = dist_row[u as usize] as u64 + weight;
-                            if alt < (dist_row[*v as usize]) as u64 {
-                                dist_row[*v as usize] = alt as i64;
-                                pred_row[*v as usize] = u as i64;
-                                let tup = (alt, *v);
-                                heap.push(Reverse(tup));
-                            }
-                        } else {
-                            panic!("bug: neighbor not in weights");
+                        let weight = weights.get(&(u, *v)).unwrap();
+                        let alt = dist_row[u as usize] as u64 + weight;
+                        if alt < (dist_row[*v as usize]) as u64 {
+                            dist_row[*v as usize] = alt as i64;
+                            pred_row[*v as usize] = u as i64;
+                            let tup = (alt, *v);
+                            heap.push(Reverse(tup));
                         }
                     }
                 }
@@ -132,15 +129,12 @@ fn dial_one_row(
                 if priority == dist_row[u as usize] as usize {
                     if let Some(neighbors) = neighbors_map.get(&u) {
                         for v in neighbors {
-                            if let Some(weight) = weights.get(&(u, *v)) {
-                                let alt = dist_row[u as usize] as u64 + weight;
-                                if alt < (dist_row[*v as usize]) as u64 {
-                                    dist_row[*v as usize] = alt as i64;
-                                    pred_row[*v as usize] = u as i64;
-                                    queue.enqueue(*v as u64, alt as usize);
-                                }
-                            } else {
-                                panic!("bug: neighbor not in weights");
+                            let weight = weights.get(&(u, *v)).unwrap();
+                            let alt = dist_row[u as usize] as u64 + weight;
+                            if alt < (dist_row[*v as usize]) as u64 {
+                                dist_row[*v as usize] = alt as i64;
+                                pred_row[*v as usize] = u as i64;
+                                queue.enqueue(*v as u64, alt as usize);
                             }
                         }
                     }
@@ -188,11 +182,8 @@ fn dijkstra_dial_inner(dist: &mut Array2<i64>, alg: Algorithm) -> Array2<i64> {
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] < INFINITY {
-                if let Some(set) = neighbors_map.get_mut(&(i as u64)) {
-                    set.insert(j as u64);
-                } else {
-                    panic!("problem with map");
-                }
+                let set = neighbors_map.get_mut(&(i as u64)).unwrap();
+                set.insert(j as u64);
             }
         }
     }
