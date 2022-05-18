@@ -1007,7 +1007,7 @@ fn generate_pdf(
                         // Asteroid belt
                         let rgba = (1.0, 1.0, 1.0, 1.0); // white
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
-                        let num_asteroids = rng.gen_range(5..=20);
+                        let num_asteroids: u64 = rng.gen_range(5..=20);
                         for _ in 0..num_asteroids {
                             let x_pos = center.0 - 0.25 * SCALE + random::<f64>() * 0.5 * SCALE;
                             let y_pos = center.1 - 0.25 * SCALE + random::<f64>() * 0.5 * SCALE;
