@@ -963,7 +963,7 @@ fn generate_pdf(
     // World, gas giants, text
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            let (hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
             if let Some(coords) = coords_opt {
                 if let Some(world) = coords_to_world.get(&coords) {
                     // UWP
@@ -1080,11 +1080,22 @@ fn generate_pdf(
                         ctx.stroke().unwrap();
                     }
                 }
+
+                // Hex label
+                let text = hex;
+                ctx.set_font_size(0.35 * SCALE);
+                ctx.set_font_face(&normal_font_face);
+                let extents = ctx.text_extents(&text).unwrap();
+                let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
+                ctx.move_to(
+                    cx + 2.0 * SCALE - extents.width / 2.0,
+                    cy + SQRT3 * SCALE * 0.3,
+                );
+                ctx.show_text(&text).unwrap();
             }
         }
     }
-
-    // TODO
 
     surface.finish();
 }
