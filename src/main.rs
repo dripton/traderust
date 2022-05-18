@@ -972,6 +972,31 @@ fn generate_pdf(
                         cy + SQRT3 * SCALE * 1.5,
                     );
                     ctx.show_text(&text).unwrap();
+
+                    // World name
+                    // All-caps for high population
+                    let name: String;
+                    if world.population().is_alphabetic() || world.population() == '9' {
+                        name = world.name.to_owned().to_uppercase();
+                    } else {
+                        name = world.name.to_owned();
+                    }
+                    ctx.set_font_size(0.4 * SCALE);
+                    ctx.set_font_face(&bold_font_face);
+                    let extents = ctx.text_extents(&name).unwrap();
+                    // Red if a sector or subsector capital
+                    if world.trade_classifications.contains("Cp")
+                        || world.trade_classifications.contains("Cs")
+                    {
+                        ctx.set_source_rgba(1.0, 0.0, 0.0, 1.0); // red
+                    } else {
+                        ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+                    }
+                    ctx.move_to(
+                        cx + 2.0 * SCALE - extents.width / 2.0,
+                        cy + SQRT3 * SCALE * 1.8,
+                    );
+                    ctx.show_text(&name).unwrap();
                 }
             }
         }
@@ -1256,8 +1281,8 @@ impl World {
         return self.uwp.substring(3, 4).to_string();
     }
 
-    fn population(&self) -> String {
-        return self.uwp.substring(4, 5).to_string();
+    fn population(&self) -> char {
+        return self.uwp.chars().nth(4).unwrap() as char;
     }
 
     fn government(&self) -> String {
@@ -1296,12 +1321,9 @@ impl World {
     fn uwtn(&self) -> f64 {
         let gt3 = self.g_tech_level() / 3;
         let tl_mod = gt3 as f64 / 2.0 - 0.5;
-        let mut population_int = 0;
-        for ch in self.population().chars() {
-            population_int = ch.to_digit(MAX_POPULATION + 1).unwrap();
-            break;
-        }
-        let pop_mod = population_int as f64 / 2.0;
+        let pop_char = self.population();
+        let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
+        let pop_mod = pop_int as f64 / 2.0;
         return tl_mod + pop_mod as f64;
     }
 

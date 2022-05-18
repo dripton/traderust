@@ -276,7 +276,7 @@ mod tests {
         assert_eq!(aramis.size(), "5");
         assert_eq!(aramis.atmosphere(), "A");
         assert_eq!(aramis.hydrosphere(), "0");
-        assert_eq!(aramis.population(), "5");
+        assert_eq!(aramis.population(), '5');
         assert_eq!(aramis.government(), "5");
         assert_eq!(aramis.law_level(), "6");
         assert_eq!(aramis.tech_level(), "B");
@@ -334,7 +334,7 @@ mod tests {
         assert_eq!(regina.size(), "7");
         assert_eq!(regina.atmosphere(), "8");
         assert_eq!(regina.hydrosphere(), "8");
-        assert_eq!(regina.population(), "8");
+        assert_eq!(regina.population(), '8');
         assert_eq!(regina.government(), "9");
         assert_eq!(regina.law_level(), "9");
         assert_eq!(regina.tech_level(), "C");
@@ -385,7 +385,7 @@ mod tests {
         assert_eq!(bronze.size(), "2");
         assert_eq!(bronze.atmosphere(), "0");
         assert_eq!(bronze.hydrosphere(), "1");
-        assert_eq!(bronze.population(), "0");
+        assert_eq!(bronze.population(), '0');
         assert_eq!(bronze.government(), "0");
         assert_eq!(bronze.law_level(), "0");
         assert_eq!(bronze.tech_level(), "0");
@@ -435,7 +435,7 @@ mod tests {
         assert_eq!(callia.size(), "5");
         assert_eq!(callia.atmosphere(), "5");
         assert_eq!(callia.hydrosphere(), "0");
-        assert_eq!(callia.population(), "8");
+        assert_eq!(callia.population(), '8');
         assert_eq!(callia.government(), "5");
         assert_eq!(callia.law_level(), "2");
         assert_eq!(callia.tech_level(), "6");
@@ -486,7 +486,7 @@ mod tests {
         assert_eq!(candory.size(), "5");
         assert_eq!(candory.atmosphere(), "9");
         assert_eq!(candory.hydrosphere(), "3");
-        assert_eq!(candory.population(), "6");
+        assert_eq!(candory.population(), '6');
         assert_eq!(candory.government(), "3");
         assert_eq!(candory.law_level(), "4");
         assert_eq!(candory.tech_level(), "8");
@@ -530,7 +530,7 @@ mod tests {
         assert_eq!(khiinra_ash.size(), "A");
         assert_eq!(khiinra_ash.atmosphere(), "E");
         assert_eq!(khiinra_ash.hydrosphere(), "6");
-        assert_eq!(khiinra_ash.population(), "3");
+        assert_eq!(khiinra_ash.population(), '3');
         assert_eq!(khiinra_ash.government(), "6");
         assert_eq!(khiinra_ash.law_level(), "2");
         assert_eq!(khiinra_ash.tech_level(), "8");
