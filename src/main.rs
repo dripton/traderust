@@ -18,7 +18,6 @@ use ndarray::prelude::*;
 extern crate rand;
 use rand::prelude::*;
 extern crate reqwest;
-use substring::Substring;
 use tempfile::tempdir;
 use url::Url;
 
@@ -1465,8 +1464,14 @@ impl World {
     fn get_coords(&self) -> Coords {
         let hex = &self.hex;
         let location = self.sector_location;
-        let x: i64 = hex.substring(0, 2).parse::<i64>().unwrap() + 32 * location.0;
-        let y: i64 = hex.substring(2, 4).parse::<i64>().unwrap() + 40 * location.1;
+        let mut scratch = String::new();
+        scratch.push(hex.chars().nth(0).unwrap());
+        scratch.push(hex.chars().nth(1).unwrap());
+        let x: i64 = scratch.parse::<i64>().unwrap() + 32 * location.0;
+        scratch.clear();
+        scratch.push(hex.chars().nth(2).unwrap());
+        scratch.push(hex.chars().nth(3).unwrap());
+        let y: i64 = scratch.parse::<i64>().unwrap() + 40 * location.1;
         let mut y2 = 2 * y;
         if x & 1 == 0 {
             y2 += 1;
