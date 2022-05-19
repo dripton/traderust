@@ -16,7 +16,7 @@ extern crate lazy_static;
 extern crate ndarray;
 use ndarray::Array2;
 extern crate rand;
-use rand::{random, Rng, thread_rng};
+use rand::{random, thread_rng, Rng};
 extern crate reqwest;
 use tempfile::tempdir;
 use url::Url;
@@ -68,6 +68,7 @@ const MAIN_ROUTE_THRESHOLD: f64 = 11.0;
 const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
 const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
+const TRIVIAL_ROUTE_THRESHOLD: f64 = 7.0;
 
 const SCALE: f64 = 15.0;
 const SECTOR_HEX_WIDTH: i64 = 32;
@@ -160,6 +161,37 @@ lazy_static! {
         wpmt.insert((0, "0".to_string()), 0.0);
         wpmt
     };
+
+    // Values in the book are ranges, but use averages for repeatability.
+    static ref DBTN_TO_CREDITS: Vec<u64> = vec![
+        2,
+        7,
+        30,
+        75,
+        300,
+        750,
+        3000,
+        7500,
+        30000,
+        75000,
+        300000,
+        750000,
+        3000000,
+        7500000,
+        30000000,
+        75000000,
+        300000000,
+        750000000,
+        3000000000,
+        75000000000,
+        300000000000,
+        750000000000,
+        3000000000000,
+        7500000000000,
+        30000000000000,
+        75000000000000,
+        300000000000000,
+    ];
 }
 
 fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Result<()> {
@@ -318,37 +350,45 @@ fn populate_trade_routes(
         for jj in ii + 1..dwtn_coords.len() {
             let (dwtn2, coords2) = dwtn_coords[jj];
             let wtn2 = dwtn2 as f64 / 2.0;
-            if wtn2 < MINOR_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
+            if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
                 || wtn1 + wtn2 < MINOR_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
                 // BTN can't be more than the lower WTN + 5, or the sum of
                 // the WTNs plus 1.  So if the lower WTN is less than 3 or
-                // the sum of the WTNs is less than 7, we know that world2
-                // and later worlds won't form any trade routes with
-                // world1.
+                // the sum of the WTNs is less than 6, we know that world2
+                // and later worlds won't come close to forming any trade
+                // routes with world1.
                 break;
             }
             let sld = coords1.straight_line_distance(&coords2) as i64;
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
-            if max_btn1 < MINOR_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
+            if max_btn1 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus 1, so if
-                // even the straight line distance modifier puts us below 7,
-                // we can't form any trade routes with world2.
+                // even the straight line distance modifier puts us below 6,
+                // we can't come close to forming any trade routes with world2.
                 continue;
             }
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-            if max_btn1 < MINOR_ROUTE_THRESHOLD + MAX_WTCM_PENALTY {
+            if max_btn1 < TRIVIAL_ROUTE_THRESHOLD + MAX_WTCM_PENALTY {
                 // Computing the wtcm is cheaper than finding the full BTN
                 let wtcm = world1.wtcm(&world2);
                 let max_btn2 = max_btn1 + wtcm;
-                if max_btn2 < MINOR_ROUTE_THRESHOLD {
+                if max_btn2 < TRIVIAL_ROUTE_THRESHOLD {
                     continue;
                 }
             }
             // At this point we have exhausted ways to skip world2 without
             // computing the BTN.
+            let world1 = coords_to_world.get(&coords1).unwrap();
+            let world2 = coords_to_world.get(&coords2).unwrap();
             let btn = world1.btn(&world2, dist2);
+
+            let dbtn = (2.0 * btn) as usize;
+            let credits = DBTN_TO_CREDITS[dbtn];
+            coords_to_world.get_mut(&coords1).unwrap().trade_credits += credits;
+            coords_to_world.get_mut(&coords2).unwrap().trade_credits += credits;
+
             if btn >= MAJOR_ROUTE_THRESHOLD {
                 coords_to_world
                     .get_mut(&coords1)
@@ -1000,9 +1040,25 @@ fn generate_pdf(
                     }
                     ctx.move_to(
                         cx + 2.0 * SCALE - extents.width / 2.0,
-                        cy + SQRT3 * SCALE * 1.8,
+                        cy + SQRT3 * SCALE * 1.75,
                     );
                     ctx.show_text(&name).unwrap();
+
+                    // DWTN, endpoint trace BTN
+                    // TODO transient trade, port size
+                    ctx.set_font_size(0.35 * SCALE);
+                    ctx.set_font_face(&normal_font_face);
+                    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+                    let dwtn = (world.wtn() * 2.0) as u64;
+                    let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &world.trade_credits);
+                    let trade_btn = trade_dbtn / 2;
+                    let text = format!("{:X}{:X}", dwtn, trade_btn);
+                    let extents = ctx.text_extents(&text).unwrap();
+                    ctx.move_to(
+                        cx + 2.0 * SCALE - extents.width / 2.0,
+                        cy + SQRT3 * SCALE * 1.95,
+                    );
+                    ctx.show_text(&text).unwrap();
 
                     // World circle
                     if world.size() == '0' {
@@ -1165,6 +1221,10 @@ struct World {
     worlds: u64,
     allegiance: String,
     stars: Vec<String>,
+    port_size: u64,
+    trade_credits: u64,
+    endpoint_trade: u64,
+    transient_trade: u64,
     xboat_routes: HashSet<Coords>,
     major_routes: HashSet<Coords>,
     main_routes: HashSet<Coords>,
@@ -1197,6 +1257,10 @@ impl World {
         let mut worlds = 0;
         let mut allegiance = "".to_string();
         let mut stars = Vec::new();
+        let port_size = 0;
+        let trade_credits = 0;
+        let endpoint_trade = 0;
+        let transient_trade = 0;
         let xboat_routes = HashSet::new();
         let major_routes = HashSet::new();
         let main_routes = HashSet::new();
@@ -1309,6 +1373,10 @@ impl World {
             worlds,
             allegiance,
             stars,
+            port_size,
+            trade_credits,
+            endpoint_trade,
+            transient_trade,
             xboat_routes,
             major_routes,
             main_routes,
