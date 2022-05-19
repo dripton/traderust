@@ -1891,8 +1891,8 @@ mod tests {
 
         assert_eq!(aramis.major_routes.len(), 0);
         assert_eq!(aramis.main_routes.len(), 0);
-        assert_eq!(aramis.intermediate_routes.len(), 5); // py 4
-        assert_eq!(aramis.feeder_routes.len(), 7); // py 9
+        assert_eq!(aramis.intermediate_routes.len(), 4);
+        assert_eq!(aramis.feeder_routes.len(), 8); // py 9
         assert_eq!(aramis.minor_routes.len(), 1); // py 0
 
         println!(
@@ -1917,8 +1917,8 @@ mod tests {
         );
 
         assert_eq!(mora.major_routes.len(), 1);
-        assert_eq!(mora.main_routes.len(), 8);
-        assert_eq!(mora.intermediate_routes.len(), 4); // py 5
+        assert_eq!(mora.main_routes.len(), 9); // py 8
+        assert_eq!(mora.intermediate_routes.len(), 3); // py 5
         assert_eq!(mora.feeder_routes.len(), 1); // py 0
         assert_eq!(mora.minor_routes.len(), 0);
 
@@ -1945,9 +1945,9 @@ mod tests {
 
         assert_eq!(jesedipere.major_routes.len(), 0);
         assert_eq!(jesedipere.main_routes.len(), 0);
-        assert_eq!(jesedipere.intermediate_routes.len(), 2); // py 0
-        assert_eq!(jesedipere.feeder_routes.len(), 2); // py 3
-        assert_eq!(jesedipere.minor_routes.len(), 2);
+        assert_eq!(jesedipere.intermediate_routes.len(), 3); // py 0
+        assert_eq!(jesedipere.feeder_routes.len(), 3);
+        assert_eq!(jesedipere.minor_routes.len(), 0); // py 2
 
         println!(
             "jesedipere major {:?}",
@@ -1972,8 +1972,8 @@ mod tests {
 
         assert_eq!(rruthaekuksu.major_routes.len(), 0);
         assert_eq!(rruthaekuksu.main_routes.len(), 0);
-        assert_eq!(rruthaekuksu.intermediate_routes.len(), 0);
-        assert_eq!(rruthaekuksu.feeder_routes.len(), 4);
+        assert_eq!(rruthaekuksu.intermediate_routes.len(), 2); // py 0
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 2); // py 4
         assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
 
         println!(

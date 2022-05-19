@@ -70,6 +70,8 @@ const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 const TRIVIAL_ROUTE_THRESHOLD: f64 = 7.0;
 
+const MIN_DBTN_FOR_JUMP_3: usize = (2.0 * FEEDER_ROUTE_THRESHOLD) as usize;
+
 const SCALE: f64 = 15.0;
 const SECTOR_HEX_WIDTH: i64 = 32;
 const SECTOR_HEX_HEIGHT: i64 = 40;
@@ -295,29 +297,6 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
-/// Promote 3 or more routes to one route of the next larger type
-fn promote_routes(
-    smaller_route_paths: HashMap<(Coords, Coords), u64>,
-    bigger_route_paths: HashMap<(Coords, Coords), u64>,
-) -> (
-    HashMap<(Coords, Coords), u64>,
-    HashMap<(Coords, Coords), u64>,
-) {
-    let mut smaller_route_paths2: HashMap<(Coords, Coords), u64> = HashMap::new();
-    let mut bigger_route_paths2 = bigger_route_paths.clone();
-    for ((coords1, coords2), count) in smaller_route_paths {
-        if count >= 3 {
-            bigger_route_paths2
-                .entry((coords1, coords2))
-                .and_modify(|count2| *count2 += 1)
-                .or_insert(1);
-        } else {
-            smaller_route_paths2.insert((coords1, coords2), count);
-        }
-    }
-    (smaller_route_paths2, bigger_route_paths2)
-}
-
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
 /// and feeder_routes for all Worlds.
 ///
@@ -386,128 +365,28 @@ fn populate_trade_routes(
 
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
-            coords_to_world.get_mut(&coords1).unwrap().trade_credits += credits;
-            coords_to_world.get_mut(&coords2).unwrap().trade_credits += credits;
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .endpoint_trade_credits += credits;
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .endpoint_trade_credits += credits;
 
-            if btn >= MAJOR_ROUTE_THRESHOLD {
-                coords_to_world
-                    .get_mut(&coords1)
-                    .unwrap()
-                    .major_routes
-                    .insert(coords2);
-                coords_to_world
-                    .get_mut(&coords2)
-                    .unwrap()
-                    .major_routes
-                    .insert(*coords1);
-            } else if btn >= MAIN_ROUTE_THRESHOLD {
-                coords_to_world
-                    .get_mut(&coords1)
-                    .unwrap()
-                    .main_routes
-                    .insert(coords2);
-                coords_to_world
-                    .get_mut(&coords2)
-                    .unwrap()
-                    .main_routes
-                    .insert(*coords1);
-            } else if btn >= INTERMEDIATE_ROUTE_THRESHOLD {
-                coords_to_world
-                    .get_mut(&coords1)
-                    .unwrap()
-                    .intermediate_routes
-                    .insert(coords2);
-                coords_to_world
-                    .get_mut(&coords2)
-                    .unwrap()
-                    .intermediate_routes
-                    .insert(*coords1);
-            } else if btn >= FEEDER_ROUTE_THRESHOLD {
-                coords_to_world
-                    .get_mut(&coords1)
-                    .unwrap()
-                    .feeder_routes
-                    .insert(coords2);
-                coords_to_world
-                    .get_mut(&coords2)
-                    .unwrap()
-                    .feeder_routes
-                    .insert(*coords1);
-            } else if btn >= MINOR_ROUTE_THRESHOLD {
-                coords_to_world
-                    .get_mut(&coords1)
-                    .unwrap()
-                    .minor_routes
-                    .insert(coords2);
-                coords_to_world
-                    .get_mut(&coords2)
-                    .unwrap()
-                    .minor_routes
-                    .insert(*coords1);
-            }
+            coords_to_world.get_mut(&coords1).unwrap().dbtn_to_coords[dbtn].insert(coords2);
+            coords_to_world.get_mut(&coords2).unwrap().dbtn_to_coords[dbtn].insert(*coords1);
         }
     }
 
-    let mut major_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
-    let mut main_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
-    let mut intermediate_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
-    let mut feeder_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
-    let mut minor_route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
 
     for (_, coords) in dwtn_coords.iter() {
         let world = coords_to_world.get(&coords).unwrap();
         world.find_route_paths(
-            &mut major_route_paths,
-            &world.major_routes,
-            3,
-            &sorted_coords,
-            &coords_to_world,
-            &coords_to_index,
-            &dist2,
-            &pred2,
-            &dist3,
-            &pred3,
-        );
-        world.find_route_paths(
-            &mut main_route_paths,
-            &world.main_routes,
-            3,
-            &sorted_coords,
-            &coords_to_world,
-            &coords_to_index,
-            &dist2,
-            &pred2,
-            &dist3,
-            &pred3,
-        );
-        world.find_route_paths(
-            &mut intermediate_route_paths,
-            &world.intermediate_routes,
-            3,
-            &sorted_coords,
-            &coords_to_world,
-            &coords_to_index,
-            &dist2,
-            &pred2,
-            &dist3,
-            &pred3,
-        );
-        world.find_route_paths(
-            &mut feeder_route_paths,
-            &world.feeder_routes,
-            3,
-            &sorted_coords,
-            &coords_to_world,
-            &coords_to_index,
-            &dist2,
-            &pred2,
-            &dist3,
-            &pred3,
-        );
-        world.find_route_paths(
-            &mut minor_route_paths,
-            &world.minor_routes,
-            2,
+            &mut route_paths,
+            &mut coords_to_transient_credits,
             &sorted_coords,
             &coords_to_world,
             &coords_to_index,
@@ -518,183 +397,72 @@ fn populate_trade_routes(
         );
     }
 
-    (minor_route_paths, feeder_route_paths) = promote_routes(minor_route_paths, feeder_route_paths);
-    (feeder_route_paths, intermediate_route_paths) =
-        promote_routes(feeder_route_paths, intermediate_route_paths);
-    (intermediate_route_paths, main_route_paths) =
-        promote_routes(intermediate_route_paths, main_route_paths);
-    (main_route_paths, major_route_paths) = promote_routes(main_route_paths, major_route_paths);
-
-    // Clear out existing routes from all worlds
-    for (_, coords) in dwtn_coords {
-        let world = coords_to_world.get_mut(&coords).unwrap();
-        world.major_routes.clear();
-        world.main_routes.clear();
-        world.intermediate_routes.clear();
-        world.feeder_routes.clear();
-        world.minor_routes.clear();
+    for ((coords1, coords2), credits) in route_paths {
+        let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
+        let trade_btn = trade_dbtn as f64 / 2.0;
+        if trade_btn >= MAJOR_ROUTE_THRESHOLD {
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .major_routes
+                .insert(coords2);
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .major_routes
+                .insert(coords1);
+        } else if trade_btn >= MAIN_ROUTE_THRESHOLD {
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .main_routes
+                .insert(coords2);
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .main_routes
+                .insert(coords1);
+        } else if trade_btn >= INTERMEDIATE_ROUTE_THRESHOLD {
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .intermediate_routes
+                .insert(coords2);
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .intermediate_routes
+                .insert(coords1);
+        } else if trade_btn >= FEEDER_ROUTE_THRESHOLD {
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .feeder_routes
+                .insert(coords2);
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .feeder_routes
+                .insert(coords1);
+        } else if trade_btn >= MINOR_ROUTE_THRESHOLD {
+            coords_to_world
+                .get_mut(&coords1)
+                .unwrap()
+                .minor_routes
+                .insert(coords2);
+            coords_to_world
+                .get_mut(&coords2)
+                .unwrap()
+                .minor_routes
+                .insert(coords1);
+        }
     }
 
-    // Keep only the largest route for each pair of coords
-    for (coords1, coords2) in minor_route_paths.keys() {
+    for (coords, credits) in coords_to_transient_credits {
         coords_to_world
-            .get_mut(&coords1)
+            .get_mut(&coords)
             .unwrap()
-            .minor_routes
-            .insert(*coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .minor_routes
-            .insert(*coords1);
-    }
-    for (coords1, coords2) in feeder_route_paths.keys() {
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .feeder_routes
-            .insert(*coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .feeder_routes
-            .insert(*coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .minor_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .minor_routes
-            .remove(coords1);
-    }
-    for (coords1, coords2) in intermediate_route_paths.keys() {
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .intermediate_routes
-            .insert(*coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .intermediate_routes
-            .insert(*coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .feeder_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .feeder_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .minor_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .minor_routes
-            .remove(coords1);
-    }
-    for (coords1, coords2) in main_route_paths.keys() {
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .main_routes
-            .insert(*coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .main_routes
-            .insert(*coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .intermediate_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .intermediate_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .feeder_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .feeder_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .minor_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .minor_routes
-            .remove(coords1);
-    }
-    for (coords1, coords2) in major_route_paths.keys() {
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .major_routes
-            .insert(*coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .major_routes
-            .insert(*coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .main_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .main_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .intermediate_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .intermediate_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .feeder_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .feeder_routes
-            .remove(coords1);
-        coords_to_world
-            .get_mut(&coords1)
-            .unwrap()
-            .minor_routes
-            .remove(coords2);
-        coords_to_world
-            .get_mut(&coords2)
-            .unwrap()
-            .minor_routes
-            .remove(coords1);
+            .transient_trade_credits += credits;
     }
 }
 
@@ -1050,9 +818,13 @@ fn generate_pdf(
                     ctx.set_font_face(&normal_font_face);
                     ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
                     let dwtn = (world.wtn() * 2.0) as u64;
-                    let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &world.trade_credits);
-                    let trade_btn = trade_dbtn / 2;
-                    let text = format!("{:X}{:X}", dwtn, trade_btn);
+                    let endpoint_dbtn =
+                        bisect_left(&DBTN_TO_CREDITS, &world.endpoint_trade_credits);
+                    let endpoint_btn = endpoint_dbtn / 2;
+                    let transient_dbtn =
+                        bisect_left(&DBTN_TO_CREDITS, &world.transient_trade_credits);
+                    let transient_btn = transient_dbtn / 2;
+                    let text = format!("{:X}{:X}{:X}", dwtn, endpoint_btn, transient_btn);
                     let extents = ctx.text_extents(&text).unwrap();
                     ctx.move_to(
                         cx + 2.0 * SCALE - extents.width / 2.0,
@@ -1222,10 +994,10 @@ struct World {
     allegiance: String,
     stars: Vec<String>,
     port_size: u64,
-    trade_credits: u64,
-    endpoint_trade: u64,
-    transient_trade: u64,
+    endpoint_trade_credits: u64,
+    transient_trade_credits: u64,
     xboat_routes: HashSet<Coords>,
+    dbtn_to_coords: Vec<HashSet<Coords>>,
     major_routes: HashSet<Coords>,
     main_routes: HashSet<Coords>,
     intermediate_routes: HashSet<Coords>,
@@ -1258,10 +1030,16 @@ impl World {
         let mut allegiance = "".to_string();
         let mut stars = Vec::new();
         let port_size = 0;
-        let trade_credits = 0;
-        let endpoint_trade = 0;
-        let transient_trade = 0;
+        let endpoint_trade_credits = 0;
+        let transient_trade_credits = 0;
         let xboat_routes = HashSet::new();
+        let mut dbtn_to_coords = Vec::new();
+        // Pre-populate every dbtn bucket with an empty set so we don't need
+        // to deal with checking later.
+        for _ in 0..DBTN_TO_CREDITS.len() {
+            let set = HashSet::new();
+            dbtn_to_coords.push(set);
+        }
         let major_routes = HashSet::new();
         let main_routes = HashSet::new();
         let intermediate_routes = HashSet::new();
@@ -1374,10 +1152,10 @@ impl World {
             allegiance,
             stars,
             port_size,
-            trade_credits,
-            endpoint_trade,
-            transient_trade,
+            endpoint_trade_credits,
+            transient_trade_credits,
             xboat_routes,
+            dbtn_to_coords,
             major_routes,
             main_routes,
             intermediate_routes,
@@ -1634,8 +1412,7 @@ impl World {
     fn find_route_paths(
         &self,
         route_paths: &mut HashMap<(Coords, Coords), u64>,
-        routes: &HashSet<Coords>,
-        max_jump: u64,
+        coords_to_transient_credits: &mut HashMap<Coords, u64>,
         sorted_coords: &Vec<Coords>,
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
@@ -1644,40 +1421,50 @@ impl World {
         dist3: &Array2<i64>,
         pred3: &Array2<i64>,
     ) {
-        for coords2 in routes {
-            let world2 = coords_to_world.get(&coords2).unwrap();
-            let mut path: Vec<Coords> = Vec::new();
-            let possible_path2 =
-                self.navigable_path(world2, sorted_coords, coords_to_index, dist2, pred2);
-            let mut possible_path3 = None;
-            if max_jump == 3 {
-                possible_path3 =
-                    self.navigable_path(world2, sorted_coords, coords_to_index, dist3, pred3);
-            }
-            if let Some(path2) = possible_path2 {
-                path = path2;
-                if let Some(path3) = possible_path3 {
-                    if path3.len() < path.len() {
-                        path = path3;
-                    }
+        for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
+            let credits = DBTN_TO_CREDITS[dbtn];
+            for coords2 in coords_set {
+                let world2 = coords_to_world.get(&coords2).unwrap();
+                let mut path: Vec<Coords> = Vec::new();
+                let possible_path2 =
+                    self.navigable_path(world2, sorted_coords, coords_to_index, dist2, pred2);
+                let mut possible_path3 = None;
+                if dbtn >= MIN_DBTN_FOR_JUMP_3 {
+                    possible_path3 =
+                        self.navigable_path(world2, sorted_coords, coords_to_index, dist3, pred3);
                 }
-            } else if let Some(path3) = possible_path3 {
-                path = path3;
-            }
-            if path.len() >= 2 {
-                for ii in 0..path.len() - 1 {
-                    let first = path.get(ii).unwrap();
-                    let second = path.get(ii + 1).unwrap();
-                    let coord_tup: (Coords, Coords);
-                    if first <= second {
-                        coord_tup = (*first, *second);
-                    } else {
-                        coord_tup = (*second, *first);
+                if let Some(path2) = possible_path2 {
+                    path = path2;
+                    if let Some(path3) = possible_path3 {
+                        if path3.len() < path.len() {
+                            path = path3;
+                        }
                     }
-                    route_paths
-                        .entry(coord_tup)
-                        .and_modify(|count| *count += 1)
-                        .or_insert(1);
+                } else if let Some(path3) = possible_path3 {
+                    path = path3;
+                }
+                if path.len() >= 2 {
+                    for ii in 0..path.len() - 1 {
+                        let first = path.get(ii).unwrap();
+                        let second = path.get(ii + 1).unwrap();
+                        let coord_tup: (Coords, Coords);
+                        if first <= second {
+                            coord_tup = (*first, *second);
+                        } else {
+                            coord_tup = (*second, *first);
+                        }
+                        route_paths
+                            .entry(coord_tup)
+                            .and_modify(|count| *count += credits)
+                            .or_insert(credits);
+                    }
+                    for jj in 1..path.len() - 2 {
+                        let coords3 = path.get(jj).unwrap();
+                        coords_to_transient_credits
+                            .entry(*coords3)
+                            .and_modify(|transient| *transient += credits)
+                            .or_insert(credits);
+                    }
                 }
             }
         }
