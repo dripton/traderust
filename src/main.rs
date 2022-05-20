@@ -72,7 +72,7 @@ const MAIN_ROUTE_THRESHOLD: f64 = 11.0;
 const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
 const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
-const TRIVIAL_ROUTE_THRESHOLD: f64 = 7.0;
+const TRIVIAL_ROUTE_THRESHOLD: f64 = 6.5;
 
 const NON_IMPERIAL_PORT_SIZE_PENALTY: f64 = 0.5;
 const NEIGHBOR_1_PORT_SIZE_BONUS: f64 = 1.5;
@@ -354,19 +354,20 @@ fn populate_trade_routes(
             if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
                 || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
-                // BTN can't be more than the lower WTN + 5, or the sum of
-                // the WTNs plus 1.  So if the lower WTN is less than 2 or
-                // the sum of the WTNs is less than 6, we know that world2
-                // and later worlds won't come close to forming any trade
-                // routes with world1.
+                // BTN can't be more than the lower WTN + 5, or the sum of the
+                // WTNs plus 1.  So if the lower WTN or the sum of the the sum
+                // of the WTNs is small enough, we know that coords2 and later
+                // worlds won't come close to forming any trade routes with
+                // coords1.
                 break;
             }
             let sld = coords1.straight_line_distance(&coords2) as i64;
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
             if max_btn1 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
-                // BTN can't be more than the sum of the WTNs plus 1, so if
-                // even the straight line distance modifier puts us below 6,
-                // we can't come close to forming any trade routes with world2.
+                // BTN can't be more than the sum of the WTNs plus the bonus,
+                // so if even the straight line distance modifier puts us too
+                // low, we can't come close to forming any trade routes with
+                // world2.
                 continue;
             }
             let world1 = coords_to_world.get(&coords1).unwrap();
