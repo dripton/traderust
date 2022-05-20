@@ -355,7 +355,7 @@ fn populate_trade_routes(
                 || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
                 // BTN can't be more than the lower WTN + 5, or the sum of
-                // the WTNs plus 1.  So if the lower WTN is less than 3 or
+                // the WTNs plus 1.  So if the lower WTN is less than 2 or
                 // the sum of the WTNs is less than 6, we know that world2
                 // and later worlds won't come close to forming any trade
                 // routes with world1.
