@@ -1,4 +1,5 @@
 use anyhow::Result;
+use log::debug;
 use std::collections::{HashMap, HashSet};
 use std::fs::create_dir_all;
 use std::path::PathBuf;
@@ -1450,7 +1451,7 @@ mod tests {
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 11);
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(
                 path,
@@ -1476,7 +1477,7 @@ mod tests {
             aramis.navigable_path(corfu, &sorted_coords, &coords_to_index, &dist3, &pred3);
         if let Some(path) = path_opt {
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(path.len(), 6);
             assert_eq!(
@@ -1498,7 +1499,7 @@ mod tests {
             aramis.navigable_path(mongo, &sorted_coords, &coords_to_index, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(path.len(), 13);
             assert_eq!(
@@ -1527,7 +1528,7 @@ mod tests {
             aramis.navigable_path(collace, &sorted_coords, &coords_to_index, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(path.len(), 20);
             assert_eq!(
@@ -1562,7 +1563,7 @@ mod tests {
         let path_opt = reno.navigable_path(javan, &sorted_coords, &coords_to_index, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(path.len(), 33);
         } else {
@@ -1585,7 +1586,7 @@ mod tests {
             aramis.navigable_path(andor, &sorted_coords, &coords_to_index, &dist3, &pred3);
         if let Some(path) = path_opt {
             for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
+                debug!("{}", coords_to_world.get(&coords).unwrap().name);
             }
             assert_eq!(path.len(), 17);
         } else {
@@ -1895,23 +1896,23 @@ mod tests {
         assert_eq!(aramis.feeder_routes.len(), 8); // py 9
         assert_eq!(aramis.minor_routes.len(), 1); // py 0
 
-        println!(
+        debug!(
             "aramis major {:?}",
             set_to_worlds(&aramis.major_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "aramis main {:?}",
             set_to_worlds(&aramis.main_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "aramis intermediate {:?}",
             set_to_worlds(&aramis.intermediate_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "aramis feeder {:?}",
             set_to_worlds(&aramis.feeder_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "aramis minor {:?}",
             set_to_worlds(&aramis.minor_routes, &coords_to_world)
         );
@@ -1922,23 +1923,23 @@ mod tests {
         assert_eq!(mora.feeder_routes.len(), 1); // py 0
         assert_eq!(mora.minor_routes.len(), 0);
 
-        println!(
+        debug!(
             "mora major {:?}",
             set_to_worlds(&mora.major_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "mora main {:?}",
             set_to_worlds(&mora.main_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "mora intermediate {:?}",
             set_to_worlds(&mora.intermediate_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "mora feeder {:?}",
             set_to_worlds(&mora.feeder_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "mora minor {:?}",
             set_to_worlds(&mora.minor_routes, &coords_to_world)
         );
@@ -1949,23 +1950,23 @@ mod tests {
         assert_eq!(jesedipere.feeder_routes.len(), 3);
         assert_eq!(jesedipere.minor_routes.len(), 0); // py 2
 
-        println!(
+        debug!(
             "jesedipere major {:?}",
             set_to_worlds(&jesedipere.major_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "jesedipere main {:?}",
             set_to_worlds(&jesedipere.main_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "jesedipere intermediate {:?}",
             set_to_worlds(&jesedipere.intermediate_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "jesedipere feeder {:?}",
             set_to_worlds(&jesedipere.feeder_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "jesedipere minor {:?}",
             set_to_worlds(&jesedipere.minor_routes, &coords_to_world)
         );
@@ -1976,23 +1977,23 @@ mod tests {
         assert_eq!(rruthaekuksu.feeder_routes.len(), 2); // py 4
         assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
 
-        println!(
+        debug!(
             "rruthaekuksu major {:?}",
             set_to_worlds(&rruthaekuksu.major_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "rruthaekuksu main {:?}",
             set_to_worlds(&rruthaekuksu.main_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "rruthaekuksu intermediate {:?}",
             set_to_worlds(&rruthaekuksu.intermediate_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "rruthaekuksu feeder {:?}",
             set_to_worlds(&rruthaekuksu.feeder_routes, &coords_to_world)
         );
-        println!(
+        debug!(
             "rruthaekuksu minor {:?}",
             set_to_worlds(&rruthaekuksu.minor_routes, &coords_to_world)
         );

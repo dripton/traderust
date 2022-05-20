@@ -5,6 +5,7 @@ use cairo::{Context, FontFace, FontSlant, FontWeight, PdfSurface};
 use clap::Parser;
 use clap_verbosity_flag;
 use elementtree::Element;
+use log::debug;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::{PI, TAU};
@@ -204,6 +205,7 @@ lazy_static! {
 }
 
 fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Result<()> {
+    debug!("download_sector_data");
     for sector_name in sector_names {
         let sector_data_filename = sector_name.to_owned() + ".sec";
         let mut data_path = data_dir.clone();
@@ -214,11 +216,13 @@ fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Resul
         let base_url = Url::parse("https://travellermap.com/data/")?;
         if !data_path.exists() {
             let data_url = base_url.join(sector_name)?;
+            debug!("downloading {}", data_url);
             let body = reqwest::blocking::get(data_url)?.text()?;
             write(data_path, body)?;
         }
         if !metadata_path.exists() {
             let metadata_url = base_url.join(&(sector_name.to_owned() + "/metadata"))?;
+            debug!("downloading {}", metadata_url);
             let body = reqwest::blocking::get(metadata_url)?.text()?;
             write(metadata_path, body)?;
         }
@@ -251,8 +255,10 @@ fn populate_navigable_distances(
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
 ) -> (Array2<i64>, Array2<i64>) {
+    debug!("populate_navigable_distances max_jump={}", max_jump);
     let num_worlds = sorted_coords.len();
     let mut np = Array2::<i64>::zeros((num_worlds, num_worlds));
+    let mut num_edges = 0;
     for (ii, coords) in sorted_coords.iter().enumerate() {
         let world = coords_to_world.get(coords).unwrap();
         if max_jump >= 3 {
@@ -260,6 +266,7 @@ fn populate_navigable_distances(
                 let neighbor = coords_to_world.get(&coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 3;
+                num_edges += 1;
             }
         }
         if max_jump >= 2 {
@@ -267,6 +274,7 @@ fn populate_navigable_distances(
                 let neighbor = coords_to_world.get(&coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 2;
+                num_edges += 1;
             }
         }
         if max_jump >= 1 {
@@ -274,15 +282,19 @@ fn populate_navigable_distances(
                 let neighbor = coords_to_world.get(&coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 1;
+                num_edges += 1;
             }
         }
         for coords in &world.xboat_routes {
             let neighbor = coords_to_world.get(&coords).unwrap();
             let jj = neighbor.index.unwrap();
             np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
+            num_edges += 1;
         }
     }
+    debug!("dijkstra worlds={} edges={}", num_worlds, num_edges);
     let pred = dijkstra(&mut np);
+    debug!("dijkstra finished");
     return (np, pred);
 }
 
@@ -321,6 +333,7 @@ fn populate_trade_routes(
     dist3: &Array2<i64>,
     pred3: &Array2<i64>,
 ) {
+    debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
     for (coords, world) in coords_to_world.iter() {
         // wtn can have 0.5 so double it to make a sortable integer
@@ -389,6 +402,7 @@ fn populate_trade_routes(
     let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
 
+    debug!("Finding route paths");
     for (_, coords) in dwtn_coords.iter() {
         let world = coords_to_world.get(&coords).unwrap();
         world.find_route_paths(
@@ -946,6 +960,7 @@ fn generate_pdfs(
     location_to_sector: &HashMap<(i64, i64), Sector>,
     coords_to_world: &HashMap<Coords, World>,
 ) {
+    debug!("generate_pdfs");
     for sector in location_to_sector.values() {
         generate_pdf(sector, output_dir, location_to_sector, coords_to_world);
     }
@@ -1782,18 +1797,23 @@ fn main() -> Result<()> {
         data_dir = data_dir_override;
     };
     let sector_names = args.sector;
+    let verbose = args.verbose;
+
+    debug!("Start");
 
     create_dir_all(&output_dir)?;
     create_dir_all(&data_dir)?;
 
     download_sector_data(&data_dir, &sector_names)?;
 
+    debug!("Building sectors");
     let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
     let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
     for sector_name in sector_names {
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
         location_to_sector.insert(sector.location, sector);
     }
+    debug!("Building routes and neighbors");
     for sector in location_to_sector.values() {
         sector
             .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
@@ -1831,6 +1851,8 @@ fn main() -> Result<()> {
     generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
 
     temp_dir.close()?;
+
+    debug!("Exit");
 
     Ok(())
 }

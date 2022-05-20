@@ -9,6 +9,8 @@ use bucket_queue::*;
 extern crate ndarray;
 use ndarray::Array2;
 
+use log::debug;
+
 pub const NO_PRED_NODE: i64 = -9999;
 pub const INFINITY: i64 = i64::MAX;
 
@@ -258,13 +260,13 @@ mod tests {
         dist[[1, 3]] = 1;
         dist[[2, 0]] = 2;
         dist[[2, 3]] = 3;
-        println!("dist before {:?}\n", dist);
+        debug!("dist before {:?}\n", dist);
         return dist;
     }
 
     fn compare_scipy_test(dist: Array2<i64>, pred: Array2<i64>) {
-        println!("dist after {:?}\n", dist);
-        println!("pred after {:?}\n", pred);
+        debug!("dist after {:?}\n", dist);
+        debug!("pred after {:?}\n", pred);
 
         assert_eq!(dist[[0, 0]], 0);
         assert_eq!(dist[[0, 1]], 1);

@@ -14,6 +14,7 @@ clap = { version = "3.1.17", features = ["derive"] }
 clap-verbosity-flag = "1.0.0"
 elementtree = "0.7.0"
 lazy_static = "1.4.0"
+log = "0.4.17"
 ndarray = { version = "0.15.4", features = ["serde", "rayon"] }
 rand = "0.8.5"
 rayon = "1.0"

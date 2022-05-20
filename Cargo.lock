@@ -1374,6 +1374,7 @@ dependencies = [
  "clap-verbosity-flag",
  "elementtree",
  "lazy_static",
+ "log",
  "ndarray",
  "rand",
  "rayon",
