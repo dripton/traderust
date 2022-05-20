@@ -17,6 +17,7 @@ extern crate ndarray;
 use ndarray::Array2;
 extern crate rand;
 use rand::{random, thread_rng, Rng};
+use rayon::prelude::*;
 extern crate reqwest;
 use tempfile::tempdir;
 use url::Url;
@@ -402,21 +403,37 @@ fn populate_trade_routes(
     }
 
     debug!("Finding route paths");
+
+    let result_tuples: Vec<(HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>)>;
+    result_tuples = dwtn_coords
+        .into_par_iter()
+        .map(|(_, coords)| {
+            coords_to_world.get(&coords).unwrap().find_route_paths(
+                &sorted_coords,
+                &coords_to_world,
+                &coords_to_index,
+                &dist2,
+                &pred2,
+                &dist3,
+                &pred3,
+            )
+        })
+        .collect();
     let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
-    for (_, coords) in dwtn_coords.iter() {
-        let world = coords_to_world.get(&coords).unwrap();
-        world.find_route_paths(
-            &mut route_paths,
-            &mut coords_to_transient_credits,
-            &sorted_coords,
-            &coords_to_world,
-            &coords_to_index,
-            &dist2,
-            &pred2,
-            &dist3,
-            &pred3,
-        );
+    for (rp, cttc) in result_tuples {
+        for (coord_tup, credits) in rp {
+            route_paths
+                .entry(coord_tup)
+                .and_modify(|count| *count += credits)
+                .or_insert(credits);
+        }
+        for (coords, credits) in cttc {
+            coords_to_transient_credits
+                .entry(coords)
+                .and_modify(|count| *count += credits)
+                .or_insert(credits);
+        }
     }
 
     debug!("Inserting trade routes");
@@ -1438,8 +1455,6 @@ impl World {
 
     fn find_route_paths(
         &self,
-        route_paths: &mut HashMap<(Coords, Coords), u64>,
-        coords_to_transient_credits: &mut HashMap<Coords, u64>,
         sorted_coords: &Vec<Coords>,
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
@@ -1447,7 +1462,9 @@ impl World {
         pred2: &Array2<i64>,
         dist3: &Array2<i64>,
         pred3: &Array2<i64>,
-    ) {
+    ) -> (HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>) {
+        let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+        let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let credits = DBTN_TO_CREDITS[dbtn];
             for coords2 in coords_set {
@@ -1495,6 +1512,7 @@ impl World {
                 }
             }
         }
+        (route_paths, coords_to_transient_credits)
     }
 
     fn imperial_affiliated(&self) -> bool {
