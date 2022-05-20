@@ -70,6 +70,13 @@ const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 const TRIVIAL_ROUTE_THRESHOLD: f64 = 7.0;
 
+const NON_IMPERIAL_PORT_SIZE_PENALTY: f64 = 0.5;
+const NEIGHBOR_1_PORT_SIZE_BONUS: f64 = 1.5;
+const NEIGHBOR_2_PORT_SIZE_BONUS: f64 = 1.0;
+const XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE: f64 = 6.0;
+const FEEDER_ROUTE_MIN_PORT_SIZE: f64 = 5.0;
+const MINOR_ROUTE_MIN_PORT_SIZE: f64 = 4.0;
+
 const MIN_DBTN_FOR_JUMP_3: usize = (2.0 * FEEDER_ROUTE_THRESHOLD) as usize;
 
 const SCALE: f64 = 15.0;
@@ -812,8 +819,7 @@ fn generate_pdf(
                     );
                     ctx.show_text(&name).unwrap();
 
-                    // DWTN, endpoint trace BTN
-                    // TODO transient trade, port size
+                    // DWTN, endpoint trace BTN, transient trade BTN, port size
                     ctx.set_font_size(0.35 * SCALE);
                     ctx.set_font_face(&normal_font_face);
                     ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
@@ -824,7 +830,13 @@ fn generate_pdf(
                     let transient_dbtn =
                         bisect_left(&DBTN_TO_CREDITS, &world.transient_trade_credits);
                     let transient_btn = transient_dbtn / 2;
-                    let text = format!("{:X}{:X}{:X}", dwtn, endpoint_btn, transient_btn);
+                    let text = format!(
+                        "{:X}{:X}{:X}{:X}",
+                        dwtn,
+                        endpoint_btn,
+                        transient_btn,
+                        world.port_size()
+                    );
                     let extents = ctx.text_extents(&text).unwrap();
                     ctx.move_to(
                         cx + 2.0 * SCALE - extents.width / 2.0,
@@ -993,7 +1005,6 @@ struct World {
     worlds: u64,
     allegiance: String,
     stars: Vec<String>,
-    port_size: u64,
     endpoint_trade_credits: u64,
     transient_trade_credits: u64,
     xboat_routes: HashSet<Coords>,
@@ -1029,7 +1040,6 @@ impl World {
         let mut worlds = 0;
         let mut allegiance = "".to_string();
         let mut stars = Vec::new();
-        let port_size = 0;
         let endpoint_trade_credits = 0;
         let transient_trade_credits = 0;
         let xboat_routes = HashSet::new();
@@ -1151,7 +1161,6 @@ impl World {
             worlds,
             allegiance,
             stars,
-            port_size,
             endpoint_trade_credits,
             transient_trade_credits,
             xboat_routes,
@@ -1468,6 +1477,43 @@ impl World {
                 }
             }
         }
+    }
+
+    fn imperial_affiliated(&self) -> bool {
+        self.allegiance == "CsIm"
+            || self.allegiance.chars().nth(0).unwrap() == 'I'
+                && self.allegiance.chars().nth(1).unwrap() == 'm'
+    }
+
+    // This only works after trade routes are built.
+    fn port_size(&self) -> u64 {
+        let mut port_size = self.wtn();
+        if !self.imperial_affiliated() {
+            port_size -= NON_IMPERIAL_PORT_SIZE_PENALTY;
+        }
+        if self.neighbors1.len() > 0 {
+            port_size += NEIGHBOR_1_PORT_SIZE_BONUS;
+        } else if self.neighbors2.len() > 0 {
+            port_size += NEIGHBOR_2_PORT_SIZE_BONUS;
+        }
+        port_size = f64::ceil(port_size);
+        if self.xboat_routes.len() > 0 || self.major_routes.len() > 0 {
+            if port_size < XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE {
+                port_size = XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE;
+            }
+        } else if self.main_routes.len() > 0
+            || self.intermediate_routes.len() > 0
+            || self.feeder_routes.len() > 0
+        {
+            if port_size < FEEDER_ROUTE_MIN_PORT_SIZE {
+                port_size = FEEDER_ROUTE_MIN_PORT_SIZE;
+            }
+        } else if self.minor_routes.len() > 0 {
+            if port_size < MINOR_ROUTE_MIN_PORT_SIZE {
+                port_size = MINOR_ROUTE_MIN_PORT_SIZE;
+            }
+        }
+        port_size as u64
     }
 }
 

@@ -1999,4 +1999,76 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_port_size(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        let gvur = Sector::new(&data_dir, "Gvurrdon".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        location_to_sector.insert(gvur.location, gvur.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
+            }
+        }
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+
+        populate_trade_routes(
+            &mut coords_to_world,
+            &coords_to_index,
+            &sorted_coords,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+
+        let aramis = spin
+            .hex_to_world("3110".to_string(), &coords_to_world)
+            .unwrap();
+        let mora = spin
+            .hex_to_world("3124".to_string(), &coords_to_world)
+            .unwrap();
+        let jesedipere = spin
+            .hex_to_world("3001".to_string(), &coords_to_world)
+            .unwrap();
+        let rruthaekuksu = gvur
+            .hex_to_world("2840".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(aramis.port_size(), 6);
+        assert_eq!(mora.port_size(), 8);
+        assert_eq!(jesedipere.port_size(), 5);
+        assert_eq!(rruthaekuksu.port_size(), 5);
+
+        Ok(())
+    }
 }
