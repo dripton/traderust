@@ -297,7 +297,6 @@ fn populate_navigable_distances(
     }
     debug!("dijkstra worlds={} edges={}", num_worlds, num_edges);
     let pred = dijkstra(&mut np);
-    debug!("dijkstra finished");
     return (np, pred);
 }
 
