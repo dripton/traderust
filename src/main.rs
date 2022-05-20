@@ -3,7 +3,6 @@ use bisection::bisect_left;
 extern crate cairo;
 use cairo::{Context, FontFace, FontSlant, FontWeight, PdfSurface};
 use clap::Parser;
-use clap_verbosity_flag;
 use elementtree::Element;
 use log::debug;
 use std::cmp::Ordering;
@@ -41,8 +40,11 @@ struct Args {
     #[clap(short, long, default_value = "/var/tmp")]
     output_directory: PathBuf,
 
-    #[clap(flatten)]
-    verbose: clap_verbosity_flag::Verbosity,
+    #[clap(short, long, parse(from_occurrences))]
+    verbose: usize,
+
+    #[clap(short)]
+    quiet: bool,
 }
 
 const SQRT3: f64 = 1.7320508075688772;
@@ -1798,6 +1800,15 @@ fn main() -> Result<()> {
     };
     let sector_names = args.sector;
     let verbose = args.verbose;
+    let quiet = args.quiet;
+
+    stderrlog::new()
+        .module(module_path!())
+        .quiet(quiet)
+        .verbosity(verbose)
+        .timestamp(stderrlog::Timestamp::Millisecond)
+        .init()
+        .unwrap();
 
     debug!("Start");
 
