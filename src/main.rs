@@ -345,7 +345,7 @@ fn populate_trade_routes(
     dwtn_coords.sort();
     dwtn_coords.reverse();
 
-    // Add initial endpoint-only routes to both endpoints
+    // Add endpoint trade credits to both endpoints
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
         for jj in ii + 1..dwtn_coords.len() {
