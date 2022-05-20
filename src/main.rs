@@ -352,7 +352,7 @@ fn populate_trade_routes(
             let (dwtn2, coords2) = dwtn_coords[jj];
             let wtn2 = dwtn2 as f64 / 2.0;
             if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
-                || wtn1 + wtn2 < MINOR_ROUTE_THRESHOLD - MAX_WTCM_BONUS
+                || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
                 // BTN can't be more than the lower WTN + 5, or the sum of
                 // the WTNs plus 1.  So if the lower WTN is less than 3 or
