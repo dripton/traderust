@@ -980,9 +980,10 @@ fn generate_pdfs(
     coords_to_world: &HashMap<Coords, World>,
 ) {
     debug!("generate_pdfs");
-    for sector in location_to_sector.values() {
-        generate_pdf(sector, output_dir, location_to_sector, coords_to_world);
-    }
+    location_to_sector
+        .par_iter()
+        .map(|(_, sector)| generate_pdf(sector, output_dir, location_to_sector, coords_to_world))
+        .collect::<Vec<()>>();
 }
 
 /// Absolute coordinates
