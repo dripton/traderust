@@ -401,10 +401,9 @@ fn populate_trade_routes(
         }
     }
 
+    debug!("Finding route paths");
     let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
-
-    debug!("Finding route paths");
     for (_, coords) in dwtn_coords.iter() {
         let world = coords_to_world.get(&coords).unwrap();
         world.find_route_paths(
@@ -420,6 +419,7 @@ fn populate_trade_routes(
         );
     }
 
+    debug!("Inserting trade routes");
     for ((coords1, coords2), credits) in route_paths {
         let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
         let trade_btn = trade_dbtn as f64 / 2.0;
@@ -481,6 +481,7 @@ fn populate_trade_routes(
         }
     }
 
+    debug!("Updating transient credits");
     for (coords, credits) in coords_to_transient_credits {
         coords_to_world
             .get_mut(&coords)
@@ -1810,7 +1811,7 @@ fn main() -> Result<()> {
         .init()
         .unwrap();
 
-    debug!("Start");
+    debug!("sectors {:?}", sector_names);
 
     create_dir_all(&output_dir)?;
     create_dir_all(&data_dir)?;
