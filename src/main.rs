@@ -1844,7 +1844,7 @@ fn main() -> Result<()> {
         .init()
         .unwrap();
 
-    debug!("sectors {:?}", sector_names);
+    debug!("{} sectors", sector_names.len());
 
     create_dir_all(&output_dir)?;
     create_dir_all(&data_dir)?;
