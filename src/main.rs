@@ -295,7 +295,7 @@ fn populate_navigable_distances(
             num_edges += 1;
         }
     }
-    debug!("dijkstra worlds={} edges={}", num_worlds, num_edges);
+    debug!("(parallel) dijkstra worlds={} edges={}", num_worlds, num_edges);
     let pred = dijkstra(&mut np);
     return (np, pred);
 }
@@ -345,9 +345,9 @@ fn populate_trade_routes(
     dwtn_coords.sort();
     dwtn_coords.reverse();
 
-    let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
-
+    debug!("Building world trade pairs");
     // Add endpoint trade credits to both endpoints
+    let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
         for jj in ii + 1..dwtn_coords.len() {
@@ -388,7 +388,7 @@ fn populate_trade_routes(
         }
     }
 
-    debug!("Finding BTNs");
+    debug!("(parallel) Finding BTNs");
     let coords_coords_dbtn_credits: Vec<(Coords, Coords, usize, u64)> = coords_pairs
         .into_par_iter()
         .map(|(coords1, coords2)| {
@@ -416,7 +416,7 @@ fn populate_trade_routes(
         coords_to_world.get_mut(&coords2).unwrap().dbtn_to_coords[dbtn].insert(coords1);
     }
 
-    debug!("Finding route paths");
+    debug!("(parallel) Finding route paths");
 
     let result_tuples: Vec<(HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>)>;
     result_tuples = dwtn_coords
@@ -994,7 +994,7 @@ fn generate_pdfs(
     location_to_sector: &HashMap<(i64, i64), Sector>,
     coords_to_world: &HashMap<Coords, World>,
 ) {
-    debug!("generate_pdfs");
+    debug!("(parallel) generate_pdfs");
     location_to_sector
         .par_iter()
         .map(|(_, sector)| generate_pdf(sector, output_dir, location_to_sector, coords_to_world))
