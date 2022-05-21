@@ -9,6 +9,7 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::{PI, TAU};
 use std::fs::{create_dir_all, read_to_string, write, File};
+use std::io::Read;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 #[macro_use]
@@ -30,21 +31,28 @@ mod tests;
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    #[clap(short, long, multiple_occurrences = true, required = true)]
+    /// Name of a sector to process.  Multiples are allowed.
+    #[clap(short, long, multiple_occurrences = true)]
     sector: Vec<String>,
 
-    /// Path to input matrix in numpy ndy format
+    /// Path to a file containing one sector name per line
+    #[clap(short, long)]
+    file_of_sectors: Option<PathBuf>,
+
+    /// Directory where we read and write data files
     #[clap(short, long)]
     data_directory: Option<PathBuf>,
 
-    /// Path to output distance and predecessor matrixes in numpy ndz format
+    /// Directory where we place output PDFs
     #[clap(short, long, default_value = "/var/tmp")]
     output_directory: PathBuf,
 
+    /// Level of verbosity.  Repeat for more output.
     #[clap(short, long, parse(from_occurrences))]
     verbose: usize,
 
-    #[clap(short)]
+    /// No output
+    #[clap(short, long)]
     quiet: bool,
 }
 
@@ -1834,6 +1842,19 @@ impl Sector {
     }
 }
 
+fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<Vec<String>> {
+    let mut sector_names: Vec<String> = Vec::new();
+    let mut file = File::open(file_of_sectors)?;
+    let mut buf = String::new();
+    file.read_to_string(&mut buf)?;
+
+    for line in buf.lines() {
+        sector_names.push(line.trim().to_string());
+    }
+
+    Ok(sector_names)
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
     let output_dir = args.output_directory;
@@ -1842,9 +1863,16 @@ fn main() -> Result<()> {
     if let Some(data_dir_override) = args.data_directory {
         data_dir = data_dir_override;
     };
-    let sector_names = args.sector;
+    let mut sector_names = args.sector;
+    if let Some(file_of_sectors) = args.file_of_sectors {
+        if let Ok(mut sector_names2) = parse_file_of_sectors(file_of_sectors) {
+            sector_names.append(&mut sector_names2);
+        }
+    }
     let verbose = args.verbose;
     let quiet = args.quiet;
+    // TODO Whine if both verbose and quiet are set
+    // TODO Whine if no sectors
 
     stderrlog::new()
         .module(module_path!())
