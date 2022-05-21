@@ -1200,12 +1200,15 @@ impl World {
                     let mut ii = 0;
                     while ii < parts.len() {
                         let star = parts[ii];
-                        if star == "BD" || star == "D" {
+                        if star == "BD" || star == "D" || star == "BH" {
                             stars.push(star.to_owned());
                             ii += 1;
-                        } else {
+                        } else if parts.len() > ii + 1 {
                             stars.push(star.to_owned() + " " + &parts[ii + 1]);
                             ii += 2;
+                        } else {
+                            stars.push(star.to_owned());
+                            ii += 1;
                         }
                     }
                 }
