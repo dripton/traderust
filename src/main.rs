@@ -1732,7 +1732,7 @@ impl Sector {
             }
             if line.starts_with("Hex") {
                 header = line;
-            } else if line.starts_with("----") {
+            } else if line.starts_with("---") {
                 let separator = line;
                 fields = parse_header_and_separator(header, separator);
             } else {
