@@ -59,8 +59,8 @@ struct Args {
 
 const SQRT3: f64 = 1.7320508075688772;
 
-const MAX_TECH_LEVEL: u32 = 17;
-const MAX_POPULATION: u32 = 15;
+const MAX_TECH_LEVEL: u32 = 34;
+const MAX_POPULATION: u32 = 34;
 
 // Rules don't say BTN can't be negative but it seems reasonable to me.
 const MIN_BTN: f64 = 0.0;
@@ -128,6 +128,23 @@ lazy_static! {
         tttg.insert(15, 12);
         tttg.insert(16, 13);
         tttg.insert(17, 13);
+        tttg.insert(18, 14);
+        tttg.insert(19, 14);
+        tttg.insert(20, 14);
+        tttg.insert(21, 14);
+        tttg.insert(22, 14);
+        tttg.insert(23, 14);
+        tttg.insert(24, 14);
+        tttg.insert(25, 14);
+        tttg.insert(26, 14);
+        tttg.insert(27, 14);
+        tttg.insert(28, 14);
+        tttg.insert(29, 14);
+        tttg.insert(30, 14);
+        tttg.insert(31, 14);
+        tttg.insert(32, 14);
+        tttg.insert(33, 14);
+        tttg.insert(34, 14);
         tttg
     };
 
@@ -1348,7 +1365,7 @@ impl World {
     }
 
     fn wtn_port_modifier(&self) -> f64 {
-        let iuwtn = u64::max(0, self.uwtn() as u64);
+        let iuwtn = u64::min(7, u64::max(0, self.uwtn() as u64));
         return *WTN_PORT_MODIFIER_TABLE
             .get(&(iuwtn, self.g_starport()))
             .unwrap();
