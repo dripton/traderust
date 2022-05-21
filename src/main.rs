@@ -618,7 +618,7 @@ fn generate_pdf(
 ) {
     let width = 60.0 * SECTOR_HEX_WIDTH as f64 * SCALE;
     let height = 35.0 * SQRT3 * SECTOR_HEX_HEIGHT as f64 * SCALE;
-    let output_filename = sector.name().to_owned() + ".pdf";
+    let output_filename = sector.name.to_owned() + ".pdf";
     let mut output_path = output_dir.clone();
     output_path.push(output_filename);
 
@@ -639,7 +639,7 @@ fn generate_pdf(
     ctx.set_font_size(3.0 * SCALE);
     ctx.set_font_face(&bold_font_face);
     ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
-    let text = sector.name();
+    let text = &sector.name;
     let extents = ctx.text_extents(text).unwrap();
     ctx.move_to(width / SCALE / 4.0 - extents.width / 2.0, 3.0 * SCALE);
     ctx.show_text(text).unwrap();
@@ -653,7 +653,7 @@ fn generate_pdf(
         draw_neighboring_sector_name(
             &ctx,
             &normal_font_face,
-            neighbor_sector.name(),
+            &neighbor_sector.name,
             width / SCALE / 2.0,
             6.0 * SCALE,
         );
@@ -666,7 +666,7 @@ fn generate_pdf(
         draw_neighboring_sector_name(
             &ctx,
             &normal_font_face,
-            neighbor_sector.name(),
+            &neighbor_sector.name,
             5.0 * SCALE,
             height / SCALE / 2.0,
         );
@@ -679,7 +679,7 @@ fn generate_pdf(
         draw_neighboring_sector_name(
             &ctx,
             &normal_font_face,
-            neighbor_sector.name(),
+            &neighbor_sector.name,
             width / SCALE - 2.0 * SCALE,
             height / SCALE / 2.0,
         );
@@ -692,7 +692,7 @@ fn generate_pdf(
         draw_neighboring_sector_name(
             &ctx,
             &normal_font_face,
-            neighbor_sector.name(),
+            &neighbor_sector.name,
             width / SCALE / 2.0,
             height / SCALE - 6.0 * SCALE,
         );
@@ -1607,6 +1607,7 @@ impl PartialOrd for World {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct Sector {
+    name: String,
     names: Vec<String>,
     abbreviation: String,
     location: (i64, i64),
@@ -1621,6 +1622,7 @@ impl Sector {
         sector_name: String,
         coords_to_world: &mut HashMap<Coords, World>,
     ) -> Sector {
+        let name = sector_name.to_owned();
         let names = Vec::new();
         let abbreviation = "".to_string();
         let location = (-1, -1);
@@ -1628,6 +1630,7 @@ impl Sector {
         let allegiance_code_to_name = HashMap::new();
         let hex_to_coords = HashMap::new();
         let mut sector = Sector {
+            name,
             names,
             abbreviation,
             location,
@@ -1749,7 +1752,7 @@ impl Sector {
         coords_to_world: &mut HashMap<Coords, World>,
     ) -> Result<()> {
         let mut xml_path = data_dir.clone();
-        xml_path.push(self.name().to_owned() + ".xml");
+        xml_path.push(self.name.to_owned() + ".xml");
         let xml_file = File::open(xml_path)?;
         let root = Element::from_reader(xml_file)?;
         let routes_opt = root.find("Routes");
@@ -1823,10 +1826,6 @@ impl Sector {
         }
 
         Ok(())
-    }
-
-    fn name(&self) -> &str {
-        &self.names[0]
     }
 
     fn hex_to_world<'a>(

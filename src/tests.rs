@@ -138,7 +138,7 @@ mod tests {
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
-        assert_eq!(sector.name(), "Spinward Marches");
+        assert_eq!(sector.name, "Spinward Marches");
         assert_eq!(sector.names, vec!["Spinward Marches", "Tloql"]);
         assert_eq!(sector.abbreviation, "Spin");
         assert_eq!(sector.location, (-4, -1));
@@ -174,7 +174,7 @@ mod tests {
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
-        assert_eq!(sector.name(), "Deneb");
+        assert_eq!(sector.name, "Deneb");
         assert_eq!(sector.names, vec!["Deneb", "Nieklsdia"]);
         assert_eq!(sector.abbreviation, "Dene");
         assert_eq!(sector.location, (-3, -1));
@@ -210,7 +210,7 @@ mod tests {
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
 
-        assert_eq!(sector.name(), "Gvurrdon");
+        assert_eq!(sector.name, "Gvurrdon");
         assert_eq!(sector.names, vec!["Gvurrdon", r"Briakqra'"]);
         assert_eq!(sector.abbreviation, "Gvur");
         assert_eq!(sector.location, (-4, -2));
