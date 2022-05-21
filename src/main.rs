@@ -360,9 +360,6 @@ fn populate_trade_routes(
     debug!("Building world trade pairs");
     // Add endpoint trade credits to both endpoints
     let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
-    let mut num_skipped_by_break = 0;
-    let mut num_skipped_by_sld = 0;
-    let mut num_skipped_by_wtcm = 0;
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
         for jj in ii + 1..dwtn_coords.len() {
@@ -376,7 +373,6 @@ fn populate_trade_routes(
                 // of the WTNs is small enough, we know that coords2 and later
                 // worlds won't come close to forming any trade routes with
                 // coords1.
-                num_skipped_by_break += dwtn_coords.len() - jj - 1;
                 break;
             }
             let sld = coords1.straight_line_distance(&coords2) as i64;
@@ -386,7 +382,6 @@ fn populate_trade_routes(
                 // so if even the straight line distance modifier puts us too
                 // low, we can't come close to forming any trade routes with
                 // world2.
-                num_skipped_by_sld += 1;
                 continue;
             }
             let world1 = coords_to_world.get(&coords1).unwrap();
@@ -396,7 +391,6 @@ fn populate_trade_routes(
                 let wtcm = world1.wtcm(&world2);
                 let max_btn2 = max_btn1 + wtcm;
                 if max_btn2 < TRIVIAL_ROUTE_THRESHOLD {
-                    num_skipped_by_wtcm += 1;
                     continue;
                 }
             }
@@ -405,10 +399,6 @@ fn populate_trade_routes(
             coords_pairs.push((*coords1, coords2));
         }
     }
-    debug!("num_skipped_by_break {:10}", num_skipped_by_break);
-    debug!("num_skipped_by_sld   {:10}", num_skipped_by_sld);
-    debug!("num_skipped_by_wtcm  {:10}", num_skipped_by_wtcm);
-    debug!("num_added            {:10}", coords_pairs.len());
 
     debug!("(parallel) Finding BTNs");
     let coords_coords_dbtn_credits: Vec<(Coords, Coords, usize, u64)> = coords_pairs
