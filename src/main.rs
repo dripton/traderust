@@ -345,6 +345,8 @@ fn populate_trade_routes(
     dwtn_coords.sort();
     dwtn_coords.reverse();
 
+    let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
+
     // Add endpoint trade credits to both endpoints
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
@@ -382,24 +384,36 @@ fn populate_trade_routes(
             }
             // At this point we have exhausted ways to skip world2 without
             // computing the BTN.
+            coords_pairs.push((*coords1, coords2));
+        }
+    }
+
+    debug!("Finding BTNs");
+    let coords_coords_dbtn_credits: Vec<(Coords, Coords, usize, u64)> = coords_pairs
+        .into_par_iter()
+        .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
             let btn = world1.btn(&world2, dist2);
-
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
-            coords_to_world
-                .get_mut(&coords1)
-                .unwrap()
-                .endpoint_trade_credits += credits;
-            coords_to_world
-                .get_mut(&coords2)
-                .unwrap()
-                .endpoint_trade_credits += credits;
+            (coords1, coords2, dbtn, credits)
+        })
+        .collect();
 
-            coords_to_world.get_mut(&coords1).unwrap().dbtn_to_coords[dbtn].insert(coords2);
-            coords_to_world.get_mut(&coords2).unwrap().dbtn_to_coords[dbtn].insert(*coords1);
-        }
+    debug!("Recording BTNs");
+    for (coords1, coords2, dbtn, credits) in coords_coords_dbtn_credits {
+        coords_to_world
+            .get_mut(&coords1)
+            .unwrap()
+            .endpoint_trade_credits += credits;
+        coords_to_world
+            .get_mut(&coords2)
+            .unwrap()
+            .endpoint_trade_credits += credits;
+
+        coords_to_world.get_mut(&coords1).unwrap().dbtn_to_coords[dbtn].insert(coords2);
+        coords_to_world.get_mut(&coords2).unwrap().dbtn_to_coords[dbtn].insert(coords1);
     }
 
     debug!("Finding route paths");
