@@ -1871,6 +1871,14 @@ fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<HashSet<String>> {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    let verbose = args.verbose;
+    let quiet = args.quiet;
+    if quiet && verbose > 0 {
+        eprintln!("Please do not set both --quiet and --verbose.  Exiting");
+        exit(1);
+    }
+
     let output_dir = args.output_directory;
     let temp_dir = tempdir()?;
     let mut data_dir: PathBuf = temp_dir.path().to_path_buf();
@@ -1888,14 +1896,8 @@ fn main() -> Result<()> {
             }
         }
     }
-    let sector_names: Vec<String> = sector_names_set.into_iter().collect();
-
-    let verbose = args.verbose;
-    let quiet = args.quiet;
-    if quiet && verbose > 0 {
-        eprintln!("Please do not set both --quiet and --verbose.  Exiting");
-        exit(1);
-    }
+    let mut sector_names: Vec<String> = sector_names_set.into_iter().collect();
+    sector_names.sort();
 
     stderrlog::new()
         .module(module_path!())
@@ -1909,7 +1911,7 @@ fn main() -> Result<()> {
         error!("No sectors.  Exiting.");
         exit(2);
     }
-    debug!("{} sectors", sector_names.len());
+    debug!("{} sectors: {:?}", sector_names.len(), sector_names);
 
     create_dir_all(&output_dir)?;
     create_dir_all(&data_dir)?;
