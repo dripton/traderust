@@ -4,7 +4,7 @@ extern crate cairo;
 use cairo::{Context, FontFace, FontSlant, FontWeight, PdfSurface};
 use clap::Parser;
 use elementtree::Element;
-use log::debug;
+use log::{debug, error};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::{PI, TAU};
@@ -1887,6 +1887,10 @@ fn main() -> Result<()> {
         .init()
         .unwrap();
 
+    if sector_names.len() == 0 {
+        error!("No sectors.  Exiting.");
+        exit(2);
+    }
     debug!("{} sectors", sector_names.len());
 
     create_dir_all(&output_dir)?;
