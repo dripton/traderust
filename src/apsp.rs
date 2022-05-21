@@ -9,8 +9,6 @@ use bucket_queue::*;
 extern crate ndarray;
 use ndarray::Array2;
 
-use log::debug;
-
 pub const NO_PRED_NODE: i32 = -9999;
 pub const INFINITY: i32 = i32::MAX;
 
@@ -71,7 +69,7 @@ pub fn floyd_warshall(dist: &mut Array2<i32>) -> Array2<i32> {
             }
         }
     }
-    return pred;
+    pred
 }
 
 fn dijkstra_one_row(
@@ -108,7 +106,7 @@ fn dijkstra_one_row(
         }
     }
 
-    return (dist_row, pred_row);
+    (dist_row, pred_row)
 }
 
 fn dial_one_row(
@@ -145,7 +143,7 @@ fn dial_one_row(
         }
     }
 
-    return (dist_row, pred_row);
+    (dist_row, pred_row)
 }
 
 fn dijkstra_dial_inner(dist: &mut Array2<i32>, alg: Algorithm) -> Array2<i32> {
@@ -234,20 +232,22 @@ fn dijkstra_dial_inner(dist: &mut Array2<i32>, alg: Algorithm) -> Array2<i32> {
         }
     }
 
-    return pred;
+    pred
 }
 
 pub fn dijkstra(dist: &mut Array2<i32>) -> Array2<i32> {
-    return dijkstra_dial_inner(dist, Algorithm::D);
+    dijkstra_dial_inner(dist, Algorithm::D)
 }
 
 pub fn dial(dist: &mut Array2<i32>) -> Array2<i32> {
-    return dijkstra_dial_inner(dist, Algorithm::Dial);
+    dijkstra_dial_inner(dist, Algorithm::Dial)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use log::debug;
 
     extern crate rand;
     use rand::prelude::*;
@@ -261,7 +261,7 @@ mod tests {
         dist[[2, 0]] = 2;
         dist[[2, 3]] = 3;
         debug!("dist before {:?}\n", dist);
-        return dist;
+        dist
     }
 
     fn compare_scipy_test(dist: Array2<i32>, pred: Array2<i32>) {
@@ -342,7 +342,7 @@ mod tests {
             let cost = rng.gen_range(1..=max_cost);
             dist[[i, j]] = cost as i32;
         }
-        return dist;
+        dist
     }
 
     #[test]

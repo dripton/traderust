@@ -11,7 +11,7 @@ use std::f64::consts::{PI, TAU};
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::exit;
 #[macro_use]
 extern crate lazy_static;
@@ -233,14 +233,14 @@ lazy_static! {
     ];
 }
 
-fn download_sector_data(data_dir: &PathBuf, sector_names: &Vec<String>) -> Result<()> {
+fn download_sector_data(data_dir: &Path, sector_names: &Vec<String>) -> Result<()> {
     debug!("download_sector_data");
     for sector_name in sector_names {
         let sector_data_filename = sector_name.to_owned() + ".sec";
-        let mut data_path = data_dir.clone();
+        let mut data_path = data_dir.to_path_buf();
         data_path.push(sector_data_filename);
         let sector_xml_filename = sector_name.to_owned() + ".xml";
-        let mut metadata_path = data_dir.clone();
+        let mut metadata_path = data_dir.to_path_buf();
         metadata_path.push(sector_xml_filename);
         let base_url = Url::parse("https://travellermap.com/data/")?;
         if !data_path.exists() {
@@ -273,7 +273,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usiz
         fields.push((start, end, field.to_string()));
         column += width + 1;
     }
-    return fields;
+    fields
 }
 
 /// Find minimum distances between all worlds, and predecessor paths.
@@ -292,7 +292,7 @@ fn populate_navigable_distances(
         let world = coords_to_world.get(coords).unwrap();
         if max_jump >= 3 {
             for coords in &world.neighbors3 {
-                let neighbor = coords_to_world.get(&coords).unwrap();
+                let neighbor = coords_to_world.get(coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 3;
                 num_edges += 1;
@@ -300,7 +300,7 @@ fn populate_navigable_distances(
         }
         if max_jump >= 2 {
             for coords in &world.neighbors2 {
-                let neighbor = coords_to_world.get(&coords).unwrap();
+                let neighbor = coords_to_world.get(coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 2;
                 num_edges += 1;
@@ -308,14 +308,14 @@ fn populate_navigable_distances(
         }
         if max_jump >= 1 {
             for coords in &world.neighbors1 {
-                let neighbor = coords_to_world.get(&coords).unwrap();
+                let neighbor = coords_to_world.get(coords).unwrap();
                 let jj = neighbor.index.unwrap();
                 np[[ii, jj]] = 1;
                 num_edges += 1;
             }
         }
         for coords in &world.xboat_routes {
-            let neighbor = coords_to_world.get(&coords).unwrap();
+            let neighbor = coords_to_world.get(coords).unwrap();
             let jj = neighbor.index.unwrap();
             np[[ii, jj]] = world.straight_line_distance(neighbor) as i32;
             num_edges += 1;
@@ -326,7 +326,7 @@ fn populate_navigable_distances(
         num_worlds, num_edges
     );
     let pred = dijkstra(&mut np);
-    return (np, pred);
+    (np, pred)
 }
 
 fn distance_modifier_table(distance: i32) -> f64 {
@@ -358,7 +358,7 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
 fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
     coords_to_index: &HashMap<Coords, usize>,
-    sorted_coords: &Vec<Coords>,
+    sorted_coords: &[Coords],
     dist2: &Array2<i32>,
     pred2: &Array2<i32>,
     dist3: &Array2<i32>,
@@ -379,9 +379,8 @@ fn populate_trade_routes(
     let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
-        for jj in ii + 1..dwtn_coords.len() {
-            let (dwtn2, coords2) = dwtn_coords[jj];
-            let wtn2 = dwtn2 as f64 / 2.0;
+        for (dwtn2, coords2) in dwtn_coords.iter().skip(ii + 1) {
+            let wtn2 = *dwtn2 as f64 / 2.0;
             if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
                 || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
@@ -392,7 +391,7 @@ fn populate_trade_routes(
                 // coords1.
                 break;
             }
-            let sld = coords1.straight_line_distance(&coords2) as i32;
+            let sld = coords1.straight_line_distance(coords2) as i32;
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
             if max_btn1 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus the bonus,
@@ -401,11 +400,11 @@ fn populate_trade_routes(
                 // world2.
                 continue;
             }
-            let world1 = coords_to_world.get(&coords1).unwrap();
-            let world2 = coords_to_world.get(&coords2).unwrap();
+            let world1 = coords_to_world.get(coords1).unwrap();
+            let world2 = coords_to_world.get(coords2).unwrap();
             if max_btn1 < TRIVIAL_ROUTE_THRESHOLD + MAX_WTCM_PENALTY {
                 // Computing the wtcm is cheaper than finding the full BTN
-                let wtcm = world1.wtcm(&world2);
+                let wtcm = world1.wtcm(world2);
                 let max_btn2 = max_btn1 + wtcm;
                 if max_btn2 < TRIVIAL_ROUTE_THRESHOLD {
                     continue;
@@ -413,7 +412,7 @@ fn populate_trade_routes(
             }
             // At this point we have exhausted ways to skip world2 without
             // computing the BTN.
-            coords_pairs.push((*coords1, coords2));
+            coords_pairs.push((*coords1, *coords2));
         }
     }
 
@@ -423,7 +422,7 @@ fn populate_trade_routes(
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-            let btn = world1.btn(&world2, dist2);
+            let btn = world1.btn(world2, dist2);
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
             (coords1, coords2, dbtn, credits)
@@ -447,18 +446,17 @@ fn populate_trade_routes(
 
     debug!("(parallel) Finding route paths");
 
-    let result_tuples: Vec<(HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>)>;
-    result_tuples = dwtn_coords
+    let result_tuples: Vec<(HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>)> = dwtn_coords
         .into_par_iter()
         .map(|(_, coords)| {
             coords_to_world.get(&coords).unwrap().find_route_paths(
-                &sorted_coords,
-                &coords_to_world,
-                &coords_to_index,
-                &dist2,
-                &pred2,
-                &dist3,
-                &pred3,
+                sorted_coords,
+                coords_to_world,
+                coords_to_index,
+                dist2,
+                pred2,
+                dist3,
+                pred3,
             )
         })
         .collect();
@@ -583,16 +581,17 @@ fn init_vars(
     let cx = (4.0 + x as f64) * 3.0 * SCALE;
     // topmost point
     let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE;
-    let mut vertexes: Vec<(f64, f64)> = Vec::new();
-    vertexes.push((cx + SCALE, cy));
-    vertexes.push((cx + 3.0 * SCALE, cy));
-    vertexes.push((cx + 4.0 * SCALE, cy + SQRT3 * SCALE));
-    vertexes.push((cx + 3.0 * SCALE, cy + 2.0 * SQRT3 * SCALE));
-    vertexes.push((cx + SCALE, cy + 2.0 * SQRT3 * SCALE));
-    vertexes.push((cx, cy + SQRT3 * SCALE));
+    let vertexes = vec![
+        (cx + SCALE, cy),
+        (cx + 3.0 * SCALE, cy),
+        (cx + 4.0 * SCALE, cy + SQRT3 * SCALE),
+        (cx + 3.0 * SCALE, cy + 2.0 * SQRT3 * SCALE),
+        (cx + SCALE, cy + 2.0 * SQRT3 * SCALE),
+        (cx, cy + SQRT3 * SCALE),
+    ];
     let center = (cx + 2.0 * SCALE, cy + SQRT3 * SCALE);
     let coords_opt = sector.hex_to_coords.get(&hex);
-    return (hex, cx, cy, vertexes, center, coords_opt);
+    (hex, cx, cy, vertexes, center, coords_opt)
 }
 
 fn draw_route(
@@ -623,14 +622,14 @@ fn draw_route(
 
 fn generate_pdf(
     sector: &Sector,
-    output_dir: &PathBuf,
+    output_dir: &Path,
     location_to_sector: &HashMap<(i64, i64), Sector>,
     coords_to_world: &HashMap<Coords, World>,
 ) {
     let width = 60.0 * SECTOR_HEX_WIDTH as f64 * SCALE;
     let height = 35.0 * SQRT3 * SECTOR_HEX_HEIGHT as f64 * SCALE;
     let output_filename = sector.name.to_owned() + ".pdf";
-    let mut output_path = output_dir.clone();
+    let mut output_path = output_dir.to_path_buf();
     output_path.push(output_filename);
 
     let surface = PdfSurface::new(width, height, output_path).unwrap();
@@ -714,7 +713,7 @@ fn generate_pdf(
     ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
 
     // vertical lines
-    for x in vec![1.0, 9.0, 17.0, 25.0, 33.0] {
+    for x in &[1.0, 9.0, 17.0, 25.0, 33.0] {
         let cx = (25.0 / 6.0 + x) * 3.0 * SCALE; // halfway between leftmost 2 points
         let y = 1.0;
         let cy1 = (3.0 + y * 2.0) * SQRT3 * SCALE;
@@ -725,7 +724,7 @@ fn generate_pdf(
         ctx.stroke().unwrap();
     }
     // horizontal lines
-    for y in vec![1.0, 11.0, 21.0, 31.0, 41.0] {
+    for y in &[1.0, 11.0, 21.0, 31.0, 41.0] {
         let x = 1.0;
         let cy = (3.0 + y * 2.0) * SQRT3 * SCALE;
         let cx1 = (25.0 / 6.0 + x) * 3.0 * SCALE;
@@ -759,12 +758,12 @@ fn generate_pdf(
     // hexsides
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (_hex, _cx, _cy, vertexes, _center, _coords) = init_vars(&sector, x, y);
+            let (_hex, _cx, _cy, vertexes, _center, _coords) = init_vars(sector, x, y);
             ctx.set_line_width(0.03 * SCALE);
             ctx.move_to(vertexes[0].0, vertexes[0].1);
             ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
-            for ii in vec![1, 2, 3, 4, 5, 0] {
-                ctx.line_to(vertexes[ii].0, vertexes[ii].1);
+            for ii in &[1, 2, 3, 4, 5, 0] {
+                ctx.line_to(vertexes[*ii].0, vertexes[*ii].1);
             }
             ctx.stroke().unwrap();
         }
@@ -773,9 +772,9 @@ fn generate_pdf(
     // Xboat routes
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(sector, x, y);
             if let Some(coords) = coords_opt {
-                if let Some(world) = coords_to_world.get(&coords) {
+                if let Some(world) = coords_to_world.get(coords) {
                     draw_route(
                         &ctx,
                         *coords,
@@ -794,9 +793,9 @@ fn generate_pdf(
     // trade routes
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            let (_hex, cx, cy, _vertexes, center, coords_opt) = init_vars(sector, x, y);
             if let Some(coords) = coords_opt {
-                if let Some(world) = coords_to_world.get(&coords) {
+                if let Some(world) = coords_to_world.get(coords) {
                     draw_route(
                         &ctx,
                         *coords,
@@ -857,29 +856,29 @@ fn generate_pdf(
     // World, gas giants, text
     for x in 1..SECTOR_HEX_WIDTH + 1 {
         for y in 1..SECTOR_HEX_HEIGHT + 1 {
-            let (hex, cx, cy, _vertexes, center, coords_opt) = init_vars(&sector, x, y);
+            let (hex, cx, cy, _vertexes, center, coords_opt) = init_vars(sector, x, y);
             if let Some(coords) = coords_opt {
-                if let Some(world) = coords_to_world.get(&coords) {
+                if let Some(world) = coords_to_world.get(coords) {
                     // UWP
                     ctx.set_font_size(0.35 * SCALE);
                     ctx.set_font_face(&normal_font_face);
                     ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
                     let text = &world.uwp;
-                    let extents = ctx.text_extents(&text).unwrap();
+                    let extents = ctx.text_extents(text).unwrap();
                     ctx.move_to(
                         cx + 2.0 * SCALE - extents.width / 2.0,
                         cy + SQRT3 * SCALE * 1.5,
                     );
-                    ctx.show_text(&text).unwrap();
+                    ctx.show_text(text).unwrap();
 
                     // World name
                     // All-caps for high population
-                    let name: String;
-                    if world.population().is_alphabetic() || world.population() == '9' {
-                        name = world.name.to_owned().to_uppercase();
-                    } else {
-                        name = world.name.to_owned();
-                    }
+                    let name: String =
+                        if world.population().is_alphabetic() || world.population() == '9' {
+                            world.name.to_owned().to_uppercase()
+                        } else {
+                            world.name.to_owned()
+                        };
                     ctx.set_font_size(0.4 * SCALE);
                     ctx.set_font_face(&bold_font_face);
                     let extents = ctx.text_extents(&name).unwrap();
@@ -1020,7 +1019,7 @@ fn generate_pdf(
 }
 
 fn generate_pdfs(
-    output_dir: &PathBuf,
+    output_dir: &Path,
     location_to_sector: &HashMap<(i64, i64), Sector>,
     coords_to_world: &HashMap<Coords, World>,
 ) {
@@ -1056,7 +1055,7 @@ impl Coords {
         if ydelta < 0.0 {
             ydelta = 0.0;
         }
-        return (f64::floor(xdelta + ydelta)) as u32;
+        (f64::floor(xdelta + ydelta)) as u32
     }
 }
 
@@ -1068,7 +1067,7 @@ impl From<Coords> for (f64, f64) {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq)]
 struct World {
     sector_location: (i64, i64),
     hex: String,
@@ -1101,11 +1100,7 @@ struct World {
 }
 
 impl World {
-    fn new(
-        line: String,
-        fields: &Vec<(usize, usize, String)>,
-        sector_location: (i64, i64),
-    ) -> World {
+    fn new(line: String, fields: &[(usize, usize, String)], sector_location: (i64, i64)) -> World {
         let mut hex = "".to_string();
         let mut name = "".to_string();
         let mut uwp = "".to_string();
@@ -1172,7 +1167,7 @@ impl World {
                     let trimmed = value
                         .trim_matches(|c| c == '{' || c == '}' || c == ' ')
                         .to_string();
-                    if trimmed.len() > 0 {
+                    if !trimmed.is_empty() {
                         if let Ok(val) = trimmed.parse() {
                             importance = val;
                         }
@@ -1183,7 +1178,7 @@ impl World {
                 "N" => nobles = value.trim_matches(|c| c == ' ' || c == '-').to_string(),
                 "B" => {
                     let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
-                    if trimmed.len() > 0 {
+                    if !trimmed.is_empty() {
                         for ch in trimmed.chars() {
                             bases.insert(ch.to_string());
                         }
@@ -1191,8 +1186,8 @@ impl World {
                 }
                 "Z" => {
                     let trimmed = value.trim_matches(|c| c == ' ' || c == '-').to_string();
-                    if trimmed.len() > 0 {
-                        zone = trimmed.chars().nth(0).unwrap();
+                    if !trimmed.is_empty() {
+                        zone = trimmed.chars().next().unwrap();
                     }
                 }
                 "PBG" => pbg = value.trim().to_string(),
@@ -1200,7 +1195,7 @@ impl World {
                     let trimmed = value
                         .trim_matches(|c| c == '{' || c == '}' || c == ' ')
                         .to_string();
-                    if trimmed.len() > 0 {
+                    if !trimmed.is_empty() {
                         if let Ok(val) = trimmed.parse() {
                             worlds = val;
                         }
@@ -1216,7 +1211,7 @@ impl World {
                             stars.push(star.to_owned());
                             ii += 1;
                         } else if parts.len() > ii + 1 {
-                            stars.push(star.to_owned() + " " + &parts[ii + 1]);
+                            stars.push(star.to_owned() + " " + parts[ii + 1]);
                             ii += 2;
                         } else {
                             stars.push(star.to_owned());
@@ -1228,7 +1223,7 @@ impl World {
             }
         }
 
-        let world = World {
+        World {
             sector_location,
             hex,
             name,
@@ -1257,8 +1252,7 @@ impl World {
             neighbors2,
             neighbors3,
             index,
-        };
-        world
+        }
     }
 
     /// Find and cache all neighbors within 3 hexes.
@@ -1292,7 +1286,7 @@ impl World {
     }
 
     fn starport(&self) -> char {
-        return self.uwp.chars().nth(0).unwrap() as char;
+        return self.uwp.chars().next().unwrap() as char;
     }
 
     fn g_starport(&self) -> String {
@@ -1301,7 +1295,7 @@ impl World {
             starport = 'X';
         }
         let opt = STARPORT_TRAVELLER_TO_GURPS.get(&starport);
-        return opt.unwrap().to_string();
+        opt.unwrap().to_string()
     }
 
     fn size(&self) -> char {
@@ -1338,18 +1332,18 @@ impl World {
             tech_level_char = '0';
         }
         let tech_level_int = tech_level_char.to_digit(MAX_TECH_LEVEL + 1).unwrap();
-        return *TECH_LEVEL_TRAVELLER_TO_GURPS.get(&tech_level_int).unwrap();
+        *TECH_LEVEL_TRAVELLER_TO_GURPS.get(&tech_level_int).unwrap()
     }
 
     fn gas_giants(&self) -> char {
-        return self.pbg.chars().nth(2).unwrap();
+        self.pbg.chars().nth(2).unwrap()
     }
 
     fn can_refuel(&self) -> bool {
-        return self.gas_giants() != '0'
+        self.gas_giants() != '0'
             || (self.zone != 'R'
                 && ((self.starport() != 'E' && self.starport() != 'X')
-                    || self.hydrosphere() != '0'));
+                    || self.hydrosphere() != '0'))
     }
 
     fn uwtn(&self) -> f64 {
@@ -1362,18 +1356,18 @@ impl World {
             let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
             pop_mod = pop_int as f64 / 2.0;
         }
-        return tl_mod + pop_mod as f64;
+        tl_mod + pop_mod as f64
     }
 
     fn wtn_port_modifier(&self) -> f64 {
         let iuwtn = u64::min(7, u64::max(0, self.uwtn() as u64));
-        return *WTN_PORT_MODIFIER_TABLE
+        *WTN_PORT_MODIFIER_TABLE
             .get(&(iuwtn, self.g_starport()))
-            .unwrap();
+            .unwrap()
     }
 
     fn wtn(&self) -> f64 {
-        return self.uwtn() + self.wtn_port_modifier();
+        self.uwtn() + self.wtn_port_modifier()
     }
 
     fn wtcm(&self, other: &World) -> f64 {
@@ -1405,7 +1399,7 @@ impl World {
         let hex = &self.hex;
         let location = self.sector_location;
         let mut scratch = String::new();
-        scratch.push(hex.chars().nth(0).unwrap());
+        scratch.push(hex.chars().next().unwrap());
         scratch.push(hex.chars().nth(1).unwrap());
         let x: i64 = scratch.parse::<i64>().unwrap() + 32 * location.0;
         scratch.clear();
@@ -1416,7 +1410,7 @@ impl World {
         if x & 1 == 0 {
             y2 += 1;
         }
-        return Coords { x, y2 };
+        Coords { x, y2 }
     }
 
     fn straight_line_distance(&self, other: &World) -> i32 {
@@ -1427,19 +1421,19 @@ impl World {
         if ydelta < 0.0 {
             ydelta = 0.0;
         }
-        return (f64::floor(xdelta + ydelta)) as i32;
+        (f64::floor(xdelta + ydelta)) as i32
     }
 
     fn navigable_distance(&self, other: &World, dist: &Array2<i32>) -> i32 {
         let ii = self.index.unwrap();
         let jj = other.index.unwrap();
-        return dist[[ii, jj]];
+        dist[[ii, jj]]
     }
 
     fn navigable_path(
         &self,
         other: &World,
-        sorted_coords: &Vec<Coords>,
+        sorted_coords: &[Coords],
         coords_to_index: &HashMap<Coords, usize>,
         dist: &Array2<i32>,
         pred: &Array2<i32>,
@@ -1456,7 +1450,7 @@ impl World {
             let ii = other.index.unwrap();
             let jj = coords_to_index.get(&coords2).unwrap();
             let index = pred[[ii, *jj]];
-            coords2 = sorted_coords[index as usize].clone();
+            coords2 = sorted_coords[index as usize];
             if coords2 == other.get_coords() {
                 path.push(coords2);
                 break;
@@ -1464,7 +1458,7 @@ impl World {
                 path.push(coords2);
             }
         }
-        return Some(path);
+        Some(path)
     }
 
     fn distance_modifier(&self, other: &World, dist2: &Array2<i32>) -> f64 {
@@ -1487,7 +1481,7 @@ impl World {
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
         let mut pbtn = base_btn - self.distance_modifier(other, dist2);
-        for world in vec![self, other] {
+        for world in [self, other] {
             if world.trade_classifications.contains("Ri") {
                 pbtn += RI_PBTN_BONUS;
             }
@@ -1503,7 +1497,7 @@ impl World {
 
     fn find_route_paths(
         &self,
-        sorted_coords: &Vec<Coords>,
+        sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
         dist2: &Array2<i32>,
@@ -1516,7 +1510,7 @@ impl World {
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let credits = DBTN_TO_CREDITS[dbtn];
             for coords2 in coords_set {
-                let world2 = coords_to_world.get(&coords2).unwrap();
+                let world2 = coords_to_world.get(coords2).unwrap();
                 let mut path: Vec<Coords> = Vec::new();
                 let possible_path2 =
                     self.navigable_path(world2, sorted_coords, coords_to_index, dist2, pred2);
@@ -1539,12 +1533,11 @@ impl World {
                     for ii in 0..path.len() - 1 {
                         let first = path.get(ii).unwrap();
                         let second = path.get(ii + 1).unwrap();
-                        let coord_tup: (Coords, Coords);
-                        if first <= second {
-                            coord_tup = (*first, *second);
+                        let coord_tup: (Coords, Coords) = if first <= second {
+                            (*first, *second)
                         } else {
-                            coord_tup = (*second, *first);
-                        }
+                            (*second, *first)
+                        };
                         route_paths
                             .entry(coord_tup)
                             .and_modify(|count| *count += credits)
@@ -1564,9 +1557,7 @@ impl World {
     }
 
     fn imperial_affiliated(&self) -> bool {
-        self.allegiance == "CsIm"
-            || self.allegiance.chars().nth(0).unwrap() == 'I'
-                && self.allegiance.chars().nth(1).unwrap() == 'm'
+        self.allegiance == "CsIm" || self.allegiance.starts_with("Im")
     }
 
     // This only works after trade routes are built.
@@ -1575,29 +1566,33 @@ impl World {
         if !self.imperial_affiliated() {
             port_size -= NON_IMPERIAL_PORT_SIZE_PENALTY;
         }
-        if self.neighbors1.len() > 0 {
+        if !self.neighbors1.is_empty() {
             port_size += NEIGHBOR_1_PORT_SIZE_BONUS;
-        } else if self.neighbors2.len() > 0 {
+        } else if !self.neighbors2.is_empty() {
             port_size += NEIGHBOR_2_PORT_SIZE_BONUS;
         }
         port_size = f64::ceil(port_size);
-        if self.xboat_routes.len() > 0 || self.major_routes.len() > 0 {
+        if !self.xboat_routes.is_empty() || !self.major_routes.is_empty() {
             if port_size < XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE {
                 port_size = XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE;
             }
-        } else if self.main_routes.len() > 0
-            || self.intermediate_routes.len() > 0
-            || self.feeder_routes.len() > 0
+        } else if !self.main_routes.is_empty()
+            || !self.intermediate_routes.is_empty()
+            || !self.feeder_routes.is_empty()
         {
             if port_size < FEEDER_ROUTE_MIN_PORT_SIZE {
                 port_size = FEEDER_ROUTE_MIN_PORT_SIZE;
             }
-        } else if self.minor_routes.len() > 0 {
-            if port_size < MINOR_ROUTE_MIN_PORT_SIZE {
-                port_size = MINOR_ROUTE_MIN_PORT_SIZE;
-            }
+        } else if !self.minor_routes.is_empty() && port_size < MINOR_ROUTE_MIN_PORT_SIZE {
+            port_size = MINOR_ROUTE_MIN_PORT_SIZE;
         }
         port_size as u64
+    }
+}
+
+impl PartialEq for World {
+    fn eq(&self, other: &Self) -> bool {
+        self.hex == other.hex && self.name == other.name
     }
 }
 
@@ -1633,7 +1628,7 @@ struct Sector {
 
 impl Sector {
     fn new(
-        data_dir: &PathBuf,
+        data_dir: &Path,
         sector_name: String,
         coords_to_world: &mut HashMap<Coords, World>,
     ) -> Sector {
@@ -1654,15 +1649,15 @@ impl Sector {
             hex_to_coords,
         };
 
-        sector.parse_xml_metadata(&data_dir, &sector_name).unwrap();
+        sector.parse_xml_metadata(data_dir, &sector_name).unwrap();
         sector
-            .parse_column_data(&data_dir, &sector_name, coords_to_world)
+            .parse_column_data(data_dir, &sector_name, coords_to_world)
             .unwrap();
         sector
     }
 
-    fn parse_xml_metadata(&mut self, data_dir: &PathBuf, sector_name: &str) -> Result<()> {
-        let mut xml_path = data_dir.clone();
+    fn parse_xml_metadata(&mut self, data_dir: &Path, sector_name: &str) -> Result<()> {
+        let mut xml_path = data_dir.to_path_buf();
         xml_path.push(sector_name.to_owned() + ".xml");
         let xml_file = File::open(xml_path)?;
         let root = Element::from_reader(xml_file)?;
@@ -1688,7 +1683,7 @@ impl Sector {
 
         let name_elements = root.find_all("Name");
         for name_element in name_elements {
-            if name_element.text().len() > 0 {
+            if !name_element.text().is_empty() {
                 self.names.push(name_element.text().to_string());
             }
         }
@@ -1699,9 +1694,9 @@ impl Sector {
             for subsector_element in subsector_elements {
                 let index_opt = subsector_element.get_attr("Index");
                 if let Some(index) = index_opt {
-                    let letter = index.chars().nth(0).unwrap();
+                    let letter = index.chars().next().unwrap();
                     let subsector_name = subsector_element.text().to_string();
-                    if subsector_name.len() > 0 {
+                    if !subsector_name.is_empty() {
                         self.subsector_letter_to_name.insert(letter, subsector_name);
                     }
                 }
@@ -1715,7 +1710,7 @@ impl Sector {
                 let code_opt = allegiance_element.get_attr("Code");
                 if let Some(code) = code_opt {
                     let allegiance_name = allegiance_element.text().to_string();
-                    if allegiance_name.len() > 0 {
+                    if !allegiance_name.is_empty() {
                         self.allegiance_code_to_name
                             .insert(code.to_string(), allegiance_name);
                     }
@@ -1728,18 +1723,18 @@ impl Sector {
 
     fn parse_column_data(
         &mut self,
-        data_dir: &PathBuf,
+        data_dir: &Path,
         sector_name: &str,
         coords_to_world: &mut HashMap<Coords, World>,
     ) -> Result<()> {
-        let mut data_path = data_dir.clone();
+        let mut data_path = data_dir.to_path_buf();
         data_path.push(sector_name.to_owned() + ".sec");
         let blob = read_to_string(data_path)?;
         let mut header = "";
         // We initialize fields here to make rustc happy, then overwrite it.
         let mut fields: Vec<(usize, usize, String)> = Vec::new();
         for line in blob.lines() {
-            if line.len() == 0 || line.starts_with("#") {
+            if line.is_empty() || line.starts_with('#') {
                 continue;
             }
             if line.starts_with("Hex") {
@@ -1762,11 +1757,11 @@ impl Sector {
     /// Must be called after all Sectors and Worlds are built
     fn parse_xml_routes(
         &self,
-        data_dir: &PathBuf,
+        data_dir: &Path,
         location_to_sector: &HashMap<(i64, i64), Sector>,
         coords_to_world: &mut HashMap<Coords, World>,
     ) -> Result<()> {
-        let mut xml_path = data_dir.clone();
+        let mut xml_path = data_dir.to_path_buf();
         xml_path.push(self.name.to_owned() + ".xml");
         let xml_file = File::open(xml_path)?;
         let root = Element::from_reader(xml_file)?;
@@ -1907,7 +1902,7 @@ fn main() -> Result<()> {
         .init()
         .unwrap();
 
-    if sector_names.len() == 0 {
+    if sector_names.is_empty() {
         error!("No sectors.  Exiting.");
         exit(2);
     }
@@ -1938,12 +1933,11 @@ fn main() -> Result<()> {
             world.populate_neighbors(&coords_to_world2);
         }
     }
-    let mut sorted_coords: Vec<Coords>;
-    sorted_coords = coords_to_world.keys().cloned().collect();
+    let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();
     sorted_coords.sort();
     let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
     for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-        coords_to_index.insert(coords.clone(), ii);
+        coords_to_index.insert(*coords, ii);
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
