@@ -12,6 +12,7 @@ use std::fs::{create_dir_all, read_to_string, write, File};
 use std::io::Read;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
+use std::process::exit;
 #[macro_use]
 extern crate lazy_static;
 extern crate ndarray;
@@ -1873,8 +1874,10 @@ fn main() -> Result<()> {
     }
     let verbose = args.verbose;
     let quiet = args.quiet;
-    // TODO Whine if both verbose and quiet are set
-    // TODO Whine if no sectors
+    if quiet && verbose > 0 {
+        eprintln!("Please do not set both --quiet and --verbose.  Exiting");
+        exit(1);
+    }
 
     stderrlog::new()
         .module(module_path!())
