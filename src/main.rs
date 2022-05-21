@@ -9,8 +9,8 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::{PI, TAU};
 use std::fs::{create_dir_all, read_to_string, write, File};
-use std::io::Read;
 use std::hash::{Hash, Hasher};
+use std::io::Read;
 use std::path::PathBuf;
 use std::process::exit;
 #[macro_use]
@@ -37,8 +37,8 @@ struct Args {
     sector: Vec<String>,
 
     /// Path to a file containing one sector name per line
-    #[clap(short, long)]
-    file_of_sectors: Option<PathBuf>,
+    #[clap(short, long, multiple_occurrences = true)]
+    file_of_sectors: Vec<PathBuf>,
 
     /// Directory where we read and write data files
     #[clap(short, long)]
@@ -304,7 +304,10 @@ fn populate_navigable_distances(
             num_edges += 1;
         }
     }
-    debug!("(parallel) dijkstra worlds={} edges={}", num_worlds, num_edges);
+    debug!(
+        "(parallel) dijkstra worlds={} edges={}",
+        num_worlds, num_edges
+    );
     let pred = dijkstra(&mut np);
     return (np, pred);
 }
@@ -1845,14 +1848,14 @@ impl Sector {
     }
 }
 
-fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<Vec<String>> {
-    let mut sector_names: Vec<String> = Vec::new();
+fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<HashSet<String>> {
+    let mut sector_names: HashSet<String> = HashSet::new();
     let mut file = File::open(file_of_sectors)?;
     let mut buf = String::new();
     file.read_to_string(&mut buf)?;
 
     for line in buf.lines() {
-        sector_names.push(line.trim().to_string());
+        sector_names.insert(line.trim().to_string());
     }
 
     Ok(sector_names)
@@ -1866,12 +1869,19 @@ fn main() -> Result<()> {
     if let Some(data_dir_override) = args.data_directory {
         data_dir = data_dir_override;
     };
-    let mut sector_names = args.sector;
-    if let Some(file_of_sectors) = args.file_of_sectors {
-        if let Ok(mut sector_names2) = parse_file_of_sectors(file_of_sectors) {
-            sector_names.append(&mut sector_names2);
+    let mut sector_names_set: HashSet<String> = HashSet::new();
+    for sector_name in args.sector {
+        sector_names_set.insert(sector_name);
+    }
+    for filename in args.file_of_sectors {
+        if let Ok(sector_names_set2) = parse_file_of_sectors(filename) {
+            for sector_name in sector_names_set2 {
+                sector_names_set.insert(sector_name);
+            }
         }
     }
+    let sector_names: Vec<String> = sector_names_set.into_iter().collect();
+
     let verbose = args.verbose;
     let quiet = args.quiet;
     if quiet && verbose > 0 {
