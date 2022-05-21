@@ -740,18 +740,19 @@ fn generate_pdf(
     for row in 0..4 {
         for col in 0..4 {
             let letter = (char::from_u32(4 * row + col + u32::from('A'))).unwrap();
-            let subsector_name = sector.subsector_letter_to_name.get(&letter).unwrap();
-            ctx.set_font_size(3.0 * SCALE);
-            ctx.set_font_face(&normal_font_face);
-            ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
-            let text = subsector_name;
-            let extents = ctx.text_extents(text).unwrap();
-            let x = 8.0 * col as f64 + 5.0;
-            let yy = 10.0 * row as f64 + 5.5;
-            let cx = (4.0 + x) * 3.0 * SCALE; // leftmost point
-            let cy = (5.0 + yy * 2.0) * SQRT3 * SCALE; // topmost point
-            ctx.move_to(cx - extents.width / 2.0, cy - extents.height / 2.0);
-            ctx.show_text(text).unwrap();
+            if let Some(subsector_name) = sector.subsector_letter_to_name.get(&letter) {
+                ctx.set_font_size(3.0 * SCALE);
+                ctx.set_font_face(&normal_font_face);
+                ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
+                let text = subsector_name;
+                let extents = ctx.text_extents(text).unwrap();
+                let x = 8.0 * col as f64 + 5.0;
+                let yy = 10.0 * row as f64 + 5.5;
+                let cx = (4.0 + x) * 3.0 * SCALE; // leftmost point
+                let cy = (5.0 + yy * 2.0) * SQRT3 * SCALE; // topmost point
+                ctx.move_to(cx - extents.width / 2.0, cy - extents.height / 2.0);
+                ctx.show_text(text).unwrap();
+            }
         }
     }
 
