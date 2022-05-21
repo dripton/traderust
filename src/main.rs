@@ -283,10 +283,10 @@ fn populate_navigable_distances(
     sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
-) -> (Array2<i64>, Array2<i64>) {
+) -> (Array2<i32>, Array2<i32>) {
     debug!("populate_navigable_distances max_jump={}", max_jump);
     let num_worlds = sorted_coords.len();
-    let mut np = Array2::<i64>::zeros((num_worlds, num_worlds));
+    let mut np = Array2::<i32>::zeros((num_worlds, num_worlds));
     let mut num_edges = 0;
     for (ii, coords) in sorted_coords.iter().enumerate() {
         let world = coords_to_world.get(coords).unwrap();
@@ -317,7 +317,7 @@ fn populate_navigable_distances(
         for coords in &world.xboat_routes {
             let neighbor = coords_to_world.get(&coords).unwrap();
             let jj = neighbor.index.unwrap();
-            np[[ii, jj]] = world.straight_line_distance(neighbor) as i64;
+            np[[ii, jj]] = world.straight_line_distance(neighbor) as i32;
             num_edges += 1;
         }
     }
@@ -329,8 +329,8 @@ fn populate_navigable_distances(
     return (np, pred);
 }
 
-fn distance_modifier_table(distance: i64) -> f64 {
-    let table: Vec<i64> = vec![1, 2, 5, 9, 19, 29, 59, 99, 199, 299, 599, 999, INFINITY];
+fn distance_modifier_table(distance: i32) -> f64 {
+    let table: Vec<i32> = vec![1, 2, 5, 9, 19, 29, 59, 99, 199, 299, 599, 999, INFINITY];
     let index = bisect_left(&table, &distance);
     index as f64 / 2.0
 }
@@ -359,10 +359,10 @@ fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
     coords_to_index: &HashMap<Coords, usize>,
     sorted_coords: &Vec<Coords>,
-    dist2: &Array2<i64>,
-    pred2: &Array2<i64>,
-    dist3: &Array2<i64>,
-    pred3: &Array2<i64>,
+    dist2: &Array2<i32>,
+    pred2: &Array2<i32>,
+    dist3: &Array2<i32>,
+    pred3: &Array2<i32>,
 ) {
     debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
@@ -392,7 +392,7 @@ fn populate_trade_routes(
                 // coords1.
                 break;
             }
-            let sld = coords1.straight_line_distance(&coords2) as i64;
+            let sld = coords1.straight_line_distance(&coords2) as i32;
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
             if max_btn1 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus the bonus,
@@ -1048,7 +1048,7 @@ impl Coords {
         Coords { x, y2 }
     }
 
-    fn straight_line_distance(&self, other: &Coords) -> u64 {
+    fn straight_line_distance(&self, other: &Coords) -> u32 {
         let (x1, y1) = <(f64, f64)>::from(*self);
         let (x2, y2) = <(f64, f64)>::from(*other);
         let xdelta = f64::abs(x2 - x1);
@@ -1056,7 +1056,7 @@ impl Coords {
         if ydelta < 0.0 {
             ydelta = 0.0;
         }
-        return (f64::floor(xdelta + ydelta)) as u64;
+        return (f64::floor(xdelta + ydelta)) as u32;
     }
 }
 
@@ -1419,7 +1419,7 @@ impl World {
         return Coords { x, y2 };
     }
 
-    fn straight_line_distance(&self, other: &World) -> u64 {
+    fn straight_line_distance(&self, other: &World) -> i32 {
         let (x1, y1) = <(f64, f64)>::from(self.get_coords());
         let (x2, y2) = <(f64, f64)>::from(other.get_coords());
         let xdelta = f64::abs(x2 - x1);
@@ -1427,10 +1427,10 @@ impl World {
         if ydelta < 0.0 {
             ydelta = 0.0;
         }
-        return (f64::floor(xdelta + ydelta)) as u64;
+        return (f64::floor(xdelta + ydelta)) as i32;
     }
 
-    fn navigable_distance(&self, other: &World, dist: &Array2<i64>) -> i64 {
+    fn navigable_distance(&self, other: &World, dist: &Array2<i32>) -> i32 {
         let ii = self.index.unwrap();
         let jj = other.index.unwrap();
         return dist[[ii, jj]];
@@ -1441,8 +1441,8 @@ impl World {
         other: &World,
         sorted_coords: &Vec<Coords>,
         coords_to_index: &HashMap<Coords, usize>,
-        dist: &Array2<i64>,
-        pred: &Array2<i64>,
+        dist: &Array2<i32>,
+        pred: &Array2<i32>,
     ) -> Option<Vec<Coords>> {
         if self == other {
             return Some(vec![self.get_coords()]);
@@ -1467,12 +1467,12 @@ impl World {
         return Some(path);
     }
 
-    fn distance_modifier(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+    fn distance_modifier(&self, other: &World, dist2: &Array2<i32>) -> f64 {
         let distance = self.navigable_distance(other, dist2);
         distance_modifier_table(distance)
     }
 
-    fn btn(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+    fn btn(&self, other: &World, dist2: &Array2<i32>) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
@@ -1481,7 +1481,7 @@ impl World {
         f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
-    fn passenger_btn(&self, other: &World, dist2: &Array2<i64>) -> f64 {
+    fn passenger_btn(&self, other: &World, dist2: &Array2<i32>) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
@@ -1506,10 +1506,10 @@ impl World {
         sorted_coords: &Vec<Coords>,
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        dist2: &Array2<i64>,
-        pred2: &Array2<i64>,
-        dist3: &Array2<i64>,
-        pred3: &Array2<i64>,
+        dist2: &Array2<i32>,
+        pred2: &Array2<i32>,
+        dist3: &Array2<i32>,
+        pred3: &Array2<i32>,
     ) -> (HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();

@@ -11,8 +11,8 @@ use ndarray::Array2;
 
 use log::debug;
 
-pub const NO_PRED_NODE: i64 = -9999;
-pub const INFINITY: i64 = i64::MAX;
+pub const NO_PRED_NODE: i32 = -9999;
+pub const INFINITY: i32 = i32::MAX;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum Algorithm {
@@ -21,9 +21,9 @@ enum Algorithm {
 }
 
 // TODO multi-thread
-pub fn floyd_warshall(dist: &mut Array2<i64>) -> Array2<i64> {
+pub fn floyd_warshall(dist: &mut Array2<i32>) -> Array2<i32> {
     let size = dist.nrows();
-    let mut pred = Array2::<i64>::from_elem((size, size), NO_PRED_NODE);
+    let mut pred = Array2::<i32>::from_elem((size, size), NO_PRED_NODE);
 
     // Set all zero vertexes to infinity
     for i in 0..size {
@@ -52,7 +52,7 @@ pub fn floyd_warshall(dist: &mut Array2<i64>) -> Array2<i64> {
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] < INFINITY {
-                pred[[i, j]] = i as i64;
+                pred[[i, j]] = i as i32;
             }
         }
     }
@@ -75,11 +75,11 @@ pub fn floyd_warshall(dist: &mut Array2<i64>) -> Array2<i64> {
 }
 
 fn dijkstra_one_row(
-    start: u64,
+    start: u32,
     size: usize,
-    neighbors_map: &HashMap<u64, HashSet<u64>>,
-    weights: &HashMap<(u64, u64), u64>,
-) -> (Vec<i64>, Vec<i64>) {
+    neighbors_map: &HashMap<u32, HashSet<u32>>,
+    weights: &HashMap<(u32, u32), u32>,
+) -> (Vec<i32>, Vec<i32>) {
     let mut dist_row = vec![INFINITY; size];
     let mut pred_row = vec![NO_PRED_NODE; size];
 
@@ -91,14 +91,14 @@ fn dijkstra_one_row(
 
     while !heap.is_empty() {
         if let Some(Reverse((priority, u))) = heap.pop() {
-            if priority == dist_row[u as usize] as u64 {
+            if priority == dist_row[u as usize] as u32 {
                 if let Some(neighbors) = neighbors_map.get(&u) {
                     for v in neighbors {
                         let weight = weights.get(&(u, *v)).unwrap();
-                        let alt = dist_row[u as usize] as u64 + weight;
-                        if alt < (dist_row[*v as usize]) as u64 {
-                            dist_row[*v as usize] = alt as i64;
-                            pred_row[*v as usize] = u as i64;
+                        let alt = dist_row[u as usize] as u32 + weight;
+                        if alt < (dist_row[*v as usize]) as u32 {
+                            dist_row[*v as usize] = alt as i32;
+                            pred_row[*v as usize] = u as i32;
                             let tup = (alt, *v);
                             heap.push(Reverse(tup));
                         }
@@ -112,15 +112,15 @@ fn dijkstra_one_row(
 }
 
 fn dial_one_row(
-    start: u64,
+    start: u32,
     size: usize,
-    neighbors_map: &HashMap<u64, HashSet<u64>>,
-    weights: &HashMap<(u64, u64), u64>,
-) -> (Vec<i64>, Vec<i64>) {
+    neighbors_map: &HashMap<u32, HashSet<u32>>,
+    weights: &HashMap<(u32, u32), u32>,
+) -> (Vec<i32>, Vec<i32>) {
     let mut dist_row = vec![INFINITY; size];
     let mut pred_row = vec![NO_PRED_NODE; size];
 
-    let mut queue = BucketQueue::<VecDeque<u64>>::new();
+    let mut queue = BucketQueue::<VecDeque<u32>>::new();
 
     dist_row[start as usize] = 0;
     queue.enqueue(start, 0);
@@ -132,11 +132,11 @@ fn dial_one_row(
                     if let Some(neighbors) = neighbors_map.get(&u) {
                         for v in neighbors {
                             let weight = weights.get(&(u, *v)).unwrap();
-                            let alt = dist_row[u as usize] as u64 + weight;
-                            if alt < (dist_row[*v as usize]) as u64 {
-                                dist_row[*v as usize] = alt as i64;
-                                pred_row[*v as usize] = u as i64;
-                                queue.enqueue(*v as u64, alt as usize);
+                            let alt = dist_row[u as usize] as u32 + weight;
+                            if alt < (dist_row[*v as usize]) as u32 {
+                                dist_row[*v as usize] = alt as i32;
+                                pred_row[*v as usize] = u as i32;
+                                queue.enqueue(*v as u32, alt as usize);
                             }
                         }
                     }
@@ -148,9 +148,9 @@ fn dial_one_row(
     return (dist_row, pred_row);
 }
 
-fn dijkstra_dial_inner(dist: &mut Array2<i64>, alg: Algorithm) -> Array2<i64> {
+fn dijkstra_dial_inner(dist: &mut Array2<i32>, alg: Algorithm) -> Array2<i32> {
     let size = dist.nrows();
-    let mut pred = Array2::<i64>::from_elem((size, size), NO_PRED_NODE);
+    let mut pred = Array2::<i32>::from_elem((size, size), NO_PRED_NODE);
 
     // Set all zero vertexes to infinity
     for i in 0..size {
@@ -176,26 +176,26 @@ fn dijkstra_dial_inner(dist: &mut Array2<i64>, alg: Algorithm) -> Array2<i64> {
     }
 
     // Populate neighbors_map
-    let mut neighbors_map: HashMap<u64, HashSet<u64>> = HashMap::new();
+    let mut neighbors_map: HashMap<u32, HashSet<u32>> = HashMap::new();
     for i in 0..size {
         let set = HashSet::new();
-        neighbors_map.insert(i as u64, set);
+        neighbors_map.insert(i as u32, set);
     }
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] < INFINITY {
-                let set = neighbors_map.get_mut(&(i as u64)).unwrap();
-                set.insert(j as u64);
+                let set = neighbors_map.get_mut(&(i as u32)).unwrap();
+                set.insert(j as u32);
             }
         }
     }
 
     // Populate weights
-    let mut weights: HashMap<(u64, u64), u64> = HashMap::new();
+    let mut weights: HashMap<(u32, u32), u32> = HashMap::new();
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] != INFINITY {
-                weights.insert((i as u64, j as u64), dist[[i, j]] as u64);
+                weights.insert((i as u32, j as u32), dist[[i, j]] as u32);
             }
         }
     }
@@ -204,22 +204,22 @@ fn dijkstra_dial_inner(dist: &mut Array2<i64>, alg: Algorithm) -> Array2<i64> {
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] < INFINITY {
-                pred[[i, j]] = i as i64;
+                pred[[i, j]] = i as i32;
             }
         }
     }
 
-    let tuples: Vec<(Vec<i64>, Vec<i64>)>;
+    let tuples: Vec<(Vec<i32>, Vec<i32>)>;
     // Do the Dijkstra or algorithm for each row, in parallel using Rayon
     if alg == Algorithm::D {
         tuples = (0..size)
             .into_par_iter()
-            .map(|i| dijkstra_one_row(i as u64, size, &neighbors_map, &weights))
+            .map(|i| dijkstra_one_row(i as u32, size, &neighbors_map, &weights))
             .collect();
     } else if alg == Algorithm::Dial {
         tuples = (0..size)
             .into_par_iter()
-            .map(|i| dial_one_row(i as u64, size, &neighbors_map, &weights))
+            .map(|i| dial_one_row(i as u32, size, &neighbors_map, &weights))
             .collect();
     } else {
         panic!("broken Algorithm");
@@ -237,11 +237,11 @@ fn dijkstra_dial_inner(dist: &mut Array2<i64>, alg: Algorithm) -> Array2<i64> {
     return pred;
 }
 
-pub fn dijkstra(dist: &mut Array2<i64>) -> Array2<i64> {
+pub fn dijkstra(dist: &mut Array2<i32>) -> Array2<i32> {
     return dijkstra_dial_inner(dist, Algorithm::D);
 }
 
-pub fn dial(dist: &mut Array2<i64>) -> Array2<i64> {
+pub fn dial(dist: &mut Array2<i32>) -> Array2<i32> {
     return dijkstra_dial_inner(dist, Algorithm::Dial);
 }
 
@@ -252,9 +252,9 @@ mod tests {
     extern crate rand;
     use rand::prelude::*;
 
-    fn setup_scipy_test() -> Array2<i64> {
+    fn setup_scipy_test() -> Array2<i32> {
         // https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csgraph.shortest_path.html
-        let mut dist = Array2::<i64>::from_elem((4, 4), INFINITY);
+        let mut dist = Array2::<i32>::from_elem((4, 4), INFINITY);
         dist[[0, 1]] = 1;
         dist[[0, 2]] = 2;
         dist[[1, 3]] = 1;
@@ -264,7 +264,7 @@ mod tests {
         return dist;
     }
 
-    fn compare_scipy_test(dist: Array2<i64>, pred: Array2<i64>) {
+    fn compare_scipy_test(dist: Array2<i32>, pred: Array2<i32>) {
         debug!("dist after {:?}\n", dist);
         debug!("pred after {:?}\n", pred);
 
@@ -330,17 +330,17 @@ mod tests {
         compare_scipy_test(dist, pred);
     }
 
-    fn setup_random_matrix() -> Array2<i64> {
+    fn setup_random_matrix() -> Array2<i32> {
         let mut rng = thread_rng();
         let vertexes = 100;
         let edges = 100;
         let max_cost = 4;
-        let mut dist = Array2::<i64>::from_elem((vertexes, vertexes), INFINITY);
+        let mut dist = Array2::<i32>::from_elem((vertexes, vertexes), INFINITY);
         for _ in 0..edges {
             let i = rng.gen_range(0..vertexes);
             let j = rng.gen_range(0..vertexes);
             let cost = rng.gen_range(1..=max_cost);
-            dist[[i, j]] = cost as i64;
+            dist[[i, j]] = cost as i32;
         }
         return dist;
     }
