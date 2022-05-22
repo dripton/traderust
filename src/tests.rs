@@ -705,7 +705,7 @@ mod tests {
         assert_eq!(distance_modifier_table(600), 5.5);
         assert_eq!(distance_modifier_table(999), 5.5);
         assert_eq!(distance_modifier_table(1000), 6.0);
-        assert_eq!(distance_modifier_table(999999), 6.0);
+        assert_eq!(distance_modifier_table(9999), 6.0);
         assert_eq!(distance_modifier_table(INFINITY), 6.0);
     }
 
