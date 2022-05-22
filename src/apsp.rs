@@ -330,10 +330,8 @@ mod tests {
         compare_scipy_test(dist, pred);
     }
 
-    fn setup_random_matrix() -> Array2<u16> {
+    fn setup_random_matrix(vertexes: usize, edges: usize) -> Array2<u16> {
         let mut rng = thread_rng();
-        let vertexes = 100;
-        let edges = 100;
         let max_cost = 4;
         let mut dist = Array2::<u16>::from_elem((vertexes, vertexes), INFINITY);
         for _ in 0..edges {
@@ -346,8 +344,8 @@ mod tests {
     }
 
     #[test]
-    fn multi_algorithm_random_matrix() {
-        let mut dist1 = setup_random_matrix();
+    fn test_multi_algorithm_random_matrix() {
+        let mut dist1 = setup_random_matrix(100, 1000);
         let mut dist2 = dist1.clone();
         let mut dist3 = dist2.clone();
 
@@ -357,6 +355,18 @@ mod tests {
 
         assert_eq!(dist1, dist2);
         assert_eq!(dist1, dist3);
+        // predecessors are not guaranteed to be identical
+    }
+
+    #[test]
+    fn test_two_algorithms_bigger_random_matrix() {
+        let mut dist1 = setup_random_matrix(1000, 6000);
+        let mut dist2 = dist1.clone();
+
+        dijkstra(&mut dist1);
+        dial(&mut dist2);
+
+        assert_eq!(dist1, dist2);
         // predecessors are not guaranteed to be identical
     }
 }
