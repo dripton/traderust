@@ -393,11 +393,9 @@ fn populate_trade_routes(
             if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
                 || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
             {
-                // BTN can't be more than the lower WTN + 5, or the sum of the
-                // WTNs plus 1.  So if the lower WTN or the sum of the the sum
-                // of the WTNs is small enough, we know that coords2 and later
-                // worlds won't come close to forming any trade routes with
-                // coords1.
+                // If the lower WTN or the sum of the WTNs is small enough, we
+                // know that coords2 and later worlds won't come close to
+                // forming any trade routes with coords1.
                 break;
             }
             let sld = coords1.straight_line_distance(coords2) as u16;
