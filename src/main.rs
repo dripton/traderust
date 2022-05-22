@@ -465,10 +465,8 @@ fn populate_trade_routes(
                 sorted_coords,
                 coords_to_world,
                 coords_to_index,
-                dist2,
-                pred2,
-                dist3,
-                pred3,
+                (dist2, pred2),
+                (dist3, pred3),
             )
         })
         .collect();
@@ -1512,10 +1510,8 @@ impl World {
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        dist2: &Array2<u16>,
-        pred2: &Array2<u16>,
-        dist3: &Array2<u16>,
-        pred3: &Array2<u16>,
+        (dist2, pred2): (&Array2<u16>, &Array2<u16>),
+        (dist3, pred3): (&Array2<u16>, &Array2<u16>),
     ) -> (HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
