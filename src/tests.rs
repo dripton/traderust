@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 
-use crate::apsp::INFINITY;
+use crate::apsp::{Algorithm, INFINITY};
 use crate::{
     distance_modifier_table, download_sector_data, parse_header_and_separator,
     populate_navigable_distances, populate_trade_routes, same_allegiance, MAX_DISTANCE_PENALTY,
@@ -21,6 +21,8 @@ mod tests {
 
     // Reuse a test directory and downloaded files to avoid overloading travellermap.com
     const TEST_DATA_DIR: &'static str = "/var/tmp/traderust_tests";
+
+    const ALG: Algorithm = Algorithm::Dijkstra;
 
     #[fixture]
     #[once]
@@ -838,7 +840,7 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
@@ -1218,8 +1220,8 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-        let (dist3, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
+        let (dist3, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, ALG);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
@@ -1332,8 +1334,8 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, ALG);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
@@ -1718,7 +1720,7 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
@@ -1827,7 +1829,7 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist2, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
 
         let aramis = spin
             .hex_to_world("3110".to_string(), &coords_to_world)
@@ -1940,8 +1942,8 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, ALG);
 
         populate_trade_routes(
             &mut coords_to_world,
@@ -2124,8 +2126,8 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, ALG);
 
         populate_trade_routes(
             &mut coords_to_world,
@@ -2188,8 +2190,8 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, ALG);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, ALG);
 
         populate_trade_routes(
             &mut coords_to_world,

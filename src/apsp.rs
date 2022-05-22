@@ -6,15 +6,17 @@ use rayon::prelude::*;
 extern crate bucket_queue;
 use bucket_queue::*;
 
+use clap::ArgEnum;
+
 extern crate ndarray;
 use ndarray::Array2;
 
 pub const INFINITY: u16 = u16::MAX;
 pub const NO_PRED_NODE: u16 = INFINITY - 1;
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-enum Algorithm {
-    D,
+#[derive(ArgEnum, Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Algorithm {
+    Dijkstra,
     Dial,
 }
 
@@ -208,8 +210,8 @@ fn dijkstra_dial_inner(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
     }
 
     let tuples: Vec<(Vec<u16>, Vec<u16>)>;
-    // Do the Dijkstra or algorithm for each row, in parallel using Rayon
-    if alg == Algorithm::D {
+    // Do the Dijkstra or Dial algorithm for each row, in parallel using Rayon
+    if alg == Algorithm::Dijkstra {
         tuples = (0..size)
             .into_par_iter()
             .map(|i| dijkstra_one_row(i as u16, size, &neighbors_map, &weights))
@@ -235,8 +237,12 @@ fn dijkstra_dial_inner(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
     pred
 }
 
+pub fn shortest_path(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
+    dijkstra_dial_inner(dist, alg)
+}
+
 pub fn dijkstra(dist: &mut Array2<u16>) -> Array2<u16> {
-    dijkstra_dial_inner(dist, Algorithm::D)
+    dijkstra_dial_inner(dist, Algorithm::Dijkstra)
 }
 
 pub fn dial(dist: &mut Array2<u16>) -> Array2<u16> {

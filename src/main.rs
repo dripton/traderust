@@ -25,7 +25,7 @@ use tempfile::tempdir;
 use url::Url;
 
 mod apsp;
-use apsp::{dijkstra, INFINITY};
+use apsp::{shortest_path, Algorithm, INFINITY};
 #[cfg(test)]
 mod tests;
 
@@ -55,6 +55,10 @@ struct Args {
     /// No output
     #[clap(short, long)]
     quiet: bool,
+
+    /// Algorithm for all pairs shortest paths
+    #[clap(arg_enum, short, long, default_value = "dial")]
+    algorithm: Algorithm,
 }
 
 const SQRT3: f64 = 1.7320508075688772;
@@ -296,6 +300,7 @@ fn populate_navigable_distances(
     sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
+    alg: Algorithm,
 ) -> (Array2<u16>, Array2<u16>) {
     debug!("populate_navigable_distances max_jump={}", max_jump);
     let num_worlds = sorted_coords.len();
@@ -339,10 +344,10 @@ fn populate_navigable_distances(
         }
     }
     debug!(
-        "(parallel) dijkstra worlds={} edges={}",
-        num_worlds, num_edges
+        "(parallel) shortest_path alg={:?} worlds={} edges={}",
+        alg, num_worlds, num_edges
     );
-    let pred = dijkstra(&mut np);
+    let pred = shortest_path(&mut np, alg);
     (np, pred)
 }
 
@@ -1904,6 +1909,7 @@ fn main() -> Result<()> {
         eprintln!("Please do not set both --quiet and --verbose.  Exiting");
         exit(1);
     }
+    let alg = args.algorithm;
 
     let output_dir = args.output_directory;
     let temp_dir = tempdir()?;
@@ -1972,8 +1978,8 @@ fn main() -> Result<()> {
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
-    let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
-    let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+    let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, alg);
+    let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, alg);
 
     populate_trade_routes(
         &mut coords_to_world,
