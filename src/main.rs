@@ -205,7 +205,7 @@ lazy_static! {
 
     // Values in the book are ranges, but use averages for repeatability.
     static ref DBTN_TO_CREDITS: Vec<u64> = vec![
-        2,
+        0,  // The book says 0-5, but 0 DBTN can also mean unreachable, so 0.
         7,
         30,
         75,
