@@ -62,6 +62,8 @@ const SQRT3: f64 = 1.7320508075688772;
 const MAX_TECH_LEVEL: u32 = 34;
 const MAX_POPULATION: u32 = 34;
 
+const MAX_DISTANCE_PENALTY: f64 = 9999.0;
+
 // Rules don't say BTN can't be negative but it seems reasonable to me.
 const MIN_BTN: f64 = 0.0;
 const MAX_BTN_WTN_DELTA: f64 = 5.0;
@@ -334,6 +336,9 @@ fn populate_navigable_distances(
 }
 
 fn distance_modifier_table(distance: u16) -> f64 {
+    if distance == INFINITY {
+        return MAX_DISTANCE_PENALTY;
+    }
     let table: Vec<u16> = vec![1, 2, 5, 9, 19, 29, 59, 99, 199, 299, 599, 999, INFINITY];
     let index = bisect_left(&table, &distance);
     index as f64 / 2.0

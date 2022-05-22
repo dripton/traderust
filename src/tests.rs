@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use crate::apsp::INFINITY;
 use crate::{
     distance_modifier_table, download_sector_data, parse_header_and_separator,
-    populate_navigable_distances, populate_trade_routes, same_allegiance,
+    populate_navigable_distances, populate_trade_routes, same_allegiance, MAX_DISTANCE_PENALTY,
 };
 use crate::{Coords, Sector, World};
 
@@ -782,7 +782,7 @@ mod tests {
         assert_eq!(distance_modifier_table(999), 5.5);
         assert_eq!(distance_modifier_table(1000), 6.0);
         assert_eq!(distance_modifier_table(9999), 6.0);
-        assert_eq!(distance_modifier_table(INFINITY), 6.0);
+        assert_eq!(distance_modifier_table(INFINITY), MAX_DISTANCE_PENALTY);
     }
 
     #[rstest]
@@ -893,15 +893,24 @@ mod tests {
         assert_eq!(aramis.distance_modifier(ldd, &dist2), 0.0);
         assert_eq!(aramis.distance_modifier(vinorian, &dist2), 0.0);
         assert_eq!(aramis.distance_modifier(corfu, &dist2), 2.0);
-        assert_eq!(aramis.distance_modifier(andor, &dist2), 6.0);
+        assert_eq!(
+            aramis.distance_modifier(andor, &dist2),
+            MAX_DISTANCE_PENALTY
+        );
         assert_eq!(aramis.distance_modifier(margesi, &dist2), 1.0);
         assert_eq!(aramis.distance_modifier(pavanne, &dist2), 1.5);
         assert_eq!(aramis.distance_modifier(regina, &dist2), 2.0);
         assert_eq!(aramis.distance_modifier(mongo, &dist2), 2.5);
         assert_eq!(aramis.distance_modifier(collace, &dist2), 3.0);
         assert_eq!(reno.distance_modifier(javan, &dist2), 3.5);
-        assert_eq!(andor.distance_modifier(candory, &dist2), 6.0);
-        assert_eq!(candory.distance_modifier(andor, &dist2), 6.0);
+        assert_eq!(
+            andor.distance_modifier(candory, &dist2),
+            MAX_DISTANCE_PENALTY
+        );
+        assert_eq!(
+            candory.distance_modifier(andor, &dist2),
+            MAX_DISTANCE_PENALTY
+        );
         assert_eq!(ldd.distance_modifier(natoko, &dist2), 0.5);
         assert_eq!(collace.distance_modifier(salaam, &dist2), 3.0);
         assert_eq!(raweh.distance_modifier(salaam, &dist2), 3.5);
@@ -1776,8 +1785,8 @@ mod tests {
         assert_eq!(vinorian.btn(nutema, &dist2), 6.5);
         assert_eq!(nutema.btn(margesi, &dist2), 5.5);
         assert_eq!(margesi.btn(saarinen, &dist2), 5.5);
-        assert_eq!(aramis.btn(andor, &dist2), 2.5);
-        assert_eq!(andor.btn(candory, &dist2), 2.0);
+        assert_eq!(aramis.btn(andor, &dist2), 0.0);
+        assert_eq!(andor.btn(candory, &dist2), 0.0);
         Ok(())
     }
 
@@ -1885,8 +1894,8 @@ mod tests {
         assert_eq!(vinorian.passenger_btn(nutema, &dist2), 6.5);
         assert_eq!(nutema.passenger_btn(margesi, &dist2), 5.5);
         assert_eq!(margesi.passenger_btn(saarinen, &dist2), 5.5);
-        assert_eq!(aramis.passenger_btn(andor, &dist2), 3.0);
-        assert_eq!(andor.passenger_btn(candory, &dist2), 2.0);
+        assert_eq!(aramis.passenger_btn(andor, &dist2), 0.0);
+        assert_eq!(andor.passenger_btn(candory, &dist2), 0.0);
         Ok(())
     }
 
