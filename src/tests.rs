@@ -2032,7 +2032,7 @@ mod tests {
         assert_eq!(jesedipere.major_routes.len(), 0);
         assert_eq!(jesedipere.main_routes.len(), 0);
         assert_eq!(jesedipere.intermediate_routes.len(), 3); // py 0
-        assert_eq!(jesedipere.feeder_routes.len(), 3);
+        assert_eq!(jesedipere.feeder_routes.len(), 5);
         assert_eq!(jesedipere.minor_routes.len(), 1); // py 2
 
         debug!(

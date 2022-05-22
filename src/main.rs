@@ -429,7 +429,12 @@ fn populate_trade_routes(
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-            let btn = world1.btn(world2, dist2);
+
+            // Book says to only use jump-2 routes except when it can save a
+            // feeder or better route at least one jump, but in some sparse
+            // regions, no jump-3 means no connections at all.  So I will
+            // allow jump-3 here to find BTNs.
+            let btn = world1.btn(world2, dist3);
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
             (coords1, coords2, dbtn, credits)
@@ -1473,21 +1478,21 @@ impl World {
         distance_modifier_table(distance)
     }
 
-    fn btn(&self, other: &World, dist2: &Array2<u16>) -> f64 {
+    fn btn(&self, other: &World, dist: &Array2<u16>) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
-        let btn = base_btn - self.distance_modifier(other, dist2);
+        let btn = base_btn - self.distance_modifier(other, dist);
         f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
-    fn passenger_btn(&self, other: &World, dist2: &Array2<u16>) -> f64 {
+    fn passenger_btn(&self, other: &World, dist: &Array2<u16>) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
-        let mut pbtn = base_btn - self.distance_modifier(other, dist2);
+        let mut pbtn = base_btn - self.distance_modifier(other, dist);
         for world in [self, other] {
             if world.trade_classifications.contains("Ri") {
                 pbtn += RI_PBTN_BONUS;
