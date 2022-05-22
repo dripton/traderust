@@ -38,6 +38,7 @@ mod tests {
             "Gvurrdon".to_string(),
             "Spinward Marches".to_string(),
             "Core".to_string(),
+            "Reft".to_string(),
         ];
         download_sector_data(&data_dir, &sector_names)?;
 
@@ -235,6 +236,81 @@ mod tests {
         let oertsous_coords = sector.hex_to_coords.get("3238").unwrap();
         let oertsous = coords_to_world.get(oertsous_coords).unwrap();
         assert_eq!(oertsous.name, "Oertsous");
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_sector_core(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Core".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name, "Core");
+        assert_eq!(sector.names, vec!["Core", "Ukan"]);
+        assert_eq!(sector.abbreviation, "Core");
+        assert_eq!(sector.location, (0, 0));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
+            "Apge".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
+            "Saregon".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 2);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("ImSy").unwrap(),
+            "Third Imperium, Sylean Worlds".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 546);
+        let shana_ma_coords = sector.hex_to_coords.get("0104").unwrap();
+        let shana_ma = coords_to_world.get(shana_ma_coords).unwrap();
+        assert_eq!(shana_ma.name, "Shana Ma");
+        let lishide_coords = sector.hex_to_coords.get("3238").unwrap();
+        let lishide = coords_to_world.get(lishide_coords).unwrap();
+        assert_eq!(lishide.name, "Lishide");
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_sector_reft(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Reft".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name, "Reft");
+        assert_eq!(
+            sector.names,
+            vec!["Reft", r"Reft Sector", "Bransakral", "Sushinar"]
+        );
+        assert_eq!(sector.abbreviation, "Reft");
+        assert_eq!(sector.location, (-3, 0));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
+            "Vestus".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
+            "Moibin".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 5);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("CsIm").unwrap(),
+            "Client state, Third Imperium".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 130);
+        let grudovo_coords = sector.hex_to_coords.get("0111").unwrap();
+        let grudovo = coords_to_world.get(grudovo_coords).unwrap();
+        assert_eq!(grudovo.name, "Grudovo");
+        let jeandrent_coords = sector.hex_to_coords.get("3237").unwrap();
+        let jeandrent = coords_to_world.get(jeandrent_coords).unwrap();
+        assert_eq!(jeandrent.name, "Jeandrent");
 
         Ok(())
     }
