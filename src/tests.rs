@@ -2157,4 +2157,377 @@ mod tests {
 
         Ok(())
     }
+
+    #[rstest]
+    fn test_islands(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let reft = Sector::new(&data_dir, "Reft".to_string(), &mut coords_to_world);
+        location_to_sector.insert(reft.location, reft.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            coords_to_index.insert(*coords, ii);
+            let world_opt = coords_to_world.get_mut(coords);
+            if let Some(world) = world_opt {
+                world.index = Some(ii);
+            } else {
+                panic!("World not found at coords");
+            }
+        }
+        let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2);
+        let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3);
+
+        populate_trade_routes(
+            &mut coords_to_world,
+            &coords_to_index,
+            &sorted_coords,
+            &dist2,
+            &pred2,
+            &dist3,
+            &pred3,
+        );
+
+        let zuflucht = reft
+            .hex_to_world("0921".to_string(), &coords_to_world)
+            .unwrap();
+        let wellington = reft
+            .hex_to_world("0925".to_string(), &coords_to_world)
+            .unwrap();
+        let esperanza = reft
+            .hex_to_world("0926".to_string(), &coords_to_world)
+            .unwrap();
+        let st_hilaire = reft
+            .hex_to_world("0930".to_string(), &coords_to_world)
+            .unwrap();
+        let nebelwelt = reft
+            .hex_to_world("1030".to_string(), &coords_to_world)
+            .unwrap();
+        let gloire = reft
+            .hex_to_world("1123".to_string(), &coords_to_world)
+            .unwrap();
+        let serendip_belt = reft
+            .hex_to_world("1323".to_string(), &coords_to_world)
+            .unwrap();
+        let new_colchis = reft
+            .hex_to_world("1327".to_string(), &coords_to_world)
+            .unwrap();
+        let herzenslust = reft
+            .hex_to_world("1426".to_string(), &coords_to_world)
+            .unwrap();
+        let orphee = reft
+            .hex_to_world("1429".to_string(), &coords_to_world)
+            .unwrap();
+        let topas = reft
+            .hex_to_world("1522".to_string(), &coords_to_world)
+            .unwrap();
+        let elysee = reft
+            .hex_to_world("1525".to_string(), &coords_to_world)
+            .unwrap();
+        let besancon = reft
+            .hex_to_world("1526".to_string(), &coords_to_world)
+            .unwrap();
+        let berlichingen = reft
+            .hex_to_world("1621".to_string(), &coords_to_world)
+            .unwrap();
+        let joyeuse = reft
+            .hex_to_world("1628".to_string(), &coords_to_world)
+            .unwrap();
+        let sturgeons_law = reft
+            .hex_to_world("1724".to_string(), &coords_to_world)
+            .unwrap();
+        let quichotte = reft
+            .hex_to_world("1729".to_string(), &coords_to_world)
+            .unwrap();
+        let neubayern = reft
+            .hex_to_world("1822".to_string(), &coords_to_world)
+            .unwrap();
+        let schlesien_belt = reft
+            .hex_to_world("1923".to_string(), &coords_to_world)
+            .unwrap();
+        let new_home = reft
+            .hex_to_world("1925".to_string(), &coords_to_world)
+            .unwrap();
+        let colchis = reft
+            .hex_to_world("2026".to_string(), &coords_to_world)
+            .unwrap();
+        let st_genevieve = reft
+            .hex_to_world("2123".to_string(), &coords_to_world)
+            .unwrap();
+        let acadie = reft
+            .hex_to_world("2225".to_string(), &coords_to_world)
+            .unwrap();
+        let sansterre = reft
+            .hex_to_world("2322".to_string(), &coords_to_world)
+            .unwrap();
+        let achille = reft
+            .hex_to_world("2324".to_string(), &coords_to_world)
+            .unwrap();
+        let amondiage = reft
+            .hex_to_world("2325".to_string(), &coords_to_world)
+            .unwrap();
+        let st_denis = reft
+            .hex_to_world("2423".to_string(), &coords_to_world)
+            .unwrap();
+
+        assert_eq!(zuflucht.uwtn(), 4.0);
+        assert_eq!(zuflucht.wtn_port_modifier(), 0.0);
+        assert_eq!(zuflucht.wtn(), 4.0);
+        assert_eq!(wellington.uwtn(), 2.0);
+        assert_eq!(wellington.wtn_port_modifier(), 0.5);
+        assert_eq!(wellington.wtn(), 2.5);
+        assert_eq!(esperanza.uwtn(), 6.0);
+        assert_eq!(esperanza.wtn_port_modifier(), 0.0);
+        assert_eq!(esperanza.wtn(), 6.0);
+        assert_eq!(st_hilaire.uwtn(), 4.5);
+        assert_eq!(st_hilaire.wtn_port_modifier(), 0.0);
+        assert_eq!(st_hilaire.wtn(), 4.5);
+        assert_eq!(nebelwelt.uwtn(), 2.5);
+        assert_eq!(nebelwelt.wtn_port_modifier(), 0.5);
+        assert_eq!(nebelwelt.wtn(), 3.0);
+        assert_eq!(gloire.uwtn(), 3.5);
+        assert_eq!(gloire.wtn_port_modifier(), 0.0);
+        assert_eq!(gloire.wtn(), 3.5);
+        assert_eq!(serendip_belt.uwtn(), 5.5);
+        assert_eq!(serendip_belt.wtn_port_modifier(), 0.0);
+        assert_eq!(serendip_belt.wtn(), 5.5);
+        assert_eq!(new_colchis.uwtn(), 5.5);
+        assert_eq!(new_colchis.wtn_port_modifier(), 0.0);
+        assert_eq!(new_colchis.wtn(), 5.5);
+        assert_eq!(herzenslust.uwtn(), 4.0);
+        assert_eq!(herzenslust.wtn_port_modifier(), -1.0);
+        assert_eq!(herzenslust.wtn(), 3.0);
+        assert_eq!(orphee.uwtn(), 2.5);
+        assert_eq!(orphee.wtn_port_modifier(), -2.5);
+        assert_eq!(orphee.wtn(), 0.0);
+        assert_eq!(topas.uwtn(), 4.5);
+        assert_eq!(topas.wtn_port_modifier(), -0.5);
+        assert_eq!(topas.wtn(), 4.0);
+        assert_eq!(elysee.uwtn(), 3.5);
+        assert_eq!(elysee.wtn_port_modifier(), 0.5);
+        assert_eq!(elysee.wtn(), 4.0);
+        assert_eq!(besancon.uwtn(), 2.5);
+        assert_eq!(besancon.wtn_port_modifier(), 0.5);
+        assert_eq!(besancon.wtn(), 3.0);
+        assert_eq!(berlichingen.uwtn(), 2.5);
+        assert_eq!(berlichingen.wtn_port_modifier(), 0.0);
+        assert_eq!(berlichingen.wtn(), 2.5);
+        assert_eq!(joyeuse.uwtn(), 5.5);
+        assert_eq!(joyeuse.wtn_port_modifier(), 0.0);
+        assert_eq!(joyeuse.wtn(), 5.5);
+        assert_eq!(sturgeons_law.uwtn(), 3.0);
+        assert_eq!(sturgeons_law.wtn_port_modifier(), 0.0);
+        assert_eq!(sturgeons_law.wtn(), 3.0);
+        assert_eq!(quichotte.uwtn(), 3.5);
+        assert_eq!(quichotte.wtn_port_modifier(), -0.5);
+        assert_eq!(quichotte.wtn(), 3.0);
+        assert_eq!(neubayern.uwtn(), 5.5);
+        assert_eq!(neubayern.wtn_port_modifier(), 0.0);
+        assert_eq!(neubayern.wtn(), 5.5);
+        assert_eq!(schlesien_belt.uwtn(), 2.5);
+        assert_eq!(schlesien_belt.wtn_port_modifier(), 0.5);
+        assert_eq!(schlesien_belt.wtn(), 3.0);
+        assert_eq!(new_home.uwtn(), 5.0);
+        assert_eq!(new_home.wtn_port_modifier(), 0.0);
+        assert_eq!(new_home.wtn(), 5.0);
+        assert_eq!(colchis.uwtn(), 5.0);
+        assert_eq!(colchis.wtn_port_modifier(), 0.0);
+        assert_eq!(colchis.wtn(), 5.0);
+        assert_eq!(st_genevieve.uwtn(), 1.5);
+        assert_eq!(st_genevieve.wtn_port_modifier(), 0.5);
+        assert_eq!(st_genevieve.wtn(), 2.0);
+        assert_eq!(acadie.uwtn(), 3.5);
+        assert_eq!(acadie.wtn_port_modifier(), 0.0);
+        assert_eq!(acadie.wtn(), 3.5);
+        assert_eq!(sansterre.uwtn(), 5.5);
+        assert_eq!(sansterre.wtn_port_modifier(), 0.0);
+        assert_eq!(sansterre.wtn(), 5.5);
+        assert_eq!(achille.uwtn(), 2.5);
+        assert_eq!(achille.wtn_port_modifier(), 0.0);
+        assert_eq!(achille.wtn(), 2.5);
+        assert_eq!(amondiage.uwtn(), 5.5);
+        assert_eq!(amondiage.wtn_port_modifier(), 0.0);
+        assert_eq!(amondiage.wtn(), 5.5);
+        assert_eq!(st_denis.uwtn(), 4.0);
+        assert_eq!(st_denis.wtn_port_modifier(), -0.5);
+        assert_eq!(st_denis.wtn(), 3.5);
+
+        assert!(zuflucht.neighbors1.is_empty());
+        assert!(zuflucht.neighbors2.is_empty());
+        assert_eq!(zuflucht.neighbors3.len(), 1);
+        assert_eq!(
+            zuflucht.neighbors3.iter().next(),
+            Some(&gloire.get_coords())
+        );
+        assert!(zuflucht.xboat_routes.is_empty());
+
+        assert_eq!(zuflucht.navigable_distance(wellington, &dist2), INFINITY);
+        assert_eq!(zuflucht.btn(wellington, &dist2), 0.0);
+        assert_eq!(zuflucht.passenger_btn(wellington, &dist2), 0.0);
+        assert_eq!(zuflucht.navigable_distance(wellington, &dist3), 6);
+        assert_eq!(zuflucht.wtcm(wellington), -0.5);
+        assert_eq!(zuflucht.btn(wellington, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(wellington, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(esperanza, &dist2), INFINITY);
+        assert_eq!(zuflucht.wtcm(esperanza), -0.5);
+        assert_eq!(zuflucht.btn(esperanza, &dist2), 0.0);
+        assert_eq!(zuflucht.passenger_btn(esperanza, &dist2), 0.0);
+        assert_eq!(zuflucht.navigable_distance(esperanza, &dist3), 7);
+        assert_eq!(zuflucht.btn(esperanza, &dist3), 8.0);
+        assert_eq!(zuflucht.passenger_btn(esperanza, &dist3), 8.0);
+
+        assert_eq!(zuflucht.navigable_distance(gloire, &dist2), INFINITY);
+        assert_eq!(zuflucht.wtcm(gloire), -0.5);
+        assert_eq!(zuflucht.btn(gloire, &dist2), 0.0);
+        assert_eq!(zuflucht.passenger_btn(gloire, &dist2), 0.0);
+        assert_eq!(zuflucht.navigable_distance(gloire, &dist3), 3);
+        assert_eq!(zuflucht.btn(gloire, &dist3), 6.0);
+        assert_eq!(zuflucht.passenger_btn(gloire, &dist3), 6.0);
+
+        assert_eq!(zuflucht.navigable_distance(serendip_belt, &dist3), 5);
+        assert_eq!(zuflucht.wtcm(serendip_belt), 0.0);
+        assert_eq!(zuflucht.btn(serendip_belt, &dist3), 8.5);
+        assert_eq!(zuflucht.passenger_btn(serendip_belt, &dist3), 8.5);
+
+        assert_eq!(zuflucht.navigable_distance(herzenslust, &dist3), 10);
+        assert_eq!(zuflucht.wtcm(herzenslust), -0.5);
+        assert_eq!(zuflucht.btn(herzenslust, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(herzenslust, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(orphee, &dist3), INFINITY);
+        assert_eq!(zuflucht.wtcm(orphee), -0.5);
+        assert_eq!(zuflucht.btn(orphee, &dist3), 0.0);
+        assert_eq!(zuflucht.passenger_btn(orphee, &dist3), 0.0);
+
+        assert_eq!(zuflucht.navigable_distance(topas, &dist3), 7);
+        assert_eq!(zuflucht.wtcm(topas), 0.0);
+        assert_eq!(zuflucht.btn(topas, &dist3), 6.5);
+        assert_eq!(zuflucht.passenger_btn(topas, &dist3), 6.5);
+
+        assert_eq!(zuflucht.navigable_distance(elysee, &dist3), 8);
+        assert_eq!(zuflucht.wtcm(elysee), -0.5);
+        assert_eq!(zuflucht.btn(elysee, &dist3), 6.0);
+        assert_eq!(zuflucht.passenger_btn(elysee, &dist3), 6.0);
+
+        assert_eq!(zuflucht.navigable_distance(besancon, &dist3), 9);
+        assert_eq!(zuflucht.wtcm(besancon), -0.5);
+        assert_eq!(zuflucht.btn(besancon, &dist3), 5.0);
+        assert_eq!(zuflucht.passenger_btn(besancon, &dist3), 5.0);
+
+        assert_eq!(zuflucht.navigable_distance(berlichingen, &dist3), 8);
+        assert_eq!(zuflucht.wtcm(berlichingen), -0.5);
+        assert_eq!(zuflucht.btn(berlichingen, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(berlichingen, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(joyeuse, &dist3), 12);
+        assert_eq!(zuflucht.wtcm(joyeuse), -0.5);
+        assert_eq!(zuflucht.btn(joyeuse, &dist3), 7.0);
+        assert_eq!(zuflucht.passenger_btn(joyeuse, &dist3), 7.0);
+
+        assert_eq!(zuflucht.navigable_distance(sturgeons_law, &dist3), 10);
+        assert_eq!(zuflucht.wtcm(sturgeons_law), -0.5);
+        assert_eq!(zuflucht.btn(sturgeons_law, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(sturgeons_law, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(quichotte, &dist3), 13);
+        assert_eq!(zuflucht.wtcm(quichotte), -0.5);
+        assert_eq!(zuflucht.btn(quichotte, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(quichotte, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(neubayern, &dist3), 10);
+        assert_eq!(zuflucht.wtcm(neubayern), -0.5);
+        assert_eq!(zuflucht.btn(neubayern, &dist3), 7.0);
+        assert_eq!(zuflucht.passenger_btn(neubayern, &dist3), 7.0);
+
+        assert_eq!(zuflucht.navigable_distance(schlesien_belt, &dist3), 11);
+        assert_eq!(zuflucht.wtcm(schlesien_belt), -0.5);
+        assert_eq!(zuflucht.btn(schlesien_belt, &dist3), 4.5);
+        assert_eq!(zuflucht.passenger_btn(schlesien_belt, &dist3), 4.5);
+
+        assert_eq!(zuflucht.navigable_distance(new_home, &dist3), 12);
+        assert_eq!(zuflucht.wtcm(new_home), -0.5);
+        assert_eq!(zuflucht.btn(new_home, &dist3), 6.5);
+        assert_eq!(zuflucht.passenger_btn(new_home, &dist3), 7.0);
+
+        assert_eq!(zuflucht.navigable_distance(colchis, &dist3), 14);
+        assert_eq!(zuflucht.wtcm(colchis), -0.5);
+        assert_eq!(zuflucht.btn(colchis, &dist3), 6.5);
+        assert_eq!(zuflucht.passenger_btn(colchis, &dist3), 6.5);
+
+        assert_eq!(zuflucht.navigable_distance(st_genevieve, &dist3), 13);
+        assert_eq!(zuflucht.wtcm(st_genevieve), -0.5);
+        assert_eq!(zuflucht.btn(st_genevieve, &dist3), 3.5);
+        assert_eq!(zuflucht.passenger_btn(st_genevieve, &dist3), 3.5);
+
+        assert_eq!(zuflucht.navigable_distance(acadie, &dist3), 15);
+        assert_eq!(zuflucht.wtcm(acadie), -0.5);
+        assert_eq!(zuflucht.btn(acadie, &dist3), 5.0);
+        assert_eq!(zuflucht.passenger_btn(acadie, &dist3), 5.0);
+
+        assert_eq!(zuflucht.navigable_distance(sansterre, &dist3), 15);
+        assert_eq!(zuflucht.wtcm(sansterre), -0.5);
+        assert_eq!(zuflucht.btn(sansterre, &dist3), 7.0);
+        assert_eq!(zuflucht.passenger_btn(sansterre, &dist3), 7.0);
+
+        assert_eq!(zuflucht.navigable_distance(achille, &dist3), 15);
+        assert_eq!(zuflucht.wtcm(achille), -0.5);
+        assert_eq!(zuflucht.btn(achille, &dist3), 4.0);
+        assert_eq!(zuflucht.passenger_btn(achille, &dist3), 4.0);
+
+        assert_eq!(zuflucht.navigable_distance(amondiage, &dist3), 16);
+        assert_eq!(zuflucht.wtcm(amondiage), -0.5);
+        assert_eq!(zuflucht.btn(amondiage, &dist3), 7.0);
+        assert_eq!(zuflucht.passenger_btn(amondiage, &dist3), 7.0);
+
+        assert_eq!(zuflucht.navigable_distance(st_denis, &dist3), 16);
+        assert_eq!(zuflucht.wtcm(st_denis), -0.5);
+        assert_eq!(zuflucht.btn(st_denis, &dist3), 5.0);
+        assert_eq!(zuflucht.passenger_btn(st_denis, &dist3), 5.0);
+
+        println!("{:?}", zuflucht.dbtn_to_coords);
+        for (ii, set) in zuflucht.dbtn_to_coords.iter().enumerate() {
+            print!("dbtn {} ", ii);
+            for coords in set {
+                println!("{}", coords_to_world.get(&coords).unwrap().name);
+            }
+        }
+        assert_eq!(zuflucht.dbtn_to_coords[0].len(), 6);
+        for ii in 1..12 {
+            assert!(zuflucht.dbtn_to_coords[ii].is_empty());
+        }
+        assert_eq!(zuflucht.dbtn_to_coords[13].len(), 3);
+        assert_eq!(zuflucht.dbtn_to_coords[14].len(), 5);
+        assert!(zuflucht.dbtn_to_coords[15].is_empty());
+        assert_eq!(zuflucht.dbtn_to_coords[16].len(), 1);
+        assert_eq!(
+            zuflucht.dbtn_to_coords[16].iter().next(),
+            Some(&esperanza.get_coords())
+        );
+        assert_eq!(zuflucht.dbtn_to_coords[17].len(), 1);
+        assert_eq!(
+            zuflucht.dbtn_to_coords[17].iter().next(),
+            Some(&serendip_belt.get_coords())
+        );
+        for ii in 18..zuflucht.dbtn_to_coords.len() - 1 {
+            assert!(zuflucht.dbtn_to_coords[ii].is_empty());
+        }
+        assert_eq!(zuflucht.endpoint_trade_credits, 1222500000);
+        assert_eq!(zuflucht.transient_trade_credits, 0);
+
+        Ok(())
+    }
 }
