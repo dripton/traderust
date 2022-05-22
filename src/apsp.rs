@@ -369,17 +369,4 @@ mod tests {
         assert_eq!(dist1, dist2);
         // predecessors are not guaranteed to be identical
     }
-
-    // Not enabled because it takes a long time.  To run it, add the test
-    // annotation, use "cargo t -r", and be patient.
-    fn test_two_algorithms_huge_random_matrix() {
-        let mut dist1 = setup_random_matrix(65500, 800000);
-        let mut dist2 = dist1.clone();
-
-        dijkstra(&mut dist1);
-        dial(&mut dist2);
-
-        assert_eq!(dist1, dist2);
-        // predecessors are not guaranteed to be identical
-    }
 }
