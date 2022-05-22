@@ -610,8 +610,7 @@ fn draw_route(
     coords_set: &HashSet<Coords>,
     line_width: f64,
     rgba: (f64, f64, f64, f64),
-    cx: f64,
-    cy: f64,
+    (cx, cy): (f64, f64),
     center: (f64, f64),
 ) {
     let (x1, y1) = <(f64, f64)>::from(coords1);
@@ -791,8 +790,7 @@ fn generate_pdf(
                         &world.xboat_routes,
                         0.3 * SCALE,
                         (0.5, 0.0, 0.5, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                 }
@@ -812,8 +810,7 @@ fn generate_pdf(
                         &world.major_routes,
                         0.09 * SCALE,
                         (0.0, 0.0, 1.0, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                     draw_route(
@@ -822,8 +819,7 @@ fn generate_pdf(
                         &world.main_routes,
                         0.08 * SCALE,
                         (0.0, 0.8, 1.8, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                     draw_route(
@@ -832,8 +828,7 @@ fn generate_pdf(
                         &world.intermediate_routes,
                         0.07 * SCALE,
                         (0.0, 1.0, 0.0, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                     draw_route(
@@ -842,8 +837,7 @@ fn generate_pdf(
                         &world.feeder_routes,
                         0.06 * SCALE,
                         (1.0, 1.0, 0.0, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                     draw_route(
@@ -852,8 +846,7 @@ fn generate_pdf(
                         &world.minor_routes,
                         0.05 * SCALE,
                         (1.0, 0.0, 0.0, 1.0),
-                        cx,
-                        cy,
+                        (cx, cy),
                         center,
                     );
                 }
