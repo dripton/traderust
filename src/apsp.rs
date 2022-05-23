@@ -20,7 +20,13 @@ pub enum Algorithm {
     Dial,
 }
 
-// TODO multi-thread
+/// Floyd-Warshall is a simple O(V^3) algorithm, where V is the number of
+/// vertexes.  We iterate over i, j, and k.  If dist[i, j] > dist[i, k] +
+/// dist[k, j] then we set dist[i, j] to that sum, and set pred[i, j] to
+/// pred[k, j] to show that the shortest path now runs through that node.  This
+/// implementation is currently single-threaded.  Even if it were
+/// multi-threaded, Floyd-Warshall is so much slower than Dijkstra for sparse
+/// matrixes (E << V^2) that it should not be used except for testing.
 pub fn floyd_warshall(dist: &mut Array2<u16>) -> Array2<u16> {
     let size = dist.nrows();
     let mut pred = Array2::<u16>::from_elem((size, size), NO_PRED_NODE);
@@ -241,10 +247,31 @@ pub fn shortest_path(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
     dijkstra_dial_inner(dist, alg)
 }
 
+/// Dijkstra's algorithm for all-pairs shortest path is just Dijkstra from a
+/// single source to all destinations, repeated for every source.  That makes
+/// it very easy to parallelize by using one thread per starting node.  The
+/// basic idea of Dijkstra is to put the start node on a priority queue.  Then,
+/// as long as the queue is not empty, pop the minimum node off the queue as
+/// node u, look at all of its neighbor nodes as node v, and see if the
+/// distance to node v through u is less than the previously recorded distance.
+/// If it is, update the distance to v to the new distance and make v's
+/// predecessor u, then put v and its current distance on the queue.  This
+/// implementation uses Rust's BinaryHeap as the priority queue.  BinaryHeap
+/// is a max-heap, so nodes are wrapped in std::cmp::Reverse to make it work
+/// as a min-heap.  APSP Dijkstra's runtime for V nodes and E edges, with a
+/// binary heap, is O(((E + V) log V)V).
 pub fn dijkstra(dist: &mut Array2<u16>) -> Array2<u16> {
     dijkstra_dial_inner(dist, Algorithm::Dijkstra)
 }
 
+/// Dial's algorithm is Dijkstra's algorithm with a bucket queue used for the
+/// priority queue.  A bucket queue is basically an array of deques, one per
+/// priority, so only works well for a small number of priorities.  In this case
+/// all non-trivial edge weights are integers in the range 1 through 4, so a
+/// bucket queue with 4 buckets works fine.  A bucket queue has O(1) push and
+/// O(buckets) pop, compared to the binary heap's O(log n) push and O(log n)
+/// pop.  This makes APSP Dial's runtime O((E + VC)V) for E edges, V nodes, and
+/// C distinct edge weights.
 pub fn dial(dist: &mut Array2<u16>) -> Array2<u16> {
     dijkstra_dial_inner(dist, Algorithm::Dial)
 }
