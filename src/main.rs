@@ -63,7 +63,7 @@ struct Args {
 
 const SQRT3: f64 = 1.7320508075688772;
 
-const MAX_TECH_LEVEL: u32 = 17;
+const MAX_TECH_LEVEL: u32 = 23;
 const MAX_POPULATION: u32 = 15;
 
 const MAX_DISTANCE_PENALTY: f64 = 9999.0;
@@ -145,6 +145,12 @@ lazy_static! {
         tttg.insert(15, 12);
         tttg.insert(16, 13);
         tttg.insert(17, 13);
+        tttg.insert(18, 14);
+        tttg.insert(19, 14);
+        tttg.insert(20, 14);
+        tttg.insert(21, 14);
+        tttg.insert(22, 14);
+        tttg.insert(23, 14);
         tttg
     };
 
@@ -1349,7 +1355,7 @@ impl World {
 
     fn g_tech_level(&self) -> u64 {
         let mut tech_level_char = self.tech_level();
-        if tech_level_char == '?' {
+        if tech_level_char == '?' || tech_level_char == 'X' {
             tech_level_char = '0';
         }
         let tech_level_int = tech_level_char.to_digit(MAX_TECH_LEVEL + 1).unwrap();
@@ -1372,7 +1378,7 @@ impl World {
         let tl_mod = gt3 as f64 / 2.0 - 0.5;
         let pop_char = self.population();
         let mut pop_mod = 0.0;
-        if pop_char.is_alphanumeric() {
+        if pop_char.is_alphanumeric() && pop_char != 'X' {
             // ignore '?'
             let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
             pop_mod = pop_int as f64 / 2.0;
@@ -1384,7 +1390,7 @@ impl World {
         let iuwtn = u64::max(0, self.uwtn() as u64);
         return *WTN_PORT_MODIFIER_TABLE
             .get(&(iuwtn, self.g_starport()))
-            .unwrap()
+            .unwrap();
     }
 
     fn wtn(&self) -> f64 {
