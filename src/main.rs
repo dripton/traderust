@@ -32,33 +32,51 @@ mod tests;
 #[derive(Debug, Parser)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// Name of a sector to process.  Multiples are allowed.
-    #[clap(short, long, multiple_occurrences = true)]
-    sector: Vec<String>,
+    /// Algorithm for All Pairs Shortest Paths
+    #[clap(arg_enum, short = 'a', long, default_value = "dial")]
+    algorithm: Algorithm,
 
-    /// Path to a file containing one sector name per line
-    #[clap(short, long, multiple_occurrences = true)]
-    file_of_sectors: Vec<PathBuf>,
+    /// Minimum BTN to use in route calculations
+    #[clap(short = 'b', long, default_value = "6.5")]
+    min_btn: f64,
 
     /// Directory where we read and write data files
-    #[clap(short, long)]
+    #[clap(short = 'd', long)]
     data_directory: Option<PathBuf>,
 
+    /// Path to a file containing one sector name per line.  Multiples are allowed
+    #[clap(short = 'f', long, multiple_occurrences = true)]
+    file_of_sectors: Vec<PathBuf>,
+
+    /// Default maximum jump
+    #[clap(short = 'j', long, default_value = "2")]
+    // TODO
+    max_jump: u8,
+
     /// Directory where we place output PDFs
-    #[clap(short, long, default_value = "/var/tmp")]
+    #[clap(short = 'o', long, default_value = "/var/tmp")]
     output_directory: PathBuf,
 
-    /// Level of verbosity.  Repeat for more output.
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: usize,
-
     /// No output
-    #[clap(short, long)]
+    #[clap(short = 'q', long)]
     quiet: bool,
 
-    /// Algorithm for all pairs shortest paths
-    #[clap(arg_enum, short, long, default_value = "dial")]
-    algorithm: Algorithm,
+    /// Minimum BTN to draw a route on the map
+    #[clap(short = 'r', long, default_value = "8.0")]
+    // TODO
+    min_route_btn: f64,
+
+    /// Name of a sector to process.  Multiples are allowed.
+    #[clap(short = 's', long, multiple_occurrences = true)]
+    sector: Vec<String>,
+
+    /// Level of verbosity.  Repeat for more output.
+    #[clap(short = 'v', long, parse(from_occurrences))]
+    verbose: usize,
+
+    /// Ignore xboat routes; don't let them ignore max_jump
+    #[clap(short = 'X', long)]
+    ignore_xboat_routes: bool,
 }
 
 const SQRT3: f64 = 1.7320508075688772;
