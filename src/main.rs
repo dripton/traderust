@@ -385,7 +385,7 @@ fn populate_trade_routes(
 
     debug!("Building world trade pairs");
     // Add endpoint trade credits to both endpoints
-    let mut coords_pairs: Vec<(Coords, Coords)> = Vec::new();
+    let mut coords_pairs: Vec<CoordsPair> = Vec::new();
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
         for (dwtn2, coords2) in dwtn_coords.iter().skip(ii + 1) {
@@ -458,7 +458,7 @@ fn populate_trade_routes(
 
     debug!("(parallel) Finding route paths");
 
-    let result_tuples: Vec<(HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>)> = dwtn_coords
+    let result_tuples: Vec<(HashMap<CoordsPair, u64>, HashMap<Coords, u64>)> = dwtn_coords
         .into_par_iter()
         .map(|(_, coords)| {
             coords_to_world.get(&coords).unwrap().find_route_paths(
@@ -470,7 +470,7 @@ fn populate_trade_routes(
             )
         })
         .collect();
-    let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
     for (rp, cttc) in result_tuples {
         for (coord_tup, credits) in rp {
@@ -1082,6 +1082,8 @@ impl From<Coords> for (f64, f64) {
     }
 }
 
+type CoordsPair = (Coords, Coords);
+
 #[derive(Clone, Debug, Eq)]
 struct World {
     sector_location: (i64, i64),
@@ -1517,8 +1519,8 @@ impl World {
         coords_to_index: &HashMap<Coords, usize>,
         (dist2, pred2): (&Array2<u16>, &Array2<u16>),
         (dist3, pred3): (&Array2<u16>, &Array2<u16>),
-    ) -> (HashMap<(Coords, Coords), u64>, HashMap<Coords, u64>) {
-        let mut route_paths: HashMap<(Coords, Coords), u64> = HashMap::new();
+    ) -> (HashMap<CoordsPair, u64>, HashMap<Coords, u64>) {
+        let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let credits = DBTN_TO_CREDITS[dbtn];
@@ -1546,7 +1548,7 @@ impl World {
                     for ii in 0..path.len() - 1 {
                         let first = path.get(ii).unwrap();
                         let second = path.get(ii + 1).unwrap();
-                        let coord_tup: (Coords, Coords) = if first <= second {
+                        let coord_tup: CoordsPair = if first <= second {
                             (*first, *second)
                         } else {
                             (*second, *first)
