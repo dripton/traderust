@@ -47,3 +47,13 @@ Running:
    should download the Spinward Marches subsector data from travellermap.com
    and then generate "/tmp/Spinward Marches.pdf" which you can view with your
    favorite PDF viewer.
+
+Performance:
+
+Numbers below are from a computer with an AMD 5950X CPU (16 cores, 32 hardware
+threads) and 64 GB RAM, running Ubuntu 21.10.  rustc 1.61 was used in release
+mode.  These numbers assume sector data was already downloaded.
+
+* Small areas (up to about 9 sectors or 3000 worlds) take less than a second.
+* The whole Imperium (28 sectors with 12052 worlds) takes about 13s.
+* All of currently charted space (142 sectors with 51264 worlds) takes about 2m52s.
