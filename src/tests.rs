@@ -1976,12 +1976,6 @@ mod tests {
                 .collect()
         }
 
-        assert_eq!(aramis.major_routes.len(), 0);
-        assert_eq!(aramis.main_routes.len(), 0);
-        assert_eq!(aramis.intermediate_routes.len(), 4);
-        assert_eq!(aramis.feeder_routes.len(), 8); // py 9
-        assert_eq!(aramis.minor_routes.len(), 1); // py 0
-
         println!(
             "aramis major {:?}",
             set_to_worlds(&aramis.major_routes, &coords_to_world)
@@ -2002,12 +1996,11 @@ mod tests {
             "aramis minor {:?}",
             set_to_worlds(&aramis.minor_routes, &coords_to_world)
         );
-
-        assert_eq!(mora.major_routes.len(), 1);
-        assert_eq!(mora.main_routes.len(), 9); // py 8
-        assert_eq!(mora.intermediate_routes.len(), 3); // py 5
-        assert_eq!(mora.feeder_routes.len(), 1); // py 0
-        assert_eq!(mora.minor_routes.len(), 0);
+        assert_eq!(aramis.major_routes.len(), 0);
+        assert_eq!(aramis.main_routes.len(), 0);
+        assert_eq!(aramis.intermediate_routes.len(), 4);
+        assert_eq!(aramis.feeder_routes.len(), 8); // py 9
+        assert_eq!(aramis.minor_routes.len(), 1); // py 0
 
         println!(
             "mora major {:?}",
@@ -2029,12 +2022,11 @@ mod tests {
             "mora minor {:?}",
             set_to_worlds(&mora.minor_routes, &coords_to_world)
         );
-
-        assert_eq!(jesedipere.major_routes.len(), 0);
-        assert_eq!(jesedipere.main_routes.len(), 0);
-        assert_eq!(jesedipere.intermediate_routes.len(), 3); // py 0
-        assert_eq!(jesedipere.feeder_routes.len(), 5);
-        assert_eq!(jesedipere.minor_routes.len(), 1); // py 2
+        assert_eq!(mora.major_routes.len(), 1);
+        assert_eq!(mora.main_routes.len(), 9); // py 8
+        assert_eq!(mora.intermediate_routes.len(), 3); // py 5
+        assert_eq!(mora.feeder_routes.len(), 1); // py 0
+        assert_eq!(mora.minor_routes.len(), 0);
 
         println!(
             "jesedipere major {:?}",
@@ -2056,12 +2048,11 @@ mod tests {
             "jesedipere minor {:?}",
             set_to_worlds(&jesedipere.minor_routes, &coords_to_world)
         );
-
-        assert_eq!(rruthaekuksu.major_routes.len(), 0);
-        assert_eq!(rruthaekuksu.main_routes.len(), 0);
-        assert_eq!(rruthaekuksu.intermediate_routes.len(), 2); // py 0
-        assert_eq!(rruthaekuksu.feeder_routes.len(), 2); // py 4
-        assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
+        assert_eq!(jesedipere.major_routes.len(), 0);
+        assert_eq!(jesedipere.main_routes.len(), 0);
+        assert_eq!(jesedipere.intermediate_routes.len(), 3); // py 0
+        assert_eq!(jesedipere.feeder_routes.len(), 5);
+        assert_eq!(jesedipere.minor_routes.len(), 1); // py 2
 
         println!(
             "rruthaekuksu major {:?}",
@@ -2083,6 +2074,11 @@ mod tests {
             "rruthaekuksu minor {:?}",
             set_to_worlds(&rruthaekuksu.minor_routes, &coords_to_world)
         );
+        assert_eq!(rruthaekuksu.major_routes.len(), 0);
+        assert_eq!(rruthaekuksu.main_routes.len(), 0);
+        assert_eq!(rruthaekuksu.intermediate_routes.len(), 2); // py 0
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 2); // py 4
+        assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
 
         Ok(())
     }
