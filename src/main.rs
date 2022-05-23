@@ -98,6 +98,17 @@ const SCALE: f64 = 15.0;
 const SECTOR_HEX_WIDTH: i64 = 32;
 const SECTOR_HEX_HEIGHT: i64 = 40;
 
+const BLACK: (f64, f64, f64, f64) = (0.0, 0.0, 0.0, 1.0);
+const WHITE: (f64, f64, f64, f64) = (1.0, 1.0, 1.0, 1.0);
+const GRAY: (f64, f64, f64, f64) = (0.5, 0.5, 0.5, 1.0);
+const RED: (f64, f64, f64, f64) = (1.0, 0.0, 0.0, 1.0);
+const ORANGE: (f64, f64, f64, f64) = (1.0, 0.65, 0.0, 1.0);
+const YELLOW: (f64, f64, f64, f64) = (1.0, 1.0, 0.0, 1.0);
+const GREEN: (f64, f64, f64, f64) = (0.0, 1.0, 0.0, 1.0);
+const CYAN: (f64, f64, f64, f64) = (0.0, 0.8, 0.8, 1.0);
+const BLUE: (f64, f64, f64, f64) = (0.0, 0.0, 1.0, 1.0);
+const PURPLE: (f64, f64, f64, f64) = (0.5, 0.0, 0.5, 1.0);
+
 lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<char, String> = {
         let mut sttg: HashMap<char, String> = HashMap::new();
@@ -568,7 +579,8 @@ fn draw_neighboring_sector_name(
     // TODO Vertical text on the left and right sides would save space
     ctx.set_font_size(SCALE);
     ctx.set_font_face(font_face);
-    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+    let rgba = WHITE;
+    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
     let extents = ctx.text_extents(name).unwrap();
     ctx.move_to(x_pos - extents.width / 2.0, y_pos - extents.height / 2.0);
     ctx.show_text(name).unwrap();
@@ -651,7 +663,8 @@ fn generate_pdf(
     ctx.scale(SCALE, SCALE);
 
     // background
-    ctx.set_source_rgba(0.0, 0.0, 0.0, 1.0); // black
+    let mut rgba = BLACK;
+    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
     ctx.rectangle(0.0, 0.0, width, height);
     ctx.fill().unwrap();
 
@@ -662,7 +675,8 @@ fn generate_pdf(
     // sector name
     ctx.set_font_size(3.0 * SCALE);
     ctx.set_font_face(&bold_font_face);
-    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+    rgba = WHITE;
+    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
     let text = &sector.name;
     let extents = ctx.text_extents(text).unwrap();
     ctx.move_to(width / SCALE / 4.0 - extents.width / 2.0, 3.0 * SCALE);
@@ -724,7 +738,8 @@ fn generate_pdf(
 
     // subsector borders
     ctx.set_line_width(0.03 * SCALE);
-    ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
+    rgba = GRAY;
+    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
 
     // vertical lines
     for x in &[1.0, 9.0, 17.0, 25.0, 33.0] {
@@ -756,7 +771,8 @@ fn generate_pdf(
             if let Some(subsector_name) = sector.subsector_letter_to_name.get(&letter) {
                 ctx.set_font_size(3.0 * SCALE);
                 ctx.set_font_face(&normal_font_face);
-                ctx.set_source_rgba(0.5, 0.5, 0.5, 1.0); // gray
+                rgba = GRAY;
+                ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                 let text = subsector_name;
                 let extents = ctx.text_extents(text).unwrap();
                 let x = 8.0 * col as f64 + 5.0;
@@ -776,7 +792,8 @@ fn generate_pdf(
             let vertexes = hexinfo.vertexes;
             ctx.set_line_width(0.03 * SCALE);
             ctx.move_to(vertexes[0].0, vertexes[0].1);
-            ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+            rgba = WHITE;
+            ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
             for ii in &[1, 2, 3, 4, 5, 0] {
                 ctx.line_to(vertexes[*ii].0, vertexes[*ii].1);
             }
@@ -795,7 +812,7 @@ fn generate_pdf(
                         *coords,
                         &world.xboat_routes,
                         0.3 * SCALE,
-                        (0.5, 0.0, 0.5, 1.0),
+                        PURPLE,
                         (hexinfo.cx, hexinfo.cy),
                         hexinfo.center,
                     );
@@ -818,7 +835,7 @@ fn generate_pdf(
                         *coords,
                         &world.major_routes,
                         0.09 * SCALE,
-                        (0.0, 0.0, 1.0, 1.0),
+                        BLUE,
                         (cx, cy),
                         center,
                     );
@@ -827,7 +844,7 @@ fn generate_pdf(
                         *coords,
                         &world.main_routes,
                         0.08 * SCALE,
-                        (0.0, 0.8, 1.8, 1.0),
+                        CYAN,
                         (cx, cy),
                         center,
                     );
@@ -836,7 +853,7 @@ fn generate_pdf(
                         *coords,
                         &world.intermediate_routes,
                         0.07 * SCALE,
-                        (0.0, 1.0, 0.0, 1.0),
+                        GREEN,
                         (cx, cy),
                         center,
                     );
@@ -845,7 +862,7 @@ fn generate_pdf(
                         *coords,
                         &world.feeder_routes,
                         0.06 * SCALE,
-                        (1.0, 1.0, 0.0, 1.0),
+                        YELLOW,
                         (cx, cy),
                         center,
                     );
@@ -854,7 +871,7 @@ fn generate_pdf(
                         *coords,
                         &world.minor_routes,
                         0.05 * SCALE,
-                        (1.0, 0.0, 0.0, 1.0),
+                        RED,
                         (cx, cy),
                         center,
                     );
@@ -877,7 +894,8 @@ fn generate_pdf(
                     // UWP
                     ctx.set_font_size(0.35 * SCALE);
                     ctx.set_font_face(&normal_font_face);
-                    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+                    rgba = WHITE;
+                    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                     let text = &world.uwp;
                     let extents = ctx.text_extents(text).unwrap();
                     ctx.move_to(
@@ -901,9 +919,11 @@ fn generate_pdf(
                     if world.trade_classifications.contains("Cp")
                         || world.trade_classifications.contains("Cs")
                     {
-                        ctx.set_source_rgba(1.0, 0.0, 0.0, 1.0); // red
+                        rgba = RED;
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                     } else {
-                        ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+                        rgba = WHITE;
+                        ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                     }
                     ctx.move_to(
                         cx + 2.0 * SCALE - extents.width / 2.0,
@@ -914,7 +934,8 @@ fn generate_pdf(
                     // DWTN, endpoint trace BTN, transient trade BTN, port size
                     ctx.set_font_size(0.35 * SCALE);
                     ctx.set_font_face(&normal_font_face);
-                    ctx.set_source_rgba(1.0, 1.0, 1.0, 1.0); // white
+                    rgba = WHITE;
+                    ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                     let dwtn = (world.wtn() * 2.0) as u64;
                     let endpoint_dbtn =
                         bisect_left(&DBTN_TO_CREDITS, &world.endpoint_trade_credits);
@@ -939,7 +960,7 @@ fn generate_pdf(
                     // World circle
                     if world.size() == '0' {
                         // Asteroid belt
-                        let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                        rgba = WHITE;
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                         let num_asteroids: u64 = rng.gen_range(5..=20);
                         for _ in 0..num_asteroids {
@@ -951,27 +972,22 @@ fn generate_pdf(
                             ctx.fill().unwrap();
                         }
                     } else {
-                        let mut rgba = (1.0, 1.0, 1.0, 1.0); // white
-                        let mut fill_rgba = rgba;
+                        rgba = WHITE;
+                        let mut fill_rgba = WHITE;
                         if world.trade_classifications.contains("Ri")
                             && world.trade_classifications.contains("Ag")
                         {
-                            rgba = (1.0, 1.0, 0.0, 1.0); // yellow
-                            fill_rgba = rgba;
+                            fill_rgba = YELLOW;
                         } else if world.trade_classifications.contains("Ri") {
-                            rgba = (0.5, 0.0, 0.5, 1.0); // purple
-                            fill_rgba = rgba;
+                            fill_rgba = PURPLE;
                         } else if world.trade_classifications.contains("Ag") {
-                            rgba = (0.5, 0.5, 0.5, 1.0); // green
-                            fill_rgba = rgba;
+                            fill_rgba = GREEN;
                         } else if world.atmosphere() == 'B' || world.atmosphere() == 'C' {
-                            rgba = (1.0, 0.65, 0.0, 1.0); // orange
-                            fill_rgba = rgba;
+                            fill_rgba = ORANGE;
                         } else if world.atmosphere() == '0' {
-                            fill_rgba = (0.0, 0.0, 0.0, 1.0); // black
+                            fill_rgba = BLACK;
                         } else if world.hydrosphere() != '0' {
-                            rgba = (0.0, 0.0, 1.0, 1.0); // blue
-                            fill_rgba = rgba;
+                            fill_rgba = BLUE;
                         }
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                         ctx.new_sub_path();
@@ -985,7 +1001,7 @@ fn generate_pdf(
 
                     // Gas giant
                     if world.gas_giants() != '0' {
-                        let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                        rgba = WHITE;
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                         ctx.new_sub_path();
                         ctx.arc(
@@ -1002,9 +1018,9 @@ fn generate_pdf(
 
                     // Red and amber zones
                     if world.zone == 'R' || world.zone == 'A' {
-                        let mut rgba = (1.0, 0.0, 0.0, 1.0); // red
+                        rgba = RED;
                         if world.zone == 'A' {
-                            rgba = (1.0, 1.0, 0.0, 1.0); // yellow
+                            rgba = YELLOW;
                         }
                         ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                         ctx.new_sub_path();
@@ -1019,7 +1035,7 @@ fn generate_pdf(
                 ctx.set_font_size(0.35 * SCALE);
                 ctx.set_font_face(&normal_font_face);
                 let extents = ctx.text_extents(&text).unwrap();
-                let rgba = (1.0, 1.0, 1.0, 1.0); // white
+                rgba = WHITE;
                 ctx.set_source_rgba(rgba.0, rgba.1, rgba.2, rgba.3);
                 ctx.move_to(
                     cx + 2.0 * SCALE - extents.width / 2.0,
