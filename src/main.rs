@@ -1388,9 +1388,9 @@ impl World {
 
     fn wtn_port_modifier(&self) -> f64 {
         let iuwtn = u64::max(0, self.uwtn() as u64);
-        return *WTN_PORT_MODIFIER_TABLE
+        *WTN_PORT_MODIFIER_TABLE
             .get(&(iuwtn, self.g_starport()))
-            .unwrap();
+            .unwrap()
     }
 
     fn wtn(&self) -> f64 {
