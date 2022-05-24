@@ -87,7 +87,7 @@ const MAX_POPULATION: u32 = 15;
 const MAX_DISTANCE_PENALTY: f64 = 9999.0;
 
 // Rules don't say BTN can't be negative but it seems reasonable to me.
-const MIN_BTN: f64 = 0.0;
+const ABSOLUTE_MIN_BTN: f64 = 0.0;
 const MAX_BTN_WTN_DELTA: f64 = 5.0;
 
 const RI_PBTN_BONUS: f64 = 0.5;
@@ -1517,7 +1517,7 @@ impl World {
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
         let btn = base_btn - self.distance_modifier(other, dist);
-        f64::max(MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
+        f64::max(ABSOLUTE_MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
     fn passenger_btn(&self, other: &World, dist: &Array2<u16>) -> f64 {
@@ -1537,7 +1537,10 @@ impl World {
                 pbtn += CS_PBTN_BONUS;
             }
         }
-        f64::max(MIN_BTN, f64::min(pbtn, min_wtn + MAX_BTN_WTN_DELTA))
+        f64::max(
+            ABSOLUTE_MIN_BTN,
+            f64::min(pbtn, min_wtn + MAX_BTN_WTN_DELTA),
+        )
     }
 
     fn find_route_paths(
