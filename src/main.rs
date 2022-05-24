@@ -301,12 +301,14 @@ fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usiz
 }
 
 /// Find minimum distances between all worlds, and predecessor paths.
-/// Only use jumps of up to max_jump hexes, except along xboat routes.
+/// Only use jumps of up to max_jump hexes, except along xboat routes
+/// if ignore_xboat_routes is not set.
 /// Must be run after all neighbors are built.
 fn populate_navigable_distances(
     sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
+    ignore_xboat_routes: bool,
     alg: Algorithm,
 ) -> (Array2<u16>, Array2<u16>) {
     debug!("populate_navigable_distances max_jump={}", max_jump);
@@ -343,11 +345,13 @@ fn populate_navigable_distances(
                 num_edges += 1;
             }
         }
-        for coords in &world.xboat_routes {
-            let neighbor = coords_to_world.get(coords).unwrap();
-            let jj = neighbor.index.unwrap();
-            np[[ii, jj]] = world.straight_line_distance(neighbor) as u16;
-            num_edges += 1;
+        if !ignore_xboat_routes {
+            for coords in &world.xboat_routes {
+                let neighbor = coords_to_world.get(coords).unwrap();
+                let jj = neighbor.index.unwrap();
+                np[[ii, jj]] = world.straight_line_distance(neighbor) as u16;
+                num_edges += 1;
+            }
         }
     }
     debug!(
@@ -1941,6 +1945,8 @@ fn main() -> Result<()> {
     let mut sector_names: Vec<String> = sector_names_set.into_iter().collect();
     sector_names.sort();
 
+    let ignore_xboat_routes = args.ignore_xboat_routes;
+
     stderrlog::new()
         .module(module_path!())
         .quiet(quiet)
@@ -1988,8 +1994,20 @@ fn main() -> Result<()> {
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
-    let (dist2, pred2) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, alg);
-    let (dist3, pred3) = populate_navigable_distances(&sorted_coords, &coords_to_world, 3, alg);
+    let (dist2, pred2) = populate_navigable_distances(
+        &sorted_coords,
+        &coords_to_world,
+        2,
+        ignore_xboat_routes,
+        alg,
+    );
+    let (dist3, pred3) = populate_navigable_distances(
+        &sorted_coords,
+        &coords_to_world,
+        3,
+        ignore_xboat_routes,
+        alg,
+    );
 
     populate_trade_routes(
         &mut coords_to_world,
