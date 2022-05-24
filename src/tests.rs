@@ -7,6 +7,7 @@ use crate::apsp::{Algorithm, INFINITY};
 use crate::{
     distance_modifier_table, download_sector_data, parse_header_and_separator,
     populate_navigable_distances, populate_trade_routes, same_allegiance, MAX_DISTANCE_PENALTY,
+    MIN_BTN,
 };
 use crate::{Coords, Sector, World};
 
@@ -1957,6 +1958,7 @@ mod tests {
             &mut coords_to_world,
             &coords_to_index,
             &sorted_coords,
+            *MIN_BTN,
             &dist2,
             &pred2,
             &dist3,
@@ -2139,6 +2141,7 @@ mod tests {
             &mut coords_to_world,
             &coords_to_index,
             &sorted_coords,
+            *MIN_BTN,
             &dist2,
             &pred2,
             &dist3,
@@ -2205,6 +2208,7 @@ mod tests {
             &mut coords_to_world,
             &coords_to_index,
             &sorted_coords,
+            *MIN_BTN,
             &dist2,
             &pred2,
             &dist3,

@@ -13,6 +13,7 @@ use std::hash::{Hash, Hasher};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::exit;
+use std::str::FromStr;
 #[macro_use]
 extern crate lazy_static;
 extern crate ndarray;
@@ -37,7 +38,7 @@ struct Args {
     algorithm: Algorithm,
 
     /// Minimum BTN to use in route calculations
-    #[clap(short = 'b', long, default_value = "6.5")]
+    #[clap(short = 'b', long, default_value = DEFAULT_MIN_BTN)]
     min_btn: f64,
 
     /// Directory where we read and write data files
@@ -105,7 +106,7 @@ const MAIN_ROUTE_THRESHOLD: f64 = 11.0;
 const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
 const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
 const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
-const TRIVIAL_ROUTE_THRESHOLD: f64 = 6.5;
+const DEFAULT_MIN_BTN: &str = "6.5";
 
 const NON_IMPERIAL_PORT_SIZE_PENALTY: f64 = 0.5;
 const NEIGHBOR_1_PORT_SIZE_BONUS: f64 = 1.5;
@@ -255,6 +256,8 @@ lazy_static! {
         75000000000000,
         300000000000000,
     ];
+
+    static ref MIN_BTN: f64 = f64::from_str(DEFAULT_MIN_BTN).unwrap();
 }
 
 fn download_sector_data(data_dir: &Path, sector_names: &Vec<String>) -> Result<()> {
@@ -395,6 +398,7 @@ fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
     coords_to_index: &HashMap<Coords, usize>,
     sorted_coords: &[Coords],
+    min_btn: f64,
     dist2: &Array2<u16>,
     pred2: &Array2<u16>,
     dist3: &Array2<u16>,
@@ -417,9 +421,7 @@ fn populate_trade_routes(
         let wtn1 = *dwtn1 as f64 / 2.0;
         for (dwtn2, coords2) in dwtn_coords.iter().skip(ii + 1) {
             let wtn2 = *dwtn2 as f64 / 2.0;
-            if wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_BTN_WTN_DELTA
-                || wtn1 + wtn2 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS
-            {
+            if wtn2 < min_btn - MAX_BTN_WTN_DELTA || wtn1 + wtn2 < min_btn - MAX_WTCM_BONUS {
                 // If the lower WTN or the sum of the WTNs is small enough, we
                 // know that coords2 and later worlds won't come close to
                 // forming any trade routes with coords1.
@@ -427,7 +429,7 @@ fn populate_trade_routes(
             }
             let sld = coords1.straight_line_distance(coords2) as u16;
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
-            if max_btn1 < TRIVIAL_ROUTE_THRESHOLD - MAX_WTCM_BONUS {
+            if max_btn1 < min_btn - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus the bonus,
                 // so if even the straight line distance modifier puts us too
                 // low, we can't come close to forming any trade routes with
@@ -436,11 +438,11 @@ fn populate_trade_routes(
             }
             let world1 = coords_to_world.get(coords1).unwrap();
             let world2 = coords_to_world.get(coords2).unwrap();
-            if max_btn1 < TRIVIAL_ROUTE_THRESHOLD + MAX_WTCM_PENALTY {
+            if max_btn1 < min_btn + MAX_WTCM_PENALTY {
                 // Computing the wtcm is cheaper than finding the full BTN
                 let wtcm = world1.wtcm(world2);
                 let max_btn2 = max_btn1 + wtcm;
-                if max_btn2 < TRIVIAL_ROUTE_THRESHOLD {
+                if max_btn2 < min_btn {
                     continue;
                 }
             }
@@ -1946,6 +1948,7 @@ fn main() -> Result<()> {
     sector_names.sort();
 
     let ignore_xboat_routes = args.ignore_xboat_routes;
+    let min_btn = args.min_btn;
 
     stderrlog::new()
         .module(module_path!())
@@ -2013,6 +2016,7 @@ fn main() -> Result<()> {
         &mut coords_to_world,
         &coords_to_index,
         &sorted_coords,
+        min_btn,
         &dist2,
         &pred2,
         &dist3,
