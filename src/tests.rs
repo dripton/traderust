@@ -824,7 +824,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1068,7 +1068,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
 
         let aramis = spin
@@ -1137,12 +1137,12 @@ mod tests {
         set.insert(natoko.get_coords());
         set.insert(reacher.get_coords());
         set.insert(vinorian.get_coords());
-        assert_eq!(aramis.neighbors1, set);
+        assert_eq!(aramis.neighbors[1], set);
 
         set.clear();
         set.insert(nutema.get_coords());
         set.insert(pysadi.get_coords());
-        assert_eq!(aramis.neighbors2, set);
+        assert_eq!(aramis.neighbors[2], set);
 
         set.clear();
         set.insert(margesi.get_coords());
@@ -1155,20 +1155,20 @@ mod tests {
         set.insert(kretikaa.get_coords());
         set.insert(new_ramma.get_coords());
         set.insert(valhalla.get_coords());
-        assert_eq!(aramis.neighbors3, set);
+        assert_eq!(aramis.neighbors[3], set);
 
         set.clear();
         set.insert(aramis.get_coords());
         set.insert(ldd.get_coords());
         set.insert(reacher.get_coords());
         set.insert(nutema.get_coords());
-        assert_eq!(vinorian.neighbors1, set);
+        assert_eq!(vinorian.neighbors[1], set);
 
         set.clear();
         set.insert(natoko.get_coords());
         set.insert(margesi.get_coords());
         set.insert(henoz.get_coords());
-        assert_eq!(vinorian.neighbors2, set);
+        assert_eq!(vinorian.neighbors[2], set);
 
         set.clear();
         set.insert(kretikaa.get_coords());
@@ -1179,7 +1179,7 @@ mod tests {
         set.insert(zivije.get_coords());
         set.insert(valhalla.get_coords());
         set.insert(pysadi.get_coords());
-        assert_eq!(vinorian.neighbors3, set);
+        assert_eq!(vinorian.neighbors[3], set);
 
         Ok(())
     }
@@ -1205,7 +1205,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1321,7 +1321,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1709,7 +1709,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1819,7 +1819,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1934,7 +1934,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1949,8 +1949,6 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) =
-            populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
         let (dist3, pred3) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 3, false, ALG);
 
@@ -1959,8 +1957,6 @@ mod tests {
             &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
-            &dist2,
-            &pred2,
             &dist3,
             &pred3,
         );
@@ -2010,8 +2006,8 @@ mod tests {
         assert_eq!(aramis.major_routes.len(), 0);
         assert_eq!(aramis.main_routes.len(), 0);
         assert_eq!(aramis.intermediate_routes.len(), 4);
-        assert_eq!(aramis.feeder_routes.len(), 8); // py 9
-        assert_eq!(aramis.minor_routes.len(), 1); // py 0
+        assert_eq!(aramis.feeder_routes.len(), 8);
+        assert_eq!(aramis.minor_routes.len(), 3);
 
         println!(
             "mora major {:?}",
@@ -2034,10 +2030,10 @@ mod tests {
             set_to_worlds(&mora.minor_routes, &coords_to_world)
         );
         assert_eq!(mora.major_routes.len(), 1);
-        assert_eq!(mora.main_routes.len(), 9); // py 8
-        assert_eq!(mora.intermediate_routes.len(), 3); // py 5
-        assert_eq!(mora.feeder_routes.len(), 1); // py 0
-        assert_eq!(mora.minor_routes.len(), 0);
+        assert_eq!(mora.main_routes.len(), 9);
+        assert_eq!(mora.intermediate_routes.len(), 3);
+        assert_eq!(mora.feeder_routes.len(), 0);
+        assert_eq!(mora.minor_routes.len(), 1);
 
         println!(
             "jesedipere major {:?}",
@@ -2061,9 +2057,9 @@ mod tests {
         );
         assert_eq!(jesedipere.major_routes.len(), 0);
         assert_eq!(jesedipere.main_routes.len(), 0);
-        assert_eq!(jesedipere.intermediate_routes.len(), 3); // py 0
-        assert_eq!(jesedipere.feeder_routes.len(), 5);
-        assert_eq!(jesedipere.minor_routes.len(), 1); // py 2
+        assert_eq!(jesedipere.intermediate_routes.len(), 0);
+        assert_eq!(jesedipere.feeder_routes.len(), 6);
+        assert_eq!(jesedipere.minor_routes.len(), 2);
 
         println!(
             "rruthaekuksu major {:?}",
@@ -2087,9 +2083,9 @@ mod tests {
         );
         assert_eq!(rruthaekuksu.major_routes.len(), 0);
         assert_eq!(rruthaekuksu.main_routes.len(), 0);
-        assert_eq!(rruthaekuksu.intermediate_routes.len(), 2); // py 0
-        assert_eq!(rruthaekuksu.feeder_routes.len(), 2); // py 4
-        assert_eq!(rruthaekuksu.minor_routes.len(), 0); // py 2
+        assert_eq!(rruthaekuksu.intermediate_routes.len(), 0);
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 4);
+        assert_eq!(rruthaekuksu.minor_routes.len(), 1);
 
         Ok(())
     }
@@ -2117,7 +2113,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -2132,8 +2128,6 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) =
-            populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
         let (dist3, pred3) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 3, false, ALG);
 
@@ -2142,8 +2136,6 @@ mod tests {
             &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
-            &dist2,
-            &pred2,
             &dist3,
             &pred3,
         );
@@ -2184,7 +2176,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, 3);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -2199,7 +2191,7 @@ mod tests {
                 panic!("World not found at coords");
             }
         }
-        let (dist2, pred2) =
+        let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, true, ALG);
         let (dist3, pred3) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 3, true, ALG);
@@ -2209,8 +2201,6 @@ mod tests {
             &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
-            &dist2,
-            &pred2,
             &dist3,
             &pred3,
         );
@@ -2379,11 +2369,11 @@ mod tests {
         assert_eq!(st_denis.wtn_port_modifier(), -0.5);
         assert_eq!(st_denis.wtn(), 3.5);
 
-        assert!(zuflucht.neighbors1.is_empty());
-        assert!(zuflucht.neighbors2.is_empty());
-        assert_eq!(zuflucht.neighbors3.len(), 1);
+        assert!(zuflucht.neighbors[1].is_empty());
+        assert!(zuflucht.neighbors[2].is_empty());
+        assert_eq!(zuflucht.neighbors[3].len(), 1);
         assert_eq!(
-            zuflucht.neighbors3.iter().next(),
+            zuflucht.neighbors[3].iter().next(),
             Some(&gloire.get_coords())
         );
         assert!(zuflucht.xboat_routes.is_empty());

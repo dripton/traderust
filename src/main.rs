@@ -50,8 +50,7 @@ struct Args {
     file_of_sectors: Vec<PathBuf>,
 
     /// Default maximum jump
-    #[clap(short = 'j', long, default_value = "2")]
-    // TODO
+    #[clap(short = 'j', long, default_value = "3")]
     max_jump: u8,
 
     /// Directory where we place output PDFs
@@ -114,8 +113,6 @@ const NEIGHBOR_2_PORT_SIZE_BONUS: f64 = 1.0;
 const XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE: f64 = 6.0;
 const FEEDER_ROUTE_MIN_PORT_SIZE: f64 = 5.0;
 const MINOR_ROUTE_MIN_PORT_SIZE: f64 = 4.0;
-
-const MIN_DBTN_FOR_JUMP_3: usize = (2.0 * FEEDER_ROUTE_THRESHOLD) as usize;
 
 const SCALE: f64 = 15.0;
 const SECTOR_HEX_WIDTH: i64 = 32;
@@ -310,7 +307,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usiz
 fn populate_navigable_distances(
     sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
-    max_jump: u64,
+    max_jump: u8,
     ignore_xboat_routes: bool,
     alg: Algorithm,
 ) -> (Array2<u16>, Array2<u16>) {
@@ -324,27 +321,11 @@ fn populate_navigable_distances(
     let mut num_edges = 0;
     for (ii, coords) in sorted_coords.iter().enumerate() {
         let world = coords_to_world.get(coords).unwrap();
-        if max_jump >= 3 {
-            for coords in &world.neighbors3 {
+        for jump in 1..=max_jump {
+            for coords in &world.neighbors[jump as usize] {
                 let neighbor = coords_to_world.get(coords).unwrap();
                 let jj = neighbor.index.unwrap();
-                np[[ii, jj]] = 3;
-                num_edges += 1;
-            }
-        }
-        if max_jump >= 2 {
-            for coords in &world.neighbors2 {
-                let neighbor = coords_to_world.get(coords).unwrap();
-                let jj = neighbor.index.unwrap();
-                np[[ii, jj]] = 2;
-                num_edges += 1;
-            }
-        }
-        if max_jump >= 1 {
-            for coords in &world.neighbors1 {
-                let neighbor = coords_to_world.get(coords).unwrap();
-                let jj = neighbor.index.unwrap();
-                np[[ii, jj]] = 1;
+                np[[ii, jj]] = jump as u16;
                 num_edges += 1;
             }
         }
@@ -399,10 +380,8 @@ fn populate_trade_routes(
     coords_to_index: &HashMap<Coords, usize>,
     sorted_coords: &[Coords],
     min_btn: f64,
-    dist2: &Array2<u16>,
-    pred2: &Array2<u16>,
-    dist3: &Array2<u16>,
-    pred3: &Array2<u16>,
+    dist: &Array2<u16>,
+    pred: &Array2<u16>,
 ) {
     debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
@@ -463,7 +442,7 @@ fn populate_trade_routes(
             // feeder or better route at least one jump, but in some sparse
             // regions, no jump-3 means no connections at all.  So I will
             // allow jump-3 here to find BTNs.
-            let btn = world1.btn(world2, dist3);
+            let btn = world1.btn(world2, dist);
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
             (coords1, coords2, dbtn, credits)
@@ -494,8 +473,7 @@ fn populate_trade_routes(
                 sorted_coords,
                 coords_to_world,
                 coords_to_index,
-                (dist2, pred2),
-                (dist3, pred3),
+                (dist, pred),
             )
         })
         .collect();
@@ -1144,9 +1122,7 @@ struct World {
     intermediate_routes: HashSet<Coords>,
     feeder_routes: HashSet<Coords>,
     minor_routes: HashSet<Coords>,
-    neighbors1: HashSet<Coords>,
-    neighbors2: HashSet<Coords>,
-    neighbors3: HashSet<Coords>,
+    neighbors: Vec<HashSet<Coords>>,
     index: Option<usize>,
 }
 
@@ -1181,9 +1157,7 @@ impl World {
         let intermediate_routes = HashSet::new();
         let feeder_routes = HashSet::new();
         let minor_routes = HashSet::new();
-        let neighbors1 = HashSet::new();
-        let neighbors2 = HashSet::new();
-        let neighbors3 = HashSet::new();
+        let neighbors = Vec::new();
         let index = None;
 
         let mut iter = line.chars().enumerate();
@@ -1299,9 +1273,7 @@ impl World {
             intermediate_routes,
             feeder_routes,
             minor_routes,
-            neighbors1,
-            neighbors2,
-            neighbors3,
+            neighbors,
             index,
         }
     }
@@ -1309,25 +1281,27 @@ impl World {
     /// Find and cache all neighbors within 3 hexes.
     ///
     /// This must be run after all Sectors and Worlds are mostly initialized.
-    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>) {
+    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>, max_jump: u8) {
+        // The 0 index is unused, but fill it in anyway to make the other
+        // indexes nicer.
+        for _jump in 0..=max_jump {
+            self.neighbors.push(HashSet::new());
+        }
         if !self.can_refuel() {
             return;
         }
         let (x, y) = <(f64, f64)>::from(self.get_coords());
-        let mut xx = x - 3.0;
-        while xx <= x + 3.0 {
-            let mut yy = y - 3.0;
-            while yy <= y + 3.0 {
+        let mut xx = x - max_jump as f64;
+        while xx <= x + max_jump as f64 {
+            let mut yy = y - max_jump as f64;
+            while yy <= y + max_jump as f64 {
                 let world_opt = coords_to_world.get(&Coords::new(xx, yy));
                 if let Some(world) = world_opt {
                     if world != self && world.can_refuel() {
                         let distance = self.straight_line_distance(world);
-                        match distance {
-                            1 => self.neighbors1.insert(world.get_coords()),
-                            2 => self.neighbors2.insert(world.get_coords()),
-                            3 => self.neighbors3.insert(world.get_coords()),
-                            _ => false,
-                        };
+                        if distance <= max_jump as u16 {
+                            self.neighbors[distance as usize].insert(world.get_coords());
+                        }
                     }
                 }
                 yy += 0.5;
@@ -1512,8 +1486,8 @@ impl World {
         Some(path)
     }
 
-    fn distance_modifier(&self, other: &World, dist2: &Array2<u16>) -> f64 {
-        let distance = self.navigable_distance(other, dist2);
+    fn distance_modifier(&self, other: &World, dist: &Array2<u16>) -> f64 {
+        let distance = self.navigable_distance(other, dist);
         distance_modifier_table(distance)
     }
 
@@ -1554,8 +1528,7 @@ impl World {
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        (dist2, pred2): (&Array2<u16>, &Array2<u16>),
-        (dist3, pred3): (&Array2<u16>, &Array2<u16>),
+        (dist, pred): (&Array2<u16>, &Array2<u16>),
     ) -> (HashMap<CoordsPair, u64>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
@@ -1564,21 +1537,9 @@ impl World {
             for coords2 in coords_set {
                 let world2 = coords_to_world.get(coords2).unwrap();
                 let mut path: Vec<Coords> = Vec::new();
-                let possible_path2 =
-                    self.navigable_path(world2, sorted_coords, coords_to_index, dist2, pred2);
-                let mut possible_path3 = None;
-                if dbtn >= MIN_DBTN_FOR_JUMP_3 {
-                    possible_path3 =
-                        self.navigable_path(world2, sorted_coords, coords_to_index, dist3, pred3);
-                }
-                if let Some(path2) = possible_path2 {
-                    path = path2;
-                    if let Some(path3) = possible_path3 {
-                        if path3.len() < path.len() {
-                            path = path3;
-                        }
-                    }
-                } else if let Some(path3) = possible_path3 {
+                let possible_path3 =
+                    self.navigable_path(world2, sorted_coords, coords_to_index, dist, pred);
+                if let Some(path3) = possible_path3 {
                     path = path3;
                 }
                 if path.len() >= 2 {
@@ -1618,9 +1579,9 @@ impl World {
         if !self.imperial_affiliated() {
             port_size -= NON_IMPERIAL_PORT_SIZE_PENALTY;
         }
-        if !self.neighbors1.is_empty() {
+        if !self.neighbors[1].is_empty() {
             port_size += NEIGHBOR_1_PORT_SIZE_BONUS;
-        } else if !self.neighbors2.is_empty() {
+        } else if self.neighbors.len() > 2 && !self.neighbors[2].is_empty() {
             port_size += NEIGHBOR_2_PORT_SIZE_BONUS;
         }
         port_size = f64::ceil(port_size);
@@ -1949,6 +1910,7 @@ fn main() -> Result<()> {
 
     let ignore_xboat_routes = args.ignore_xboat_routes;
     let min_btn = args.min_btn;
+    let max_jump = args.max_jump;
 
     stderrlog::new()
         .module(module_path!())
@@ -1986,7 +1948,7 @@ fn main() -> Result<()> {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2);
+            world.populate_neighbors(&coords_to_world2, max_jump);
         }
     }
     let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();
@@ -1997,17 +1959,10 @@ fn main() -> Result<()> {
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
-    let (dist2, pred2) = populate_navigable_distances(
+    let (dist, pred) = populate_navigable_distances(
         &sorted_coords,
         &coords_to_world,
-        2,
-        ignore_xboat_routes,
-        alg,
-    );
-    let (dist3, pred3) = populate_navigable_distances(
-        &sorted_coords,
-        &coords_to_world,
-        3,
+        max_jump,
         ignore_xboat_routes,
         alg,
     );
@@ -2017,10 +1972,8 @@ fn main() -> Result<()> {
         &coords_to_index,
         &sorted_coords,
         min_btn,
-        &dist2,
-        &pred2,
-        &dist3,
-        &pred3,
+        &dist,
+        &pred,
     );
 
     generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
