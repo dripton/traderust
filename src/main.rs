@@ -62,8 +62,7 @@ struct Args {
     quiet: bool,
 
     /// Minimum BTN to draw a route on the map
-    #[clap(short = 'r', long, default_value = "8.0")]
-    // TODO
+    #[clap(short = 'r', long, default_value = DEFAULT_MIN_ROUTE_BTN)]
     min_route_btn: f64,
 
     /// Name of a sector to process.  Multiples are allowed.
@@ -100,12 +99,8 @@ const MAX_WTCM_BONUS: f64 = AG_WTCM_BONUS + IN_WTCM_BONUS;
 const DIFFERENT_ALLEGIANCE_WTCM_PENALTY: f64 = 0.5;
 const MAX_WTCM_PENALTY: f64 = DIFFERENT_ALLEGIANCE_WTCM_PENALTY;
 
-const MAJOR_ROUTE_THRESHOLD: f64 = 12.0;
-const MAIN_ROUTE_THRESHOLD: f64 = 11.0;
-const INTERMEDIATE_ROUTE_THRESHOLD: f64 = 10.0;
-const FEEDER_ROUTE_THRESHOLD: f64 = 9.0;
-const MINOR_ROUTE_THRESHOLD: f64 = 8.0;
 const DEFAULT_MIN_BTN: &str = "6.5";
+const DEFAULT_MIN_ROUTE_BTN: &str = "8.0";
 
 const NON_IMPERIAL_PORT_SIZE_PENALTY: f64 = 0.5;
 const NEIGHBOR_1_PORT_SIZE_BONUS: f64 = 1.5;
@@ -255,6 +250,7 @@ lazy_static! {
     ];
 
     static ref MIN_BTN: f64 = f64::from_str(DEFAULT_MIN_BTN).unwrap();
+    static ref MIN_ROUTE_BTN: f64 = f64::from_str(DEFAULT_MIN_ROUTE_BTN).unwrap();
 }
 
 fn download_sector_data(data_dir: &Path, sector_names: &Vec<String>) -> Result<()> {
@@ -380,6 +376,7 @@ fn populate_trade_routes(
     coords_to_index: &HashMap<Coords, usize>,
     sorted_coords: &[Coords],
     min_btn: f64,
+    min_route_btn: f64,
     dist: &Array2<u16>,
     pred: &Array2<u16>,
 ) {
@@ -495,10 +492,17 @@ fn populate_trade_routes(
     }
 
     debug!("Inserting trade routes");
+
+    let minor_route_threshold: f64 = min_route_btn;
+    let feeder_route_threshold: f64 = min_route_btn + 1.0;
+    let intermediate_route_threshold: f64 = min_route_btn + 2.0;
+    let main_route_threshold: f64 = min_route_btn + 3.0;
+    let major_route_threshold: f64 = min_route_btn + 4.0;
+
     for ((coords1, coords2), credits) in route_paths {
         let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
         let trade_btn = trade_dbtn as f64 / 2.0;
-        if trade_btn >= MAJOR_ROUTE_THRESHOLD {
+        if trade_btn >= major_route_threshold {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -509,7 +513,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .major_routes
                 .insert(coords1);
-        } else if trade_btn >= MAIN_ROUTE_THRESHOLD {
+        } else if trade_btn >= main_route_threshold {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -520,7 +524,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .main_routes
                 .insert(coords1);
-        } else if trade_btn >= INTERMEDIATE_ROUTE_THRESHOLD {
+        } else if trade_btn >= intermediate_route_threshold {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -531,7 +535,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .intermediate_routes
                 .insert(coords1);
-        } else if trade_btn >= FEEDER_ROUTE_THRESHOLD {
+        } else if trade_btn >= feeder_route_threshold {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -542,7 +546,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .feeder_routes
                 .insert(coords1);
-        } else if trade_btn >= MINOR_ROUTE_THRESHOLD {
+        } else if trade_btn >= minor_route_threshold {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -1910,6 +1914,7 @@ fn main() -> Result<()> {
 
     let ignore_xboat_routes = args.ignore_xboat_routes;
     let min_btn = args.min_btn;
+    let min_route_btn = args.min_route_btn;
     let max_jump = args.max_jump;
 
     stderrlog::new()
@@ -1972,6 +1977,7 @@ fn main() -> Result<()> {
         &coords_to_index,
         &sorted_coords,
         min_btn,
+        min_route_btn,
         &dist,
         &pred,
     );
