@@ -49,6 +49,10 @@ struct Args {
     #[clap(short = 'f', long, multiple_occurrences = true)]
     file_of_sectors: Vec<PathBuf>,
 
+    // TODO GTFT18 says to only use jump-2 routes except for xboat routes and
+    // when jump-3 can save a feeder or better route at least one jump.  But in
+    // some sparse regions, no jump-3 means no connections at all.  So I'm not
+    // sure what the best default is.
     /// Default maximum jump
     #[clap(short = 'j', long, default_value = "3")]
     max_jump: u8,
@@ -218,9 +222,9 @@ lazy_static! {
         wpmt
     };
 
-    // Values in the book are ranges, but use averages for repeatability.
+    // Values on GTFT16 are ranges, but we use averages for repeatability.
     static ref DBTN_TO_CREDITS: Vec<u64> = vec![
-        0,  // The book says 0-5, but 0 DBTN can also mean unreachable, so 0.
+        0,  // GTFT16 says 0-5, but 0 DBTN can also mean unreachable, so use 0.
         7,
         30,
         75,
@@ -434,11 +438,6 @@ fn populate_trade_routes(
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-
-            // Book says to only use jump-2 routes except when it can save a
-            // feeder or better route at least one jump, but in some sparse
-            // regions, no jump-3 means no connections at all.  So I will
-            // allow jump-3 here to find BTNs.
             let btn = world1.btn(world2, dist);
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
