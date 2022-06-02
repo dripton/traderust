@@ -1558,7 +1558,7 @@ fn main() -> Result<()> {
         &preds,
     );
 
-    generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
+    generate_pdfs(output_dir, &location_to_sector, &coords_to_world);
 
     temp_dir.close()?;
 
