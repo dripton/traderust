@@ -1469,19 +1469,13 @@ fn main() -> Result<()> {
     let ignore_xboat_routes = args.ignore_xboat_routes;
     let min_btn = args.min_btn;
     let min_route_btn = args.min_route_btn;
-    let max_jump = args.max_jump;
-    let max_jump_minor = args.max_jump_minor;
-    let max_jump_feeder = args.max_jump_feeder;
-    let max_jump_intermediate = args.max_jump_intermediate;
-    let max_jump_main = args.max_jump_main;
-    let max_jump_major = args.max_jump_major;
     let max_jumps: Vec<u8> = vec![
-        max_jump,
-        max_jump_minor,
-        max_jump_feeder,
-        max_jump_intermediate,
-        max_jump_main,
-        max_jump_major,
+        args.max_jump,
+        args.max_jump_minor,
+        args.max_jump_feeder,
+        args.max_jump_intermediate,
+        args.max_jump_main,
+        args.max_jump_major,
     ];
     let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
 
