@@ -1775,27 +1775,27 @@ mod tests {
             .hex_to_world("0201".to_string(), &coords_to_world)
             .unwrap();
 
-        assert_eq!(aramis.btn(ldd, &dist2), 8.0);
-        assert_eq!(aramis.btn(natoko, &dist2), 6.5);
-        assert_eq!(aramis.btn(reacher, &dist2), 7.0);
-        assert_eq!(aramis.btn(vinorian, &dist2), 8.0);
-        assert_eq!(aramis.btn(corfu, &dist2), 5.5);
-        assert_eq!(aramis.btn(lablon, &dist2), 6.0);
-        assert_eq!(aramis.btn(junidy, &dist2), 7.5);
-        assert_eq!(aramis.btn(marz, &dist2), 7.5);
-        assert_eq!(aramis.btn(regina, &dist2), 7.0);
-        assert_eq!(ldd.btn(aramis, &dist2), 8.0);
-        assert_eq!(ldd.btn(natoko, &dist2), 6.0);
-        assert_eq!(ldd.btn(reacher, &dist2), 6.5);
-        assert_eq!(ldd.btn(nutema, &dist2), 6.0);
-        assert_eq!(ldd.btn(margesi, &dist2), 6.0);
-        assert_eq!(ldd.btn(saarinen, &dist2), 5.5);
-        assert_eq!(natoko.btn(reacher, &dist2), 5.5);
-        assert_eq!(vinorian.btn(nutema, &dist2), 6.5);
-        assert_eq!(nutema.btn(margesi, &dist2), 5.5);
-        assert_eq!(margesi.btn(saarinen, &dist2), 5.5);
-        assert_eq!(aramis.btn(andor, &dist2), 0.0);
-        assert_eq!(andor.btn(candory, &dist2), 0.0);
+        assert_eq!(aramis.btn(ldd, &dist2, false), 8.0);
+        assert_eq!(aramis.btn(natoko, &dist2, false), 6.5);
+        assert_eq!(aramis.btn(reacher, &dist2, false), 7.0);
+        assert_eq!(aramis.btn(vinorian, &dist2, false), 8.0);
+        assert_eq!(aramis.btn(corfu, &dist2, false), 5.5);
+        assert_eq!(aramis.btn(lablon, &dist2, false), 6.0);
+        assert_eq!(aramis.btn(junidy, &dist2, false), 7.5);
+        assert_eq!(aramis.btn(marz, &dist2, false), 7.5);
+        assert_eq!(aramis.btn(regina, &dist2, false), 7.0);
+        assert_eq!(ldd.btn(aramis, &dist2, false), 8.0);
+        assert_eq!(ldd.btn(natoko, &dist2, false), 6.0);
+        assert_eq!(ldd.btn(reacher, &dist2, false), 6.5);
+        assert_eq!(ldd.btn(nutema, &dist2, false), 6.0);
+        assert_eq!(ldd.btn(margesi, &dist2, false), 6.0);
+        assert_eq!(ldd.btn(saarinen, &dist2, false), 5.5);
+        assert_eq!(natoko.btn(reacher, &dist2, false), 5.5);
+        assert_eq!(vinorian.btn(nutema, &dist2, false), 6.5);
+        assert_eq!(nutema.btn(margesi, &dist2, false), 5.5);
+        assert_eq!(margesi.btn(saarinen, &dist2, false), 5.5);
+        assert_eq!(aramis.btn(andor, &dist2, false), 0.0);
+        assert_eq!(andor.btn(candory, &dist2, false), 0.0);
         Ok(())
     }
 
@@ -1885,27 +1885,27 @@ mod tests {
             .hex_to_world("0201".to_string(), &coords_to_world)
             .unwrap();
 
-        assert_eq!(aramis.passenger_btn(ldd, &dist2), 8.5);
-        assert_eq!(aramis.passenger_btn(natoko, &dist2), 7.0);
-        assert_eq!(aramis.passenger_btn(reacher, &dist2), 7.5);
-        assert_eq!(aramis.passenger_btn(vinorian, &dist2), 8.5);
-        assert_eq!(aramis.passenger_btn(corfu, &dist2), 6.0);
-        assert_eq!(aramis.passenger_btn(lablon, &dist2), 6.5);
-        assert_eq!(aramis.passenger_btn(junidy, &dist2), 8.0);
-        assert_eq!(aramis.passenger_btn(marz, &dist2), 8.0);
-        assert_eq!(aramis.passenger_btn(regina, &dist2), 8.5);
-        assert_eq!(ldd.passenger_btn(aramis, &dist2), 8.5);
-        assert_eq!(ldd.passenger_btn(natoko, &dist2), 6.0);
-        assert_eq!(ldd.passenger_btn(reacher, &dist2), 6.5);
-        assert_eq!(ldd.passenger_btn(nutema, &dist2), 6.0);
-        assert_eq!(ldd.passenger_btn(margesi, &dist2), 6.0);
-        assert_eq!(ldd.passenger_btn(saarinen, &dist2), 5.5);
-        assert_eq!(natoko.passenger_btn(reacher, &dist2), 5.5);
-        assert_eq!(vinorian.passenger_btn(nutema, &dist2), 6.5);
-        assert_eq!(nutema.passenger_btn(margesi, &dist2), 5.5);
-        assert_eq!(margesi.passenger_btn(saarinen, &dist2), 5.5);
-        assert_eq!(aramis.passenger_btn(andor, &dist2), 0.0);
-        assert_eq!(andor.passenger_btn(candory, &dist2), 0.0);
+        assert_eq!(aramis.btn(ldd, &dist2, true), 8.5);
+        assert_eq!(aramis.btn(natoko, &dist2, true), 7.0);
+        assert_eq!(aramis.btn(reacher, &dist2, true), 7.5);
+        assert_eq!(aramis.btn(vinorian, &dist2, true), 8.5);
+        assert_eq!(aramis.btn(corfu, &dist2, true), 6.0);
+        assert_eq!(aramis.btn(lablon, &dist2, true), 6.5);
+        assert_eq!(aramis.btn(junidy, &dist2, true), 8.0);
+        assert_eq!(aramis.btn(marz, &dist2, true), 8.0);
+        assert_eq!(aramis.btn(regina, &dist2, true), 8.5);
+        assert_eq!(ldd.btn(aramis, &dist2, true), 8.5);
+        assert_eq!(ldd.btn(natoko, &dist2, true), 6.0);
+        assert_eq!(ldd.btn(reacher, &dist2, true), 6.5);
+        assert_eq!(ldd.btn(nutema, &dist2, true), 6.0);
+        assert_eq!(ldd.btn(margesi, &dist2, true), 6.0);
+        assert_eq!(ldd.btn(saarinen, &dist2, true), 5.5);
+        assert_eq!(natoko.btn(reacher, &dist2, true), 5.5);
+        assert_eq!(vinorian.btn(nutema, &dist2, true), 6.5);
+        assert_eq!(nutema.btn(margesi, &dist2, true), 5.5);
+        assert_eq!(margesi.btn(saarinen, &dist2, true), 5.5);
+        assert_eq!(aramis.btn(andor, &dist2, true), 0.0);
+        assert_eq!(andor.btn(candory, &dist2, true), 0.0);
         Ok(())
     }
 
@@ -2063,6 +2063,7 @@ mod tests {
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
+            false,
             &max_jumps,
             &dists,
             &preds,
@@ -2252,6 +2253,7 @@ mod tests {
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
+            false,
             &max_jumps,
             &dists,
             &preds,
@@ -2325,6 +2327,7 @@ mod tests {
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
+            false,
             &max_jumps,
             &dists,
             &preds,
@@ -2507,128 +2510,128 @@ mod tests {
         assert!(zuflucht.xboat_routes.is_empty());
 
         assert_eq!(zuflucht.navigable_distance(wellington, &dist2), INFINITY);
-        assert_eq!(zuflucht.btn(wellington, &dist2), 0.0);
-        assert_eq!(zuflucht.passenger_btn(wellington, &dist2), 0.0);
+        assert_eq!(zuflucht.btn(wellington, &dist2, false), 0.0);
+        assert_eq!(zuflucht.btn(wellington, &dist2, true), 0.0);
         assert_eq!(zuflucht.navigable_distance(wellington, &dist3), 6);
         assert_eq!(zuflucht.wtcm(wellington), -0.5);
-        assert_eq!(zuflucht.btn(wellington, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(wellington, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(wellington, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(wellington, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(esperanza, &dist2), INFINITY);
         assert_eq!(zuflucht.wtcm(esperanza), -0.5);
-        assert_eq!(zuflucht.btn(esperanza, &dist2), 0.0);
-        assert_eq!(zuflucht.passenger_btn(esperanza, &dist2), 0.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist2, false), 0.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist2, true), 0.0);
         assert_eq!(zuflucht.navigable_distance(esperanza, &dist3), 7);
-        assert_eq!(zuflucht.btn(esperanza, &dist3), 8.0);
-        assert_eq!(zuflucht.passenger_btn(esperanza, &dist3), 8.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist3, false), 8.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist3, true), 8.0);
 
         assert_eq!(zuflucht.navigable_distance(gloire, &dist2), INFINITY);
         assert_eq!(zuflucht.wtcm(gloire), -0.5);
-        assert_eq!(zuflucht.btn(gloire, &dist2), 0.0);
-        assert_eq!(zuflucht.passenger_btn(gloire, &dist2), 0.0);
+        assert_eq!(zuflucht.btn(gloire, &dist2, false), 0.0);
+        assert_eq!(zuflucht.btn(gloire, &dist2, true), 0.0);
         assert_eq!(zuflucht.navigable_distance(gloire, &dist3), 3);
-        assert_eq!(zuflucht.btn(gloire, &dist3), 6.0);
-        assert_eq!(zuflucht.passenger_btn(gloire, &dist3), 6.0);
+        assert_eq!(zuflucht.btn(gloire, &dist3, false), 6.0);
+        assert_eq!(zuflucht.btn(gloire, &dist3, true), 6.0);
 
         assert_eq!(zuflucht.navigable_distance(serendip_belt, &dist3), 5);
         assert_eq!(zuflucht.wtcm(serendip_belt), 0.0);
-        assert_eq!(zuflucht.btn(serendip_belt, &dist3), 8.5);
-        assert_eq!(zuflucht.passenger_btn(serendip_belt, &dist3), 8.5);
+        assert_eq!(zuflucht.btn(serendip_belt, &dist3, false), 8.5);
+        assert_eq!(zuflucht.btn(serendip_belt, &dist3, true), 8.5);
 
         assert_eq!(zuflucht.navigable_distance(herzenslust, &dist3), 10);
         assert_eq!(zuflucht.wtcm(herzenslust), -0.5);
-        assert_eq!(zuflucht.btn(herzenslust, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(herzenslust, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(herzenslust, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(herzenslust, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(orphee, &dist3), INFINITY);
         assert_eq!(zuflucht.wtcm(orphee), -0.5);
-        assert_eq!(zuflucht.btn(orphee, &dist3), 0.0);
-        assert_eq!(zuflucht.passenger_btn(orphee, &dist3), 0.0);
+        assert_eq!(zuflucht.btn(orphee, &dist3, false), 0.0);
+        assert_eq!(zuflucht.btn(orphee, &dist3, true), 0.0);
 
         assert_eq!(zuflucht.navigable_distance(topas, &dist3), 7);
         assert_eq!(zuflucht.wtcm(topas), 0.0);
-        assert_eq!(zuflucht.btn(topas, &dist3), 6.5);
-        assert_eq!(zuflucht.passenger_btn(topas, &dist3), 6.5);
+        assert_eq!(zuflucht.btn(topas, &dist3, false), 6.5);
+        assert_eq!(zuflucht.btn(topas, &dist3, true), 6.5);
 
         assert_eq!(zuflucht.navigable_distance(elysee, &dist3), 8);
         assert_eq!(zuflucht.wtcm(elysee), -0.5);
-        assert_eq!(zuflucht.btn(elysee, &dist3), 6.0);
-        assert_eq!(zuflucht.passenger_btn(elysee, &dist3), 6.0);
+        assert_eq!(zuflucht.btn(elysee, &dist3, false), 6.0);
+        assert_eq!(zuflucht.btn(elysee, &dist3, true), 6.0);
 
         assert_eq!(zuflucht.navigable_distance(besancon, &dist3), 9);
         assert_eq!(zuflucht.wtcm(besancon), -0.5);
-        assert_eq!(zuflucht.btn(besancon, &dist3), 5.0);
-        assert_eq!(zuflucht.passenger_btn(besancon, &dist3), 5.0);
+        assert_eq!(zuflucht.btn(besancon, &dist3, false), 5.0);
+        assert_eq!(zuflucht.btn(besancon, &dist3, true), 5.0);
 
         assert_eq!(zuflucht.navigable_distance(berlichingen, &dist3), 8);
         assert_eq!(zuflucht.wtcm(berlichingen), -0.5);
-        assert_eq!(zuflucht.btn(berlichingen, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(berlichingen, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(berlichingen, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(berlichingen, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(joyeuse, &dist3), 12);
         assert_eq!(zuflucht.wtcm(joyeuse), -0.5);
-        assert_eq!(zuflucht.btn(joyeuse, &dist3), 7.0);
-        assert_eq!(zuflucht.passenger_btn(joyeuse, &dist3), 7.0);
+        assert_eq!(zuflucht.btn(joyeuse, &dist3, false), 7.0);
+        assert_eq!(zuflucht.btn(joyeuse, &dist3, true), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(sturgeons_law, &dist3), 10);
         assert_eq!(zuflucht.wtcm(sturgeons_law), -0.5);
-        assert_eq!(zuflucht.btn(sturgeons_law, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(sturgeons_law, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(quichotte, &dist3), 13);
         assert_eq!(zuflucht.wtcm(quichotte), -0.5);
-        assert_eq!(zuflucht.btn(quichotte, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(quichotte, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(quichotte, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(quichotte, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(neubayern, &dist3), 10);
         assert_eq!(zuflucht.wtcm(neubayern), -0.5);
-        assert_eq!(zuflucht.btn(neubayern, &dist3), 7.0);
-        assert_eq!(zuflucht.passenger_btn(neubayern, &dist3), 7.0);
+        assert_eq!(zuflucht.btn(neubayern, &dist3, false), 7.0);
+        assert_eq!(zuflucht.btn(neubayern, &dist3, true), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(schlesien_belt, &dist3), 11);
         assert_eq!(zuflucht.wtcm(schlesien_belt), -0.5);
-        assert_eq!(zuflucht.btn(schlesien_belt, &dist3), 4.5);
-        assert_eq!(zuflucht.passenger_btn(schlesien_belt, &dist3), 4.5);
+        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, false), 4.5);
+        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, true), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(new_home, &dist3), 12);
         assert_eq!(zuflucht.wtcm(new_home), -0.5);
-        assert_eq!(zuflucht.btn(new_home, &dist3), 6.5);
-        assert_eq!(zuflucht.passenger_btn(new_home, &dist3), 7.0);
+        assert_eq!(zuflucht.btn(new_home, &dist3, false), 6.5);
+        assert_eq!(zuflucht.btn(new_home, &dist3, true), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(colchis, &dist3), 14);
         assert_eq!(zuflucht.wtcm(colchis), -0.5);
-        assert_eq!(zuflucht.btn(colchis, &dist3), 6.5);
-        assert_eq!(zuflucht.passenger_btn(colchis, &dist3), 6.5);
+        assert_eq!(zuflucht.btn(colchis, &dist3, false), 6.5);
+        assert_eq!(zuflucht.btn(colchis, &dist3, true), 6.5);
 
         assert_eq!(zuflucht.navigable_distance(st_genevieve, &dist3), 13);
         assert_eq!(zuflucht.wtcm(st_genevieve), -0.5);
-        assert_eq!(zuflucht.btn(st_genevieve, &dist3), 3.5);
-        assert_eq!(zuflucht.passenger_btn(st_genevieve, &dist3), 3.5);
+        assert_eq!(zuflucht.btn(st_genevieve, &dist3, false), 3.5);
+        assert_eq!(zuflucht.btn(st_genevieve, &dist3, true), 3.5);
 
         assert_eq!(zuflucht.navigable_distance(acadie, &dist3), 15);
         assert_eq!(zuflucht.wtcm(acadie), -0.5);
-        assert_eq!(zuflucht.btn(acadie, &dist3), 5.0);
-        assert_eq!(zuflucht.passenger_btn(acadie, &dist3), 5.0);
+        assert_eq!(zuflucht.btn(acadie, &dist3, false), 5.0);
+        assert_eq!(zuflucht.btn(acadie, &dist3, true), 5.0);
 
         assert_eq!(zuflucht.navigable_distance(sansterre, &dist3), 15);
         assert_eq!(zuflucht.wtcm(sansterre), -0.5);
-        assert_eq!(zuflucht.btn(sansterre, &dist3), 7.0);
-        assert_eq!(zuflucht.passenger_btn(sansterre, &dist3), 7.0);
+        assert_eq!(zuflucht.btn(sansterre, &dist3, false), 7.0);
+        assert_eq!(zuflucht.btn(sansterre, &dist3, true), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(achille, &dist3), 15);
         assert_eq!(zuflucht.wtcm(achille), -0.5);
-        assert_eq!(zuflucht.btn(achille, &dist3), 4.0);
-        assert_eq!(zuflucht.passenger_btn(achille, &dist3), 4.0);
+        assert_eq!(zuflucht.btn(achille, &dist3, false), 4.0);
+        assert_eq!(zuflucht.btn(achille, &dist3, true), 4.0);
 
         assert_eq!(zuflucht.navigable_distance(amondiage, &dist3), 16);
         assert_eq!(zuflucht.wtcm(amondiage), -0.5);
-        assert_eq!(zuflucht.btn(amondiage, &dist3), 7.0);
-        assert_eq!(zuflucht.passenger_btn(amondiage, &dist3), 7.0);
+        assert_eq!(zuflucht.btn(amondiage, &dist3, false), 7.0);
+        assert_eq!(zuflucht.btn(amondiage, &dist3, true), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(st_denis, &dist3), 16);
         assert_eq!(zuflucht.wtcm(st_denis), -0.5);
-        assert_eq!(zuflucht.btn(st_denis, &dist3), 5.0);
-        assert_eq!(zuflucht.passenger_btn(st_denis, &dist3), 5.0);
+        assert_eq!(zuflucht.btn(st_denis, &dist3, false), 5.0);
+        assert_eq!(zuflucht.btn(st_denis, &dist3, true), 5.0);
 
         println!("{:?}", zuflucht.dbtn_to_coords);
         for (ii, set) in zuflucht.dbtn_to_coords.iter().enumerate() {

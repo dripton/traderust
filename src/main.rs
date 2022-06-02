@@ -97,6 +97,10 @@ struct Args {
     /// Ignore xboat routes; don't let them ignore max_jump
     #[clap(short = 'X', long)]
     ignore_xboat_routes: bool,
+
+    /// Use Passenger BTN instead of Freight BTN
+    #[clap(short = 'p', long)]
+    passenger: bool,
 }
 
 const MAX_TECH_LEVEL: u32 = 23;
@@ -400,6 +404,7 @@ fn populate_trade_routes(
     sorted_coords: &[Coords],
     min_btn: f64,
     min_route_btn: f64,
+    passenger: bool,
     max_jumps: &[u8],
     dists: &HashMap<u8, Array2<u16>>,
     preds: &HashMap<u8, Array2<u16>>,
@@ -463,7 +468,7 @@ fn populate_trade_routes(
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-            let btn = world1.btn(world2, dist);
+            let btn = world1.btn(world2, dist, passenger);
             let dbtn = (2.0 * btn) as usize;
             let credits = DBTN_TO_CREDITS[dbtn];
             (coords1, coords2, dbtn, credits)
@@ -1029,36 +1034,26 @@ impl World {
         distance_modifier_table(distance)
     }
 
-    fn btn(&self, other: &World, dist: &Array2<u16>) -> f64 {
+    fn btn(&self, other: &World, dist: &Array2<u16>, passenger: bool) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
-        let btn = base_btn - self.distance_modifier(other, dist);
-        f64::max(ABSOLUTE_MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
-    }
-
-    fn passenger_btn(&self, other: &World, dist: &Array2<u16>) -> f64 {
-        let wtn1 = self.wtn();
-        let wtn2 = other.wtn();
-        let min_wtn = f64::min(wtn1, wtn2);
-        let base_btn = wtn1 + wtn2 + self.wtcm(other);
-        let mut pbtn = base_btn - self.distance_modifier(other, dist);
-        for world in [self, other] {
-            if world.trade_classifications.contains("Ri") {
-                pbtn += RI_PBTN_BONUS;
-            }
-            if world.trade_classifications.contains("Cp") {
-                pbtn += CP_PBTN_BONUS;
-            }
-            if world.trade_classifications.contains("Cs") {
-                pbtn += CS_PBTN_BONUS;
+        let mut btn = base_btn - self.distance_modifier(other, dist);
+        if passenger {
+            for world in [self, other] {
+                if world.trade_classifications.contains("Ri") {
+                    btn += RI_PBTN_BONUS;
+                }
+                if world.trade_classifications.contains("Cp") {
+                    btn += CP_PBTN_BONUS;
+                }
+                if world.trade_classifications.contains("Cs") {
+                    btn += CS_PBTN_BONUS;
+                }
             }
         }
-        f64::max(
-            ABSOLUTE_MIN_BTN,
-            f64::min(pbtn, min_wtn + MAX_BTN_WTN_DELTA),
-        )
+        f64::max(ABSOLUTE_MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
     /// Build a map of CoordsPairs to the credits of trade between them, and a
@@ -1468,6 +1463,7 @@ fn main() -> Result<()> {
     let ignore_xboat_routes = args.ignore_xboat_routes;
     let min_btn = args.min_btn;
     let min_route_btn = args.min_route_btn;
+    let passenger = args.passenger;
     let max_jumps: Vec<u8> = vec![
         args.max_jump,
         args.max_jump_minor,
@@ -1547,6 +1543,7 @@ fn main() -> Result<()> {
         &sorted_coords,
         min_btn,
         min_route_btn,
+        passenger,
         &max_jumps,
         &dists,
         &preds,
