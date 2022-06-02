@@ -48,13 +48,31 @@ struct Args {
     #[clap(short = 'f', long, multiple_occurrences = true)]
     file_of_sectors: Vec<PathBuf>,
 
-    // TODO GTFT18 says to only use jump-2 routes except for xboat routes and
-    // when jump-3 can save a feeder or better route at least one jump.  But in
-    // some sparse regions, no jump-3 means no connections at all.  So I'm not
-    // sure what the best default is.
+    // GTFT18 says to only use jump-2 routes except for xboat routes and
+    // when jump-3 can save a feeder or better route at least one jump.
     /// Default maximum jump
-    #[clap(short = 'j', long, default_value = "3")]
+    #[clap(short = 'j', long, default_value = "2")]
     max_jump: u8,
+
+    /// Maximum jump for minor routes
+    #[clap(short = '1', long, default_value = "2")]
+    max_jump_minor: u8,
+
+    /// Maximum jump for feeder routes
+    #[clap(short = '2', long, default_value = "3")]
+    max_jump_feeder: u8,
+
+    /// Maximum jump for intermediate routes
+    #[clap(short = '3', long, default_value = "3")]
+    max_jump_intermediate: u8,
+
+    /// Maximum jump for main routes
+    #[clap(short = '4', long, default_value = "3")]
+    max_jump_main: u8,
+
+    /// Maximum jump for major routes
+    #[clap(short = '5', long, default_value = "3")]
+    max_jump_major: u8,
 
     /// Directory where we place output PDFs
     #[clap(short = 'o', long, default_value = "/var/tmp")]
@@ -349,6 +367,25 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
+fn find_max_allowed_jump(credits: u64, max_jumps: &[u8], min_route_btn: f64) -> u8 {
+    let feeder_route_threshold: f64 = min_route_btn + 1.0;
+    let intermediate_route_threshold: f64 = min_route_btn + 2.0;
+    let main_route_threshold: f64 = min_route_btn + 3.0;
+    let major_route_threshold: f64 = min_route_btn + 4.0;
+    let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
+    let trade_btn = trade_dbtn as f64 / 2.0;
+    if trade_btn >= major_route_threshold {
+        return max_jumps[5];
+    } else if trade_btn >= main_route_threshold {
+        return max_jumps[4];
+    } else if trade_btn >= intermediate_route_threshold {
+        return max_jumps[3];
+    } else if trade_btn >= feeder_route_threshold {
+        return max_jumps[2];
+    }
+    max_jumps[1]
+}
+
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
 /// and feeder_routes for all Worlds.
 ///
@@ -363,8 +400,9 @@ fn populate_trade_routes(
     sorted_coords: &[Coords],
     min_btn: f64,
     min_route_btn: f64,
-    dist: &Array2<u16>,
-    pred: &Array2<u16>,
+    max_jumps: &[u8],
+    dists: &HashMap<u8, Array2<u16>>,
+    preds: &HashMap<u8, Array2<u16>>,
 ) {
     debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
@@ -414,7 +452,12 @@ fn populate_trade_routes(
         }
     }
 
+    let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
+
     debug!("(parallel) Finding BTNs");
+    // This will consider all jumps, even those only allowed for higher routes.
+    // So we need to filter some out later.
+    let dist = dists.get(&max_max_jump).unwrap();
     let coords_coords_dbtn_credits: Vec<(Coords, Coords, usize, u64)> = coords_pairs
         .into_par_iter()
         .map(|(coords1, coords2)| {
@@ -451,7 +494,10 @@ fn populate_trade_routes(
                 sorted_coords,
                 coords_to_world,
                 coords_to_index,
-                (dist, pred),
+                max_jumps,
+                min_route_btn,
+                dists,
+                preds,
             )
         })
         .collect();
@@ -473,7 +519,6 @@ fn populate_trade_routes(
     }
 
     debug!("Inserting trade routes");
-
     let minor_route_threshold: f64 = min_route_btn;
     let feeder_route_threshold: f64 = min_route_btn + 1.0;
     let intermediate_route_threshold: f64 = min_route_btn + 2.0;
@@ -948,6 +993,7 @@ impl World {
         dist[[ii, jj]]
     }
 
+    /// Return the inclusive path from self to other.
     fn navigable_path(
         &self,
         other: &World,
@@ -1016,24 +1062,43 @@ impl World {
         )
     }
 
+    /// Build a map of CoordsPairs to the credits of trade between them, and a
+    /// map of Coords to its total transient (non-endpoint) trade credits.
     fn find_route_paths(
         &self,
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        (dist, pred): (&Array2<u16>, &Array2<u16>),
+        max_jumps: &[u8],
+        min_route_btn: f64,
+        dists: &HashMap<u8, Array2<u16>>,
+        preds: &HashMap<u8, Array2<u16>>,
     ) -> (HashMap<CoordsPair, u64>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
+        let all_jumps_set: HashSet<u8> = max_jumps.iter().cloned().collect();
+        let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
+        all_jumps.sort_unstable();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let credits = DBTN_TO_CREDITS[dbtn];
+            let max_allowed_jump = find_max_allowed_jump(credits, max_jumps, min_route_btn);
             for coords2 in coords_set {
                 let world2 = coords_to_world.get(coords2).unwrap();
                 let mut path: Vec<Coords> = Vec::new();
-                let possible_path3 =
-                    self.navigable_path(world2, sorted_coords, coords_to_index, dist, pred);
-                if let Some(path3) = possible_path3 {
-                    path = path3;
+                for jump in all_jumps.iter() {
+                    // Only allow jumps that are allowed based on the route size.
+                    if jump <= &max_allowed_jump {
+                        let dist = dists.get(jump).unwrap();
+                        let pred = preds.get(jump).unwrap();
+                        let possible_path_opt =
+                            self.navigable_path(world2, sorted_coords, coords_to_index, dist, pred);
+                        if let Some(possible_path) = possible_path_opt {
+                            // Only use bigger jumps if that saves us a hop.
+                            if path.is_empty() || possible_path.len() < path.len() {
+                                path = possible_path;
+                            }
+                        }
+                    }
                 }
                 if path.len() >= 2 {
                     for ii in 0..path.len() - 1 {
@@ -1405,6 +1470,20 @@ fn main() -> Result<()> {
     let min_btn = args.min_btn;
     let min_route_btn = args.min_route_btn;
     let max_jump = args.max_jump;
+    let max_jump_minor = args.max_jump_minor;
+    let max_jump_feeder = args.max_jump_feeder;
+    let max_jump_intermediate = args.max_jump_intermediate;
+    let max_jump_main = args.max_jump_main;
+    let max_jump_major = args.max_jump_major;
+    let max_jumps: Vec<u8> = vec![
+        max_jump,
+        max_jump_minor,
+        max_jump_feeder,
+        max_jump_intermediate,
+        max_jump_main,
+        max_jump_major,
+    ];
+    let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
 
     stderrlog::new()
         .module(module_path!())
@@ -1442,7 +1521,7 @@ fn main() -> Result<()> {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, max_jump);
+            world.populate_neighbors(&coords_to_world2, max_max_jump);
         }
     }
     let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();
@@ -1453,13 +1532,21 @@ fn main() -> Result<()> {
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
-    let (dist, pred) = populate_navigable_distances(
-        &sorted_coords,
-        &coords_to_world,
-        max_jump,
-        ignore_xboat_routes,
-        alg,
-    );
+
+    let all_jumps: HashSet<u8> = max_jumps.iter().cloned().collect();
+    let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
+    let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
+    for jump in all_jumps.iter() {
+        let (dist, pred) = populate_navigable_distances(
+            &sorted_coords,
+            &coords_to_world,
+            *jump,
+            ignore_xboat_routes,
+            alg,
+        );
+        dists.insert(*jump, dist);
+        preds.insert(*jump, pred);
+    }
 
     populate_trade_routes(
         &mut coords_to_world,
@@ -1467,8 +1554,9 @@ fn main() -> Result<()> {
         &sorted_coords,
         min_btn,
         min_route_btn,
-        &dist,
-        &pred,
+        &max_jumps,
+        &dists,
+        &preds,
     );
 
     generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
