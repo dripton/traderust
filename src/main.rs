@@ -1429,41 +1429,7 @@ fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<HashSet<String>> {
     Ok(sector_names)
 }
 
-fn main() -> Result<()> {
-    let args = Args::parse();
-
-    let verbose = args.verbose;
-    let quiet = args.quiet;
-    if quiet && verbose > 0 {
-        eprintln!("Please do not set both --quiet and --verbose.  Exiting");
-        exit(1);
-    }
-    let alg = args.algorithm;
-
-    let output_dir = args.output_directory;
-    let temp_dir = tempdir()?;
-    let mut data_dir: PathBuf = temp_dir.path().to_path_buf();
-    if let Some(data_dir_override) = args.data_directory {
-        data_dir = data_dir_override;
-    };
-    let mut sector_names_set: HashSet<String> = HashSet::new();
-    for sector_name in args.sector {
-        sector_names_set.insert(sector_name);
-    }
-    for filename in args.file_of_sectors {
-        if let Ok(sector_names_set2) = parse_file_of_sectors(filename) {
-            for sector_name in sector_names_set2 {
-                sector_names_set.insert(sector_name);
-            }
-        }
-    }
-    let mut sector_names: Vec<String> = sector_names_set.into_iter().collect();
-    sector_names.sort();
-
-    let ignore_xboat_routes = args.ignore_xboat_routes;
-    let min_btn = args.min_btn;
-    let min_route_btn = args.min_route_btn;
-    let passenger = args.passenger;
+fn parse_max_jumps(args: &Args) -> Vec<u8> {
     let mut max_jumps: Vec<u8> = vec![
         args.max_jump_minor,
         args.max_jump_feeder,
@@ -1476,6 +1442,45 @@ fn main() -> Result<()> {
             *old_max_jump = max_jump;
         }
     }
+    max_jumps
+}
+
+fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let verbose = args.verbose;
+    let quiet = args.quiet;
+    if quiet && verbose > 0 {
+        eprintln!("Please do not set both --quiet and --verbose.  Exiting");
+        exit(1);
+    }
+    let alg = args.algorithm;
+
+    let output_dir = &args.output_directory;
+    let temp_dir = tempdir()?;
+    let mut data_dir: PathBuf = temp_dir.path().to_path_buf();
+    if let Some(ref data_dir_override) = args.data_directory {
+        data_dir = data_dir_override.to_path_buf();
+    };
+    let mut sector_names_set: HashSet<String> = HashSet::new();
+    for sector_name in &args.sector {
+        sector_names_set.insert(sector_name.to_string());
+    }
+    for filename in &args.file_of_sectors {
+        if let Ok(sector_names_set2) = parse_file_of_sectors(filename.to_path_buf()) {
+            for sector_name in sector_names_set2 {
+                sector_names_set.insert(sector_name);
+            }
+        }
+    }
+    let mut sector_names: Vec<String> = sector_names_set.into_iter().collect();
+    sector_names.sort();
+
+    let ignore_xboat_routes = args.ignore_xboat_routes;
+    let min_btn = args.min_btn;
+    let min_route_btn = args.min_route_btn;
+    let passenger = args.passenger;
+    let max_jumps = parse_max_jumps(&args);
     let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
 
     stderrlog::new()
