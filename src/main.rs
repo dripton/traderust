@@ -687,8 +687,7 @@ impl World {
         // Pre-populate every dbtn bucket with an empty set so we don't need
         // to deal with checking later.
         for _ in 0..DBTN_TO_CREDITS.len() {
-            let set = HashSet::new();
-            dbtn_to_coords.push(set);
+            dbtn_to_coords.push(HashSet::new());
         }
         let major_routes = HashSet::new();
         let main_routes = HashSet::new();
