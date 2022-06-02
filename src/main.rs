@@ -50,9 +50,9 @@ struct Args {
 
     // GTFT18 says to only use jump-2 routes except for xboat routes and
     // when jump-3 can save a feeder or better route at least one jump.
-    /// Default maximum jump
-    #[clap(short = 'j', long, default_value = "2")]
-    max_jump: u8,
+    /// Maximum jump for all route types; overrides other max-jump-x args.
+    #[clap(short = 'j', long)]
+    max_jump: Option<u8>,
 
     /// Maximum jump for minor routes
     #[clap(short = '1', long, default_value = "2")]
@@ -379,15 +379,15 @@ fn find_max_allowed_jump(credits: u64, max_jumps: &[u8], min_route_btn: f64) -> 
     let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
     let trade_btn = trade_dbtn as f64 / 2.0;
     if trade_btn >= major_route_threshold {
-        return max_jumps[5];
-    } else if trade_btn >= main_route_threshold {
         return max_jumps[4];
-    } else if trade_btn >= intermediate_route_threshold {
+    } else if trade_btn >= main_route_threshold {
         return max_jumps[3];
-    } else if trade_btn >= feeder_route_threshold {
+    } else if trade_btn >= intermediate_route_threshold {
         return max_jumps[2];
+    } else if trade_btn >= feeder_route_threshold {
+        return max_jumps[1];
     }
-    max_jumps[1]
+    max_jumps[0]
 }
 
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
@@ -1464,14 +1464,18 @@ fn main() -> Result<()> {
     let min_btn = args.min_btn;
     let min_route_btn = args.min_route_btn;
     let passenger = args.passenger;
-    let max_jumps: Vec<u8> = vec![
-        args.max_jump,
+    let mut max_jumps: Vec<u8> = vec![
         args.max_jump_minor,
         args.max_jump_feeder,
         args.max_jump_intermediate,
         args.max_jump_main,
         args.max_jump_major,
     ];
+    if let Some(max_jump) = args.max_jump {
+        for old_max_jump in &mut max_jumps {
+            *old_max_jump = max_jump;
+        }
+    }
     let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
 
     stderrlog::new()
