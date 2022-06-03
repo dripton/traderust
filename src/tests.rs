@@ -8,9 +8,10 @@ use crate::apsp::{Algorithm, INFINITY};
 use crate::{
     distance_modifier_table, download_sector_data, find_max_allowed_jump,
     parse_header_and_separator, populate_navigable_distances, populate_trade_routes,
-    same_allegiance, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
+    same_allegiance, Route, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
 };
 use crate::{Coords, Sector, World};
+use Route::{Feeder, Intermediate, Main, Major, Minor};
 
 #[cfg(test)]
 mod tests {
@@ -1911,95 +1912,45 @@ mod tests {
 
     #[rstest]
     fn test_find_max_allowed_jump() {
-        assert_eq!(find_max_allowed_jump(0, &vec![2, 3, 3, 3, 3], 8.0), 2);
-        assert_eq!(
-            find_max_allowed_jump(299999999, &vec![2, 3, 3, 3, 3], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(300000000, &vec![2, 3, 3, 3, 3], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(750000000, &vec![2, 3, 3, 3, 3], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(3000000000, &vec![2, 3, 3, 3, 3], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(7500000000, &vec![2, 3, 3, 3, 3], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(30000000000, &vec![2, 3, 3, 3, 3], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(75000000000, &vec![2, 3, 3, 3, 3], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(75000000001, &vec![2, 3, 3, 3, 3], 8.0),
-            3
-        );
+        let mut max_jumps = HashMap::new();
+        max_jumps.insert(Minor, 2);
+        max_jumps.insert(Feeder, 3);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 3);
+        max_jumps.insert(Major, 3);
 
-        assert_eq!(find_max_allowed_jump(0, &vec![1, 2, 3, 4, 5], 8.0), 1);
+        assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(299999999, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(300000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(750000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(3000000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(7500000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(30000000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(75000000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(75000000001, &max_jumps, 8.0), 3);
+
+        max_jumps.insert(Minor, 1);
+        max_jumps.insert(Feeder, 2);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 4);
+        max_jumps.insert(Major, 5);
+
+        assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(299999999, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(300000000, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(750000000, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(3000000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(7500000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(30000000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(75000000000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(300000000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(750000000000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(3000000000000, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(7500000000000, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(30000000000000, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(75000000000000, &max_jumps, 8.0), 5);
         assert_eq!(
-            find_max_allowed_jump(299999999, &vec![1, 2, 3, 4, 5], 8.0),
-            1
-        );
-        assert_eq!(
-            find_max_allowed_jump(300000000, &vec![1, 2, 3, 4, 5], 8.0),
-            1
-        );
-        assert_eq!(
-            find_max_allowed_jump(750000000, &vec![1, 2, 3, 4, 5], 8.0),
-            1
-        );
-        assert_eq!(
-            find_max_allowed_jump(3000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(7500000000, &vec![1, 2, 3, 4, 5], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(30000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(75000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            2
-        );
-        assert_eq!(
-            find_max_allowed_jump(300000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(750000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            3
-        );
-        assert_eq!(
-            find_max_allowed_jump(3000000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            4
-        );
-        assert_eq!(
-            find_max_allowed_jump(7500000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            4
-        );
-        assert_eq!(
-            find_max_allowed_jump(30000000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            5
-        );
-        assert_eq!(
-            find_max_allowed_jump(75000000000000, &vec![1, 2, 3, 4, 5], 8.0),
-            5
-        );
-        assert_eq!(
-            find_max_allowed_jump(750000000000000000, &vec![1, 2, 3, 4, 5], 8.0),
+            find_max_allowed_jump(750000000000000000, &max_jumps, 8.0),
             5
         );
     }
@@ -2046,8 +1997,13 @@ mod tests {
             }
         }
 
-        let max_jumps = vec![2, 2, 3, 3, 3, 3];
-        let all_jumps: HashSet<u8> = max_jumps.iter().cloned().collect();
+        let mut max_jumps = HashMap::new();
+        max_jumps.insert(Minor, 2);
+        max_jumps.insert(Feeder, 3);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 3);
+        max_jumps.insert(Major, 3);
+        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
         let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {
@@ -2113,8 +2069,8 @@ mod tests {
         );
         assert_eq!(aramis.major_routes.len(), 0);
         assert_eq!(aramis.main_routes.len(), 0);
-        assert_eq!(aramis.intermediate_routes.len(), 0);
-        assert_eq!(aramis.feeder_routes.len(), 5);
+        assert_eq!(aramis.intermediate_routes.len(), 4);
+        assert_eq!(aramis.feeder_routes.len(), 8);
         assert_eq!(aramis.minor_routes.len(), 1);
 
         println!(
@@ -2138,9 +2094,9 @@ mod tests {
             set_to_worlds(&mora.minor_routes, &coords_to_world)
         );
         assert_eq!(mora.major_routes.len(), 1);
-        assert_eq!(mora.main_routes.len(), 10);
-        assert_eq!(mora.intermediate_routes.len(), 2);
-        assert_eq!(mora.feeder_routes.len(), 0);
+        assert_eq!(mora.main_routes.len(), 9);
+        assert_eq!(mora.intermediate_routes.len(), 3);
+        assert_eq!(mora.feeder_routes.len(), 1);
         assert_eq!(mora.minor_routes.len(), 0);
 
         println!(
@@ -2166,7 +2122,7 @@ mod tests {
         assert_eq!(jesedipere.major_routes.len(), 0);
         assert_eq!(jesedipere.main_routes.len(), 0);
         assert_eq!(jesedipere.intermediate_routes.len(), 3);
-        assert_eq!(jesedipere.feeder_routes.len(), 2);
+        assert_eq!(jesedipere.feeder_routes.len(), 5);
         assert_eq!(jesedipere.minor_routes.len(), 1);
 
         println!(
@@ -2192,7 +2148,7 @@ mod tests {
         assert_eq!(rruthaekuksu.major_routes.len(), 0);
         assert_eq!(rruthaekuksu.main_routes.len(), 0);
         assert_eq!(rruthaekuksu.intermediate_routes.len(), 2);
-        assert_eq!(rruthaekuksu.feeder_routes.len(), 1);
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 2);
         assert_eq!(rruthaekuksu.minor_routes.len(), 0);
 
         Ok(())
@@ -2237,8 +2193,13 @@ mod tests {
             }
         }
 
-        let max_jumps = vec![2, 2, 3, 3, 3, 3];
-        let all_jumps: HashSet<u8> = max_jumps.iter().cloned().collect();
+        let mut max_jumps = HashMap::new();
+        max_jumps.insert(Minor, 2);
+        max_jumps.insert(Feeder, 3);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 3);
+        max_jumps.insert(Major, 3);
+        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
         let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {
@@ -2311,8 +2272,13 @@ mod tests {
             }
         }
 
-        let max_jumps = vec![2, 2, 3, 3, 3, 3];
-        let all_jumps: HashSet<u8> = max_jumps.iter().cloned().collect();
+        let mut max_jumps = HashMap::new();
+        max_jumps.insert(Minor, 2);
+        max_jumps.insert(Feeder, 3);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 3);
+        max_jumps.insert(Major, 3);
+        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
         let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {

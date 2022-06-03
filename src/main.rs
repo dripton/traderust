@@ -132,6 +132,16 @@ const XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE: f64 = 6.0;
 const FEEDER_ROUTE_MIN_PORT_SIZE: f64 = 5.0;
 const MINOR_ROUTE_MIN_PORT_SIZE: f64 = 4.0;
 
+#[derive(Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum Route {
+    Minor,
+    Feeder,
+    Intermediate,
+    Main,
+    Major,
+}
+use Route::*;
+
 lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<char, String> = {
         let mut sttg: HashMap<char, String> = HashMap::new();
@@ -371,23 +381,23 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
-fn find_max_allowed_jump(credits: u64, max_jumps: &[u8], min_route_btn: f64) -> u8 {
-    let feeder_route_threshold: f64 = min_route_btn + 1.0;
-    let intermediate_route_threshold: f64 = min_route_btn + 2.0;
-    let main_route_threshold: f64 = min_route_btn + 3.0;
-    let major_route_threshold: f64 = min_route_btn + 4.0;
+fn find_max_allowed_jump(credits: u64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
+    let feeder_route_threshold: f64 = min_route_btn + Feeder as u8 as f64;
+    let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u8 as f64;
+    let main_route_threshold: f64 = min_route_btn + Main as u8 as f64;
+    let major_route_threshold: f64 = min_route_btn + Major as u8 as f64;
     let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
     let trade_btn = trade_dbtn as f64 / 2.0;
     if trade_btn >= major_route_threshold {
-        return max_jumps[4];
+        return max_jumps[&Major];
     } else if trade_btn >= main_route_threshold {
-        return max_jumps[3];
+        return max_jumps[&Main];
     } else if trade_btn >= intermediate_route_threshold {
-        return max_jumps[2];
+        return max_jumps[&Intermediate];
     } else if trade_btn >= feeder_route_threshold {
-        return max_jumps[1];
+        return max_jumps[&Feeder];
     }
-    max_jumps[0]
+    max_jumps[&Minor]
 }
 
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
@@ -405,7 +415,7 @@ fn populate_trade_routes(
     min_btn: f64,
     min_route_btn: f64,
     passenger: bool,
-    max_jumps: &[u8],
+    max_jumps: &HashMap<Route, u8>,
     dists: &HashMap<u8, Array2<u16>>,
     preds: &HashMap<u8, Array2<u16>>,
 ) {
@@ -457,7 +467,7 @@ fn populate_trade_routes(
         }
     }
 
-    let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
+    let max_max_jump: u8 = *max_jumps.values().max().unwrap();
 
     debug!("(parallel) Finding BTNs");
     // This will consider all jumps, even those only allowed for higher routes.
@@ -1063,14 +1073,14 @@ impl World {
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        max_jumps: &[u8],
+        max_jumps: &HashMap<Route, u8>,
         min_route_btn: f64,
         dists: &HashMap<u8, Array2<u16>>,
         preds: &HashMap<u8, Array2<u16>>,
     ) -> (HashMap<CoordsPair, u64>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
-        let all_jumps_set: HashSet<u8> = max_jumps.iter().cloned().collect();
+        let all_jumps_set: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
         all_jumps.sort_unstable();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
@@ -1429,16 +1439,15 @@ fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<HashSet<String>> {
     Ok(sector_names)
 }
 
-fn parse_max_jumps(args: &Args) -> Vec<u8> {
-    let mut max_jumps: Vec<u8> = vec![
-        args.max_jump_minor,
-        args.max_jump_feeder,
-        args.max_jump_intermediate,
-        args.max_jump_main,
-        args.max_jump_major,
-    ];
+fn parse_max_jumps(args: &Args) -> HashMap<Route, u8> {
+    let mut max_jumps = HashMap::new();
+    max_jumps.insert(Minor, args.max_jump_minor);
+    max_jumps.insert(Feeder, args.max_jump_feeder);
+    max_jumps.insert(Intermediate, args.max_jump_intermediate);
+    max_jumps.insert(Main, args.max_jump_main);
+    max_jumps.insert(Major, args.max_jump_major);
     if let Some(max_jump) = args.max_jump {
-        for old_max_jump in &mut max_jumps {
+        for old_max_jump in &mut max_jumps.values_mut() {
             *old_max_jump = max_jump;
         }
     }
@@ -1481,7 +1490,7 @@ fn main() -> Result<()> {
     let min_route_btn = args.min_route_btn;
     let passenger = args.passenger;
     let max_jumps = parse_max_jumps(&args);
-    let max_max_jump: u8 = *max_jumps.iter().max().unwrap();
+    let max_max_jump: u8 = *max_jumps.values().max().unwrap();
 
     stderrlog::new()
         .module(module_path!())
@@ -1531,7 +1540,7 @@ fn main() -> Result<()> {
         world.index = Some(ii);
     }
 
-    let all_jumps: HashSet<u8> = max_jumps.iter().cloned().collect();
+    let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
     let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
     let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
     for jump in all_jumps.iter() {
