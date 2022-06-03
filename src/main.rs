@@ -891,12 +891,40 @@ impl World {
         return self.uwp.chars().nth(4).unwrap() as char;
     }
 
-    fn government(&self) -> char {
+    pub fn government(&self) -> char {
         return self.uwp.chars().nth(5).unwrap() as char;
     }
 
-    fn law_level(&self) -> char {
+    pub fn law_level(&self) -> char {
         return self.uwp.chars().nth(6).unwrap() as char;
+    }
+
+    pub fn importance(&self) -> i64 {
+        self.importance
+    }
+
+    pub fn economic(&self) -> String {
+        self.economic.clone()
+    }
+
+    pub fn cultural(&self) -> String {
+        self.cultural.clone()
+    }
+
+    pub fn nobles(&self) -> String {
+        self.nobles.clone()
+    }
+
+    pub fn bases(&self) -> HashSet<String> {
+        self.bases.iter().cloned().collect()
+    }
+
+    pub fn worlds(&self) -> u64 {
+        self.worlds
+    }
+
+    pub fn stars(&self) -> Vec<String> {
+        self.stars.to_vec()
     }
 
     fn tech_level(&self) -> char {
@@ -1413,7 +1441,7 @@ impl Sector {
         Ok(())
     }
 
-    fn hex_to_world<'a>(
+    pub fn hex_to_world<'a>(
         &'a self,
         hex: String,
         coords_to_world: &'a HashMap<Coords, World>,
