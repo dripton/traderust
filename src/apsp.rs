@@ -18,6 +18,7 @@ pub const NO_PRED_NODE: u16 = INFINITY - 1;
 pub enum Algorithm {
     Dijkstra,
     Dial,
+    Floyd,
 }
 
 /// Floyd-Warshall is a simple O(V^3) algorithm, where V is the number of
@@ -27,7 +28,7 @@ pub enum Algorithm {
 /// implementation is currently single-threaded.  Even if it were
 /// multi-threaded, Floyd-Warshall is so much slower than Dijkstra for sparse
 /// matrixes (E << V^2) that it should not be used except for testing.
-pub fn floyd_warshall(dist: &mut Array2<u16>) -> Array2<u16> {
+fn floyd_warshall(dist: &mut Array2<u16>) -> Array2<u16> {
     let size = dist.nrows();
     let mut pred = Array2::<u16>::from_elem((size, size), NO_PRED_NODE);
 
@@ -244,7 +245,11 @@ fn dijkstra_dial_inner(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
 }
 
 pub fn shortest_path(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
-    dijkstra_dial_inner(dist, alg)
+    match alg {
+        Algorithm::Dial => dial(dist),
+        Algorithm::Dijkstra => dijkstra(dist),
+        Algorithm::Floyd => floyd_warshall(dist),
+    }
 }
 
 /// Dijkstra's algorithm for all-pairs shortest path is just Dijkstra from a
@@ -260,7 +265,7 @@ pub fn shortest_path(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
 /// is a max-heap, so nodes are wrapped in std::cmp::Reverse to make it work
 /// as a min-heap.  APSP Dijkstra's runtime for V nodes and E edges, with a
 /// binary heap, is O(((E + V) log V)V).
-pub fn dijkstra(dist: &mut Array2<u16>) -> Array2<u16> {
+fn dijkstra(dist: &mut Array2<u16>) -> Array2<u16> {
     dijkstra_dial_inner(dist, Algorithm::Dijkstra)
 }
 
@@ -272,7 +277,7 @@ pub fn dijkstra(dist: &mut Array2<u16>) -> Array2<u16> {
 /// O(buckets) pop, compared to the binary heap's O(log n) push and O(log n)
 /// pop.  This makes APSP Dial's runtime O((E + VC)V) for E edges, V nodes, and
 /// C distinct edge weights.
-pub fn dial(dist: &mut Array2<u16>) -> Array2<u16> {
+fn dial(dist: &mut Array2<u16>) -> Array2<u16> {
     dijkstra_dial_inner(dist, Algorithm::Dial)
 }
 
