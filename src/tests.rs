@@ -1920,14 +1920,14 @@ mod tests {
         max_jumps.insert(Major, 3);
 
         assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(299999999, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(300000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(750000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(3000000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(7500000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(30000000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(75000000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(75000000001, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(299_999_999, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(300_000_000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(750_000_000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(3_000_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(7_500_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(30_000_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(75_000_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(75_000_000_001, &max_jumps, 8.0), 3);
 
         max_jumps.insert(Minor, 1);
         max_jumps.insert(Feeder, 2);
@@ -1936,21 +1936,21 @@ mod tests {
         max_jumps.insert(Major, 5);
 
         assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(299999999, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(300000000, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(750000000, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(3000000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(7500000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(30000000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(75000000000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(300000000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(750000000000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(3000000000000, &max_jumps, 8.0), 4);
-        assert_eq!(find_max_allowed_jump(7500000000000, &max_jumps, 8.0), 4);
-        assert_eq!(find_max_allowed_jump(30000000000000, &max_jumps, 8.0), 5);
-        assert_eq!(find_max_allowed_jump(75000000000000, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(299_999_999, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(300_000_000, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(750_000_000, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(3_000_000_000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(7_500_000_000, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(30_000_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(75_000_000_000, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(300_000_000_000, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(750_000_000_000, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(3_000_000_000_000, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(7_500_000_000_000, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(30_000_000_000_000, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(75_000_000_000_000, &max_jumps, 8.0), 5);
         assert_eq!(
-            find_max_allowed_jump(750000000000000000, &max_jumps, 8.0),
+            find_max_allowed_jump(750_000_000_000_000_000, &max_jumps, 8.0),
             5
         );
     }
@@ -2069,8 +2069,8 @@ mod tests {
         );
         assert_eq!(aramis.major_routes.len(), 0);
         assert_eq!(aramis.main_routes.len(), 0);
-        assert_eq!(aramis.intermediate_routes.len(), 4);
-        assert_eq!(aramis.feeder_routes.len(), 8);
+        assert_eq!(aramis.intermediate_routes.len(), 8);
+        assert_eq!(aramis.feeder_routes.len(), 4);
         assert_eq!(aramis.minor_routes.len(), 1);
 
         println!(
@@ -2094,9 +2094,9 @@ mod tests {
             set_to_worlds(&mora.minor_routes, &coords_to_world)
         );
         assert_eq!(mora.major_routes.len(), 1);
-        assert_eq!(mora.main_routes.len(), 9);
+        assert_eq!(mora.main_routes.len(), 10);
         assert_eq!(mora.intermediate_routes.len(), 3);
-        assert_eq!(mora.feeder_routes.len(), 1);
+        assert_eq!(mora.feeder_routes.len(), 0);
         assert_eq!(mora.minor_routes.len(), 0);
 
         println!(
@@ -2120,9 +2120,9 @@ mod tests {
             set_to_worlds(&jesedipere.minor_routes, &coords_to_world)
         );
         assert_eq!(jesedipere.major_routes.len(), 0);
-        assert_eq!(jesedipere.main_routes.len(), 0);
-        assert_eq!(jesedipere.intermediate_routes.len(), 3);
-        assert_eq!(jesedipere.feeder_routes.len(), 5);
+        assert_eq!(jesedipere.main_routes.len(), 3);
+        assert_eq!(jesedipere.intermediate_routes.len(), 1);
+        assert_eq!(jesedipere.feeder_routes.len(), 4);
         assert_eq!(jesedipere.minor_routes.len(), 1);
 
         println!(
@@ -2146,9 +2146,9 @@ mod tests {
             set_to_worlds(&rruthaekuksu.minor_routes, &coords_to_world)
         );
         assert_eq!(rruthaekuksu.major_routes.len(), 0);
-        assert_eq!(rruthaekuksu.main_routes.len(), 0);
-        assert_eq!(rruthaekuksu.intermediate_routes.len(), 2);
-        assert_eq!(rruthaekuksu.feeder_routes.len(), 2);
+        assert_eq!(rruthaekuksu.main_routes.len(), 2);
+        assert_eq!(rruthaekuksu.intermediate_routes.len(), 1);
+        assert_eq!(rruthaekuksu.feeder_routes.len(), 1);
         assert_eq!(rruthaekuksu.minor_routes.len(), 0);
 
         Ok(())
