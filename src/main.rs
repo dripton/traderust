@@ -428,7 +428,6 @@ fn populate_trade_routes(
     dwtn_coords.reverse();
 
     debug!("Building world trade pairs");
-    // Add endpoint trade credits to both endpoints
     let mut coords_pairs: Vec<CoordsPair> = Vec::new();
     for (ii, (dwtn1, coords1)) in dwtn_coords.iter().enumerate() {
         let wtn1 = *dwtn1 as f64 / 2.0;
