@@ -471,20 +471,20 @@ fn populate_trade_routes(
     // This will consider all jumps, even those only allowed for higher routes.
     // So we need to filter some out later.
     let dist = dists.get(&max_max_jump).unwrap();
-    let coords_pair_dbtn_credits: Vec<(Coords, Coords, usize, u64)> = coords_pairs
+    let coords_pair_dbtn: Vec<(Coords, Coords, usize)> = coords_pairs
         .into_par_iter()
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
             let btn = world1.btn(world2, dist, passenger);
             let dbtn = (2.0 * btn) as usize;
-            let credits = DBTN_TO_CREDITS[dbtn];
-            (coords1, coords2, dbtn, credits)
+            (coords1, coords2, dbtn)
         })
         .collect();
 
     debug!("Recording BTNs");
-    for (coords1, coords2, dbtn, credits) in coords_pair_dbtn_credits {
+    for (coords1, coords2, dbtn) in coords_pair_dbtn {
+        let credits = DBTN_TO_CREDITS[dbtn];
         coords_to_world
             .get_mut(&coords1)
             .unwrap()
