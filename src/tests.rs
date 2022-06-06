@@ -1919,15 +1919,14 @@ mod tests {
         max_jumps.insert(Main, 3);
         max_jumps.insert(Major, 3);
 
-        assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(299_999_999, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(300_000_000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(750_000_000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(3_000_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(7_500_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(30_000_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(75_000_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(75_000_000_001, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(0.0, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(7.5, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(8.0, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(8.5, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(9.0, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(9.5, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(10.0, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(10.5, &max_jumps, 8.0), 3);
 
         max_jumps.insert(Minor, 1);
         max_jumps.insert(Feeder, 2);
@@ -1935,24 +1934,18 @@ mod tests {
         max_jumps.insert(Main, 4);
         max_jumps.insert(Major, 5);
 
-        assert_eq!(find_max_allowed_jump(0, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(299_999_999, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(300_000_000, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(750_000_000, &max_jumps, 8.0), 1);
-        assert_eq!(find_max_allowed_jump(3_000_000_000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(7_500_000_000, &max_jumps, 8.0), 2);
-        assert_eq!(find_max_allowed_jump(30_000_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(75_000_000_000, &max_jumps, 8.0), 3);
-        assert_eq!(find_max_allowed_jump(300_000_000_000, &max_jumps, 8.0), 4);
-        assert_eq!(find_max_allowed_jump(750_000_000_000, &max_jumps, 8.0), 4);
-        assert_eq!(find_max_allowed_jump(3_000_000_000_000, &max_jumps, 8.0), 5);
-        assert_eq!(find_max_allowed_jump(7_500_000_000_000, &max_jumps, 8.0), 5);
-        assert_eq!(find_max_allowed_jump(30_000_000_000_000, &max_jumps, 8.0), 5);
-        assert_eq!(find_max_allowed_jump(75_000_000_000_000, &max_jumps, 8.0), 5);
-        assert_eq!(
-            find_max_allowed_jump(750_000_000_000_000_000, &max_jumps, 8.0),
-            5
-        );
+        assert_eq!(find_max_allowed_jump(0.0, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(7.5, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(8.0, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(8.5, &max_jumps, 8.0), 1);
+        assert_eq!(find_max_allowed_jump(9.0, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(9.5, &max_jumps, 8.0), 2);
+        assert_eq!(find_max_allowed_jump(10.0, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(10.5, &max_jumps, 8.0), 3);
+        assert_eq!(find_max_allowed_jump(11.0, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(11.5, &max_jumps, 8.0), 4);
+        assert_eq!(find_max_allowed_jump(12.0, &max_jumps, 8.0), 5);
+        assert_eq!(find_max_allowed_jump(12.5, &max_jumps, 8.0), 5);
     }
 
     #[rstest]

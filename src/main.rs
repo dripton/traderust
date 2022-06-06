@@ -379,20 +379,18 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
-fn find_max_allowed_jump(credits: u64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
+fn find_max_allowed_jump(btn: f64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
     let feeder_route_threshold: f64 = min_route_btn + Feeder as u8 as f64;
     let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u8 as f64;
     let main_route_threshold: f64 = min_route_btn + Main as u8 as f64;
     let major_route_threshold: f64 = min_route_btn + Major as u8 as f64;
-    let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
-    let trade_btn = trade_dbtn as f64 / 2.0;
-    if trade_btn >= major_route_threshold {
+    if btn >= major_route_threshold {
         return max_jumps[&Major];
-    } else if trade_btn >= main_route_threshold {
+    } else if btn >= main_route_threshold {
         return max_jumps[&Main];
-    } else if trade_btn >= intermediate_route_threshold {
+    } else if btn >= intermediate_route_threshold {
         return max_jumps[&Intermediate];
-    } else if trade_btn >= feeder_route_threshold {
+    } else if btn >= feeder_route_threshold {
         return max_jumps[&Feeder];
     }
     max_jumps[&Minor]
@@ -1109,8 +1107,9 @@ impl World {
         let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
         all_jumps.sort_unstable();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
+            let btn = dbtn as f64 / 2.0;
+            let max_allowed_jump = find_max_allowed_jump(btn, max_jumps, min_route_btn);
             let credits = DBTN_TO_CREDITS[dbtn];
-            let max_allowed_jump = find_max_allowed_jump(credits, max_jumps, min_route_btn);
             for coords2 in coords_set {
                 let world2 = coords_to_world.get(coords2).unwrap();
                 let mut path: Vec<Coords> = Vec::new();
