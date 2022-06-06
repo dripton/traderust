@@ -2626,7 +2626,7 @@ mod tests {
         for ii in 18..zuflucht.dbtn_to_coords.len() - 1 {
             assert!(zuflucht.dbtn_to_coords[ii].is_empty());
         }
-        assert_eq!(zuflucht.endpoint_trade_credits, 1222500000);
+        assert_eq!(zuflucht.endpoint_trade_credits, 1_222_500_000);
         assert_eq!(zuflucht.transient_trade_credits, 0);
 
         Ok(())
