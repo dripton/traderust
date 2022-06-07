@@ -832,9 +832,7 @@ mod tests {
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
         assert_eq!(sorted_coords.len(), 825);
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1209,9 +1207,7 @@ mod tests {
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
         assert_eq!(sorted_coords.len(), 825);
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1321,9 +1317,7 @@ mod tests {
         sorted_coords = coords_to_world.keys().cloned().collect();
         assert_eq!(sorted_coords.len(), 825);
         sorted_coords.sort();
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1473,7 +1467,7 @@ mod tests {
             .unwrap();
 
         let path_opt =
-            aramis.navigable_path(aramis, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(aramis, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 1);
             assert_eq!(path[0], aramis.get_coords());
@@ -1482,7 +1476,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(aramis, &sorted_coords, &coords_to_index, &dist3, &pred3);
+            aramis.navigable_path(aramis, &sorted_coords, &coords_to_world, &dist3, &pred3);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 1);
             assert_eq!(path[0], aramis.get_coords());
@@ -1490,7 +1484,7 @@ mod tests {
             panic!("No navigable path");
         }
 
-        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 2);
             assert_eq!(path[0], aramis.get_coords());
@@ -1499,7 +1493,7 @@ mod tests {
             panic!("No navigable path");
         }
 
-        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_index, &dist3, &pred3);
+        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_world, &dist3, &pred3);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 2);
             assert_eq!(path[0], aramis.get_coords());
@@ -1509,7 +1503,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 2);
             assert_eq!(path[0], aramis.get_coords());
@@ -1519,7 +1513,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_index, &dist3, &pred3);
+            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist3, &pred3);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 2);
             assert_eq!(path[0], aramis.get_coords());
@@ -1529,7 +1523,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(corfu, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(corfu, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             assert_eq!(path.len(), 11);
             for coords in &path {
@@ -1556,7 +1550,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(corfu, &sorted_coords, &coords_to_index, &dist3, &pred3);
+            aramis.navigable_path(corfu, &sorted_coords, &coords_to_world, &dist3, &pred3);
         if let Some(path) = path_opt {
             for coords in &path {
                 println!("{}", coords_to_world.get(&coords).unwrap().name);
@@ -1578,7 +1572,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(mongo, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(mongo, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
                 println!("{}", coords_to_world.get(&coords).unwrap().name);
@@ -1607,7 +1601,7 @@ mod tests {
         }
 
         let path_opt =
-            aramis.navigable_path(collace, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(collace, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
                 println!("{}", coords_to_world.get(&coords).unwrap().name);
@@ -1642,7 +1636,7 @@ mod tests {
             panic!("No navigable path");
         }
 
-        let path_opt = reno.navigable_path(javan, &sorted_coords, &coords_to_index, &dist2, &pred2);
+        let path_opt = reno.navigable_path(javan, &sorted_coords, &coords_to_world, &dist2, &pred2);
         if let Some(path) = path_opt {
             for coords in &path {
                 println!("{}", coords_to_world.get(&coords).unwrap().name);
@@ -1653,19 +1647,19 @@ mod tests {
         }
 
         let path_opt =
-            andor.navigable_path(candory, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            andor.navigable_path(candory, &sorted_coords, &coords_to_world, &dist2, &pred2);
         assert_eq!(path_opt, None);
 
         let path_opt =
-            candory.navigable_path(andor, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            candory.navigable_path(andor, &sorted_coords, &coords_to_world, &dist2, &pred2);
         assert_eq!(path_opt, None);
 
         let path_opt =
-            aramis.navigable_path(andor, &sorted_coords, &coords_to_index, &dist2, &pred2);
+            aramis.navigable_path(andor, &sorted_coords, &coords_to_world, &dist2, &pred2);
         assert_eq!(path_opt, None);
 
         let path_opt =
-            aramis.navigable_path(andor, &sorted_coords, &coords_to_index, &dist3, &pred3);
+            aramis.navigable_path(andor, &sorted_coords, &coords_to_world, &dist3, &pred3);
         if let Some(path) = path_opt {
             for coords in &path {
                 println!("{}", coords_to_world.get(&coords).unwrap().name);
@@ -1705,9 +1699,7 @@ mod tests {
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
         assert_eq!(sorted_coords.len(), 825);
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1811,9 +1803,7 @@ mod tests {
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
         assert_eq!(sorted_coords.len(), 825);
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1959,9 +1949,7 @@ mod tests {
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -1984,7 +1972,6 @@ mod tests {
 
         populate_trade_routes(
             &mut coords_to_world,
-            &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
@@ -2151,9 +2138,7 @@ mod tests {
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -2175,7 +2160,6 @@ mod tests {
         }
         populate_trade_routes(
             &mut coords_to_world,
-            &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
@@ -2226,9 +2210,7 @@ mod tests {
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
         sorted_coords.sort();
-        let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-            coords_to_index.insert(*coords, ii);
             let world = coords_to_world.get_mut(coords).unwrap();
             world.index = Some(ii);
         }
@@ -2250,7 +2232,6 @@ mod tests {
         }
         populate_trade_routes(
             &mut coords_to_world,
-            &coords_to_index,
             &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,

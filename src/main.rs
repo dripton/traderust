@@ -419,7 +419,6 @@ fn find_max_allowed_jump(btn: f64, max_jumps: &RouteCounter, min_route_btn: f64)
 /// The wiki version is more fun so we'll use that.
 fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
-    coords_to_index: &HashMap<Coords, usize>,
     sorted_coords: &[Coords],
     min_btn: f64,
     min_route_btn: f64,
@@ -516,7 +515,6 @@ fn populate_trade_routes(
             coords_to_world.get(&coords).unwrap().find_route_paths(
                 sorted_coords,
                 coords_to_world,
-                coords_to_index,
                 max_jumps,
                 min_route_btn,
                 dists,
@@ -1087,7 +1085,7 @@ impl World {
         &self,
         other: &World,
         sorted_coords: &[Coords],
-        coords_to_index: &HashMap<Coords, usize>,
+        coords_to_world: &HashMap<Coords, World>,
         dist: &Array2<u16>,
         pred: &Array2<u16>,
     ) -> Option<Vec<Coords>> {
@@ -1101,8 +1099,8 @@ impl World {
         let mut coords2 = self.get_coords();
         loop {
             let ii = other.index.unwrap();
-            let jj = coords_to_index.get(&coords2).unwrap();
-            let index = pred[[ii, *jj]];
+            let jj = coords_to_world.get(&coords2).unwrap().index.unwrap();
+            let index = pred[[ii, jj]];
             coords2 = sorted_coords[index as usize];
             if coords2 == other.get_coords() {
                 path.push(coords2);
@@ -1147,7 +1145,6 @@ impl World {
         &self,
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
-        coords_to_index: &HashMap<Coords, usize>,
         max_jumps: &RouteCounter,
         min_route_btn: f64,
         dists: &HashMap<u64, Array2<u16>>,
@@ -1172,7 +1169,7 @@ impl World {
                         let dist = dists.get(jump).unwrap();
                         let pred = preds.get(jump).unwrap();
                         let possible_path_opt =
-                            self.navigable_path(world2, sorted_coords, coords_to_index, dist, pred);
+                            self.navigable_path(world2, sorted_coords, coords_to_world, dist, pred);
                         if let Some(possible_path) = possible_path_opt {
                             // Only use bigger jumps if that saves us a hop.
                             if path.is_empty() || possible_path.len() < path.len() {
@@ -1621,9 +1618,7 @@ fn main() -> Result<()> {
     }
     let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();
     sorted_coords.sort();
-    let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
     for (ii, coords) in sorted_coords.iter_mut().enumerate() {
-        coords_to_index.insert(*coords, ii);
         let world = coords_to_world.get_mut(coords).unwrap();
         world.index = Some(ii);
     }
@@ -1645,7 +1640,6 @@ fn main() -> Result<()> {
 
     populate_trade_routes(
         &mut coords_to_world,
-        &coords_to_index,
         &sorted_coords,
         min_btn,
         min_route_btn,
