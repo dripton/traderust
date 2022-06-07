@@ -510,10 +510,7 @@ fn populate_trade_routes(
 
     debug!("(parallel) Finding route paths");
 
-    let result_tuples: Vec<(
-        HashMap<CoordsPair, HashMap<Route, u64>>,
-        HashMap<Coords, u64>,
-    )> = dwtn_coords
+    let result_tuples: Vec<(HashMap<CoordsPair, RouteCounter>, HashMap<Coords, u64>)> = dwtn_coords
         .into_par_iter()
         .map(|(_, coords)| {
             coords_to_world.get(&coords).unwrap().find_route_paths(
@@ -527,7 +524,7 @@ fn populate_trade_routes(
             )
         })
         .collect();
-    let mut route_paths: HashMap<CoordsPair, HashMap<Route, u64>> = HashMap::new();
+    let mut route_paths: HashMap<CoordsPair, RouteCounter> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
 
     for (rp, cttc) in result_tuples {
@@ -697,6 +694,7 @@ impl From<Coords> for (f64, f64) {
 }
 
 type CoordsPair = (Coords, Coords);
+type RouteCounter = HashMap<Route, u64>;
 
 #[derive(Clone, Debug, Eq)]
 pub struct World {
@@ -1154,11 +1152,8 @@ impl World {
         min_route_btn: f64,
         dists: &HashMap<u8, Array2<u16>>,
         preds: &HashMap<u8, Array2<u16>>,
-    ) -> (
-        HashMap<CoordsPair, HashMap<Route, u64>>,
-        HashMap<Coords, u64>,
-    ) {
-        let mut route_paths: HashMap<CoordsPair, HashMap<Route, u64>> = HashMap::new();
+    ) -> (HashMap<CoordsPair, RouteCounter>, HashMap<Coords, u64>) {
+        let mut route_paths: HashMap<CoordsPair, RouteCounter> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
         let all_jumps_set: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
