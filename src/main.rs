@@ -52,27 +52,27 @@ struct Args {
     // when jump-3 can save a feeder or better route at least one jump.
     /// Maximum jump for all route types; overrides other max-jump-x args.
     #[clap(short = 'j', long)]
-    max_jump: Option<u8>,
+    max_jump: Option<u64>,
 
     /// Maximum jump for minor routes
     #[clap(short = '1', long, default_value = "2")]
-    max_jump_minor: u8,
+    max_jump_minor: u64,
 
     /// Maximum jump for feeder routes
     #[clap(short = '2', long, default_value = "3")]
-    max_jump_feeder: u8,
+    max_jump_feeder: u64,
 
     /// Maximum jump for intermediate routes
     #[clap(short = '3', long, default_value = "3")]
-    max_jump_intermediate: u8,
+    max_jump_intermediate: u64,
 
     /// Maximum jump for main routes
     #[clap(short = '4', long, default_value = "3")]
-    max_jump_main: u8,
+    max_jump_main: u64,
 
     /// Maximum jump for major routes
     #[clap(short = '5', long, default_value = "3")]
-    max_jump_major: u8,
+    max_jump_major: u64,
 
     /// Directory where we place output PDFs
     #[clap(short = 'o', long, default_value = "/var/tmp")]
@@ -319,7 +319,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usiz
 fn populate_navigable_distances(
     sorted_coords: &Vec<Coords>,
     coords_to_world: &HashMap<Coords, World>,
-    max_jump: u8,
+    max_jump: u64,
     ignore_xboat_routes: bool,
     alg: Algorithm,
 ) -> (Array2<u16>, Array2<u16>) {
@@ -380,10 +380,10 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
 }
 
 fn btn_to_route(btn: f64, min_route_btn: f64) -> Option<Route> {
-    let major_route_threshold: f64 = min_route_btn + Major as u8 as f64;
-    let main_route_threshold: f64 = min_route_btn + Main as u8 as f64;
-    let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u8 as f64;
-    let feeder_route_threshold: f64 = min_route_btn + Feeder as u8 as f64;
+    let major_route_threshold: f64 = min_route_btn + Major as u64 as f64;
+    let main_route_threshold: f64 = min_route_btn + Main as u64 as f64;
+    let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u64 as f64;
+    let feeder_route_threshold: f64 = min_route_btn + Feeder as u64 as f64;
     let minor_route_threshold: f64 = min_route_btn;
     if btn >= major_route_threshold {
         Some(Major)
@@ -400,7 +400,7 @@ fn btn_to_route(btn: f64, min_route_btn: f64) -> Option<Route> {
     }
 }
 
-fn find_max_allowed_jump(btn: f64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
+fn find_max_allowed_jump(btn: f64, max_jumps: &RouteCounter, min_route_btn: f64) -> u64 {
     let route_opt = btn_to_route(btn, min_route_btn);
     if let Some(route) = route_opt {
         max_jumps[&route]
@@ -424,9 +424,9 @@ fn populate_trade_routes(
     min_btn: f64,
     min_route_btn: f64,
     passenger: bool,
-    max_jumps: &HashMap<Route, u8>,
-    dists: &HashMap<u8, Array2<u16>>,
-    preds: &HashMap<u8, Array2<u16>>,
+    max_jumps: &RouteCounter,
+    dists: &HashMap<u64, Array2<u16>>,
+    preds: &HashMap<u64, Array2<u16>>,
 ) {
     debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
@@ -475,7 +475,7 @@ fn populate_trade_routes(
         }
     }
 
-    let max_max_jump: u8 = *max_jumps.values().max().unwrap();
+    let max_max_jump: u64 = *max_jumps.values().max().unwrap();
 
     debug!("(parallel) Finding BTNs");
     // This will consider all jumps, even those only allowed for higher routes.
@@ -880,7 +880,7 @@ impl World {
     /// Find and cache all neighbors within 3 hexes.
     ///
     /// This must be run after all Sectors and Worlds are mostly initialized.
-    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>, max_jump: u8) {
+    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>, max_jump: u64) {
         // The 0 index is unused, but fill it in anyway to make the other
         // indexes nicer.
         for _jump in 0..=max_jump {
@@ -1148,15 +1148,15 @@ impl World {
         sorted_coords: &[Coords],
         coords_to_world: &HashMap<Coords, World>,
         coords_to_index: &HashMap<Coords, usize>,
-        max_jumps: &HashMap<Route, u8>,
+        max_jumps: &RouteCounter,
         min_route_btn: f64,
-        dists: &HashMap<u8, Array2<u16>>,
-        preds: &HashMap<u8, Array2<u16>>,
+        dists: &HashMap<u64, Array2<u16>>,
+        preds: &HashMap<u64, Array2<u16>>,
     ) -> (HashMap<CoordsPair, RouteCounter>, HashMap<Coords, u64>) {
         let mut route_paths: HashMap<CoordsPair, RouteCounter> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
-        let all_jumps_set: HashSet<u8> = max_jumps.values().cloned().collect();
-        let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
+        let all_jumps_set: HashSet<u64> = max_jumps.values().cloned().collect();
+        let mut all_jumps: Vec<u64> = all_jumps_set.iter().cloned().collect();
         all_jumps.sort_unstable();
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let btn = dbtn as f64 / 2.0;
@@ -1527,7 +1527,7 @@ fn parse_file_of_sectors(file_of_sectors: PathBuf) -> Result<HashSet<String>> {
     Ok(sector_names)
 }
 
-fn parse_max_jumps(args: &Args) -> HashMap<Route, u8> {
+fn parse_max_jumps(args: &Args) -> RouteCounter {
     let mut max_jumps = HashMap::new();
     max_jumps.insert(Minor, args.max_jump_minor);
     max_jumps.insert(Feeder, args.max_jump_feeder);
@@ -1578,7 +1578,7 @@ fn main() -> Result<()> {
     let min_route_btn = args.min_route_btn;
     let passenger = args.passenger;
     let max_jumps = parse_max_jumps(&args);
-    let max_max_jump: u8 = *max_jumps.values().max().unwrap();
+    let max_max_jump: u64 = *max_jumps.values().max().unwrap();
 
     stderrlog::new()
         .module(module_path!())
@@ -1628,9 +1628,9 @@ fn main() -> Result<()> {
         world.index = Some(ii);
     }
 
-    let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
-    let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
-    let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
+    let all_jumps: HashSet<u64> = max_jumps.values().cloned().collect();
+    let mut dists: HashMap<u64, Array2<u16>> = HashMap::new();
+    let mut preds: HashMap<u64, Array2<u16>> = HashMap::new();
     for jump in all_jumps.iter() {
         let (dist, pred) = populate_navigable_distances(
             &sorted_coords,

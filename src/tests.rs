@@ -1996,9 +1996,9 @@ mod tests {
         max_jumps.insert(Intermediate, 3);
         max_jumps.insert(Main, 3);
         max_jumps.insert(Major, 3);
-        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
-        let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
-        let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
+        let all_jumps: HashSet<u64> = max_jumps.values().cloned().collect();
+        let mut dists: HashMap<u64, Array2<u16>> = HashMap::new();
+        let mut preds: HashMap<u64, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {
             let (dist, pred) =
                 populate_navigable_distances(&sorted_coords, &coords_to_world, *jump, false, ALG);
@@ -2192,9 +2192,9 @@ mod tests {
         max_jumps.insert(Intermediate, 3);
         max_jumps.insert(Main, 3);
         max_jumps.insert(Major, 3);
-        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
-        let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
-        let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
+        let all_jumps: HashSet<u64> = max_jumps.values().cloned().collect();
+        let mut dists: HashMap<u64, Array2<u16>> = HashMap::new();
+        let mut preds: HashMap<u64, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {
             let (dist, pred) =
                 populate_navigable_distances(&sorted_coords, &coords_to_world, *jump, false, ALG);
@@ -2271,9 +2271,9 @@ mod tests {
         max_jumps.insert(Intermediate, 3);
         max_jumps.insert(Main, 3);
         max_jumps.insert(Major, 3);
-        let all_jumps: HashSet<u8> = max_jumps.values().cloned().collect();
-        let mut dists: HashMap<u8, Array2<u16>> = HashMap::new();
-        let mut preds: HashMap<u8, Array2<u16>> = HashMap::new();
+        let all_jumps: HashSet<u64> = max_jumps.values().cloned().collect();
+        let mut dists: HashMap<u64, Array2<u16>> = HashMap::new();
+        let mut preds: HashMap<u64, Array2<u16>> = HashMap::new();
         for jump in all_jumps.iter() {
             let (dist, pred) =
                 populate_navigable_distances(&sorted_coords, &coords_to_world, *jump, false, ALG);
