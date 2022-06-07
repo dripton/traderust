@@ -531,9 +531,9 @@ fn populate_trade_routes(
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
 
     for (rp, cttc) in result_tuples {
-        for (coord_tup, new_route_to_count) in rp {
+        for (coords_pair, new_route_to_count) in rp {
             route_paths
-                .entry(coord_tup)
+                .entry(coords_pair)
                 .and_modify(|route_to_count| {
                     for (key, new_val) in new_route_to_count.iter() {
                         route_to_count
@@ -1190,14 +1190,14 @@ impl World {
                     for ii in 0..path.len() - 1 {
                         let first = path.get(ii).unwrap();
                         let second = path.get(ii + 1).unwrap();
-                        let coord_tup: CoordsPair = if first <= second {
+                        let coords_pair: CoordsPair = if first <= second {
                             (*first, *second)
                         } else {
                             (*second, *first)
                         };
                         if let Some(route) = route_opt {
                             route_paths
-                                .entry(coord_tup)
+                                .entry(coords_pair)
                                 .and_modify(|route_to_count| {
                                     route_to_count
                                         .entry(route)
