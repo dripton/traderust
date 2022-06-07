@@ -132,7 +132,7 @@ const XBOAT_MAJOR_ROUTE_MIN_PORT_SIZE: f64 = 6.0;
 const FEEDER_ROUTE_MIN_PORT_SIZE: f64 = 5.0;
 const MINOR_ROUTE_MIN_PORT_SIZE: f64 = 4.0;
 
-#[derive(Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Route {
     Minor,
     Feeder,
@@ -379,21 +379,34 @@ fn same_allegiance(allegiance1: &str, allegiance2: &str) -> bool {
     true
 }
 
-fn find_max_allowed_jump(btn: f64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
-    let feeder_route_threshold: f64 = min_route_btn + Feeder as u8 as f64;
-    let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u8 as f64;
-    let main_route_threshold: f64 = min_route_btn + Main as u8 as f64;
+fn btn_to_route(btn: f64, min_route_btn: f64) -> Option<Route> {
     let major_route_threshold: f64 = min_route_btn + Major as u8 as f64;
+    let main_route_threshold: f64 = min_route_btn + Main as u8 as f64;
+    let intermediate_route_threshold: f64 = min_route_btn + Intermediate as u8 as f64;
+    let feeder_route_threshold: f64 = min_route_btn + Feeder as u8 as f64;
+    let minor_route_threshold: f64 = min_route_btn;
     if btn >= major_route_threshold {
-        return max_jumps[&Major];
+        Some(Major)
     } else if btn >= main_route_threshold {
-        return max_jumps[&Main];
+        Some(Main)
     } else if btn >= intermediate_route_threshold {
-        return max_jumps[&Intermediate];
+        Some(Intermediate)
     } else if btn >= feeder_route_threshold {
-        return max_jumps[&Feeder];
+        Some(Feeder)
+    } else if btn >= minor_route_threshold {
+        Some(Minor)
+    } else {
+        None
     }
-    max_jumps[&Minor]
+}
+
+fn find_max_allowed_jump(btn: f64, max_jumps: &HashMap<Route, u8>, min_route_btn: f64) -> u8 {
+    let route_opt = btn_to_route(btn, min_route_btn);
+    if let Some(route) = route_opt {
+        max_jumps[&route]
+    } else {
+        max_jumps[&Minor]
+    }
 }
 
 /// Fill in major_routes, main_routes, intermediate_routes, minor_routes,
@@ -497,7 +510,10 @@ fn populate_trade_routes(
 
     debug!("(parallel) Finding route paths");
 
-    let result_tuples: Vec<(HashMap<CoordsPair, u64>, HashMap<Coords, u64>)> = dwtn_coords
+    let result_tuples: Vec<(
+        HashMap<CoordsPair, HashMap<Route, u64>>,
+        HashMap<Coords, u64>,
+    )> = dwtn_coords
         .into_par_iter()
         .map(|(_, coords)| {
             coords_to_world.get(&coords).unwrap().find_route_paths(
@@ -511,15 +527,24 @@ fn populate_trade_routes(
             )
         })
         .collect();
-    let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
+    let mut route_paths: HashMap<CoordsPair, HashMap<Route, u64>> = HashMap::new();
     let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
+
     for (rp, cttc) in result_tuples {
-        for (coord_tup, credits) in rp {
+        for (coord_tup, new_route_to_count) in rp {
             route_paths
                 .entry(coord_tup)
-                .and_modify(|count| *count += credits)
-                .or_insert(credits);
+                .and_modify(|route_to_count| {
+                    for (key, new_val) in new_route_to_count.iter() {
+                        route_to_count
+                            .entry(*key)
+                            .and_modify(|prev| *prev += new_val)
+                            .or_insert(*new_val);
+                    }
+                })
+                .or_insert(new_route_to_count);
         }
+
         for (coords, credits) in cttc {
             coords_to_transient_credits
                 .entry(coords)
@@ -529,16 +554,45 @@ fn populate_trade_routes(
     }
 
     debug!("Inserting trade routes");
-    let minor_route_threshold: f64 = min_route_btn;
-    let feeder_route_threshold: f64 = min_route_btn + 1.0;
-    let intermediate_route_threshold: f64 = min_route_btn + 2.0;
-    let main_route_threshold: f64 = min_route_btn + 3.0;
-    let major_route_threshold: f64 = min_route_btn + 4.0;
+    for ((coords1, coords2), route_to_count) in route_paths {
+        let mut num_major_routes = 0;
+        let mut num_main_routes = 0;
+        let mut num_intermediate_routes = 0;
+        let mut num_feeder_routes = 0;
+        let mut num_minor_routes = 0;
+        if let Some(major_routes) = route_to_count.get(&Major) {
+            num_major_routes += major_routes;
+        };
+        if let Some(main_routes) = route_to_count.get(&Main) {
+            num_main_routes += main_routes;
+        };
+        if let Some(intermediate_routes) = route_to_count.get(&Intermediate) {
+            num_intermediate_routes += intermediate_routes;
+        };
+        if let Some(feeder_routes) = route_to_count.get(&Feeder) {
+            num_feeder_routes += feeder_routes;
+        };
+        if let Some(minor_routes) = route_to_count.get(&Minor) {
+            num_minor_routes += minor_routes;
+        };
+        if num_minor_routes >= 3 {
+            num_feeder_routes += 1;
+            num_minor_routes = 0;
+        }
+        if num_feeder_routes >= 3 {
+            num_intermediate_routes += 1;
+            num_feeder_routes = 0;
+        }
+        if num_intermediate_routes >= 3 {
+            num_main_routes += 1;
+            num_intermediate_routes = 0;
+        }
+        if num_main_routes >= 3 {
+            num_major_routes += 1;
+            num_main_routes = 0;
+        }
 
-    for ((coords1, coords2), credits) in route_paths {
-        let trade_dbtn = bisect_left(&DBTN_TO_CREDITS, &credits);
-        let trade_btn = trade_dbtn as f64 / 2.0;
-        if trade_btn >= major_route_threshold {
+        if num_major_routes >= 1 {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -549,7 +603,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .major_routes
                 .insert(coords1);
-        } else if trade_btn >= main_route_threshold {
+        } else if num_main_routes >= 1 {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -560,7 +614,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .main_routes
                 .insert(coords1);
-        } else if trade_btn >= intermediate_route_threshold {
+        } else if num_intermediate_routes >= 1 {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -571,7 +625,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .intermediate_routes
                 .insert(coords1);
-        } else if trade_btn >= feeder_route_threshold {
+        } else if num_feeder_routes >= 1 {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -582,7 +636,7 @@ fn populate_trade_routes(
                 .unwrap()
                 .feeder_routes
                 .insert(coords1);
-        } else if trade_btn >= minor_route_threshold {
+        } else if num_minor_routes >= 1 {
             coords_to_world
                 .get_mut(&coords1)
                 .unwrap()
@@ -1089,7 +1143,7 @@ impl World {
         f64::max(ABSOLUTE_MIN_BTN, f64::min(btn, min_wtn + MAX_BTN_WTN_DELTA))
     }
 
-    /// Build a map of CoordsPairs to the credits of trade between them, and a
+    /// Build a map of CoordsPairs to a counter of trade routes between them, and a
     /// map of Coords to its total transient (non-endpoint) trade credits.
     fn find_route_paths(
         &self,
@@ -1100,8 +1154,11 @@ impl World {
         min_route_btn: f64,
         dists: &HashMap<u8, Array2<u16>>,
         preds: &HashMap<u8, Array2<u16>>,
-    ) -> (HashMap<CoordsPair, u64>, HashMap<Coords, u64>) {
-        let mut route_paths: HashMap<CoordsPair, u64> = HashMap::new();
+    ) -> (
+        HashMap<CoordsPair, HashMap<Route, u64>>,
+        HashMap<Coords, u64>,
+    ) {
+        let mut route_paths: HashMap<CoordsPair, HashMap<Route, u64>> = HashMap::new();
         let mut coords_to_transient_credits: HashMap<Coords, u64> = HashMap::new();
         let all_jumps_set: HashSet<u8> = max_jumps.values().cloned().collect();
         let mut all_jumps: Vec<u8> = all_jumps_set.iter().cloned().collect();
@@ -1109,6 +1166,7 @@ impl World {
         for (dbtn, coords_set) in self.dbtn_to_coords.iter().enumerate() {
             let btn = dbtn as f64 / 2.0;
             let max_allowed_jump = find_max_allowed_jump(btn, max_jumps, min_route_btn);
+            let route_opt = btn_to_route(btn, min_route_btn);
             let credits = DBTN_TO_CREDITS[dbtn];
             for coords2 in coords_set {
                 let world2 = coords_to_world.get(coords2).unwrap();
@@ -1137,10 +1195,21 @@ impl World {
                         } else {
                             (*second, *first)
                         };
-                        route_paths
-                            .entry(coord_tup)
-                            .and_modify(|count| *count += credits)
-                            .or_insert(credits);
+                        if let Some(route) = route_opt {
+                            route_paths
+                                .entry(coord_tup)
+                                .and_modify(|route_to_count| {
+                                    route_to_count
+                                        .entry(route)
+                                        .and_modify(|prev| *prev += 1)
+                                        .or_insert(1);
+                                })
+                                .or_insert_with(|| {
+                                    let mut route_to_count = HashMap::new();
+                                    route_to_count.insert(route, 1);
+                                    route_to_count
+                                });
+                        };
                     }
                     for jj in 1..path.len() - 2 {
                         let coords3 = path.get(jj).unwrap();
