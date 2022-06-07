@@ -835,12 +835,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
@@ -1216,12 +1212,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
@@ -1332,12 +1324,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
         let (dist2, pred2) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
@@ -1720,12 +1708,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
@@ -1830,12 +1814,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
@@ -1982,12 +1962,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
 
         let mut max_jumps = HashMap::new();
@@ -2178,12 +2154,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
 
         let mut max_jumps = HashMap::new();
@@ -2257,12 +2229,8 @@ mod tests {
         let mut coords_to_index: HashMap<Coords, usize> = HashMap::new();
         for (ii, coords) in sorted_coords.iter_mut().enumerate() {
             coords_to_index.insert(*coords, ii);
-            let world_opt = coords_to_world.get_mut(coords);
-            if let Some(world) = world_opt {
-                world.index = Some(ii);
-            } else {
-                panic!("World not found at coords");
-            }
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
         }
 
         let mut max_jumps = HashMap::new();
