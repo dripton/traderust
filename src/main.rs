@@ -787,7 +787,7 @@ impl World {
                 "Name" => name = value.trim().to_string(),
                 "UWP" => uwp = value.to_string(),
                 "Remarks" => {
-                    for tc in value.trim().split_whitespace() {
+                    for tc in value.split_whitespace() {
                         trade_classifications.insert(tc.to_string());
                     }
                 }
@@ -831,7 +831,7 @@ impl World {
                 }
                 "A" => allegiance = value.to_string(),
                 "Stellar" => {
-                    let parts: Vec<&str> = value.trim().split_whitespace().collect();
+                    let parts: Vec<&str> = value.split_whitespace().collect();
                     let mut ii = 0;
                     while ii < parts.len() {
                         let star = parts[ii];
