@@ -419,7 +419,6 @@ fn find_max_allowed_jump(btn: f64, max_jumps: &RouteCounter, min_route_btn: f64)
 /// The wiki version is more fun so we'll use that.
 fn populate_trade_routes(
     coords_to_world: &mut HashMap<Coords, World>,
-    sorted_coords: &[Coords],
     min_btn: f64,
     min_route_btn: f64,
     passenger: bool,
@@ -509,11 +508,14 @@ fn populate_trade_routes(
 
     debug!("(parallel) Finding route paths");
 
+    let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();
+    sorted_coords.sort();
+
     let result_tuples: Vec<(HashMap<CoordsPair, RouteCounter>, HashMap<Coords, u64>)> = dwtn_coords
         .into_par_iter()
         .map(|(_, coords)| {
             coords_to_world.get(&coords).unwrap().find_route_paths(
-                sorted_coords,
+                &sorted_coords,
                 coords_to_world,
                 max_jumps,
                 min_route_btn,
@@ -1640,7 +1642,6 @@ fn main() -> Result<()> {
 
     populate_trade_routes(
         &mut coords_to_world,
-        &sorted_coords,
         min_btn,
         min_route_btn,
         passenger,

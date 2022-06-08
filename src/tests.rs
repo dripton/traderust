@@ -1972,7 +1972,6 @@ mod tests {
 
         populate_trade_routes(
             &mut coords_to_world,
-            &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
             false,
@@ -2160,7 +2159,6 @@ mod tests {
         }
         populate_trade_routes(
             &mut coords_to_world,
-            &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
             false,
@@ -2232,7 +2230,6 @@ mod tests {
         }
         populate_trade_routes(
             &mut coords_to_world,
-            &sorted_coords,
             *MIN_BTN,
             *MIN_ROUTE_BTN,
             false,
