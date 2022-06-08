@@ -101,6 +101,10 @@ struct Args {
     /// Use Passenger BTN instead of Freight BTN
     #[clap(short = 'p', long)]
     passenger: bool,
+
+    /// Disallow all travel through red zones including gas giant refueling
+    #[clap(short = 'R', long)]
+    disallow_red_zones: bool,
 }
 
 const MAX_TECH_LEVEL: u32 = 23;
@@ -880,13 +884,18 @@ impl World {
     /// Find and cache all neighbors within 3 hexes.
     ///
     /// This must be run after all Sectors and Worlds are mostly initialized.
-    fn populate_neighbors(&mut self, coords_to_world: &HashMap<Coords, World>, max_jump: u64) {
+    fn populate_neighbors(
+        &mut self,
+        coords_to_world: &HashMap<Coords, World>,
+        max_jump: u64,
+        disallow_red_zones: bool,
+    ) {
         // The 0 index is unused, but fill it in anyway to make the other
         // indexes nicer.
         for _jump in 0..=max_jump {
             self.neighbors.push(HashSet::new());
         }
-        if !self.can_refuel() {
+        if !self.can_refuel(disallow_red_zones) {
             return;
         }
         let (x, y) = <(f64, f64)>::from(self.get_coords());
@@ -896,7 +905,7 @@ impl World {
             while yy <= y + max_jump as f64 {
                 let world_opt = coords_to_world.get(&Coords::new(xx, yy));
                 if let Some(world) = world_opt {
-                    if world != self && world.can_refuel() {
+                    if world != self && world.can_refuel(disallow_red_zones) {
                         let distance = self.straight_line_distance(world);
                         if distance <= max_jump as u16 {
                             self.neighbors[distance as usize].insert(world.get_coords());
@@ -991,11 +1000,15 @@ impl World {
         self.pbg.chars().nth(2).unwrap()
     }
 
-    fn can_refuel(&self) -> bool {
-        self.gas_giants() != '0'
-            || (self.zone != 'R'
-                && ((self.starport() != 'E' && self.starport() != 'X')
-                    || self.hydrosphere() != '0'))
+    fn can_refuel(&self, disallow_red_zones: bool) -> bool {
+        if disallow_red_zones && self.zone == 'R' {
+            false
+        } else {
+            self.gas_giants() != '0'
+                || (self.zone != 'R'
+                    && ((self.starport() != 'E' && self.starport() != 'X')
+                        || self.hydrosphere() != '0'))
+        }
     }
 
     fn uwtn(&self) -> f64 {
@@ -1576,6 +1589,7 @@ fn main() -> Result<()> {
     let min_btn = args.min_btn;
     let min_route_btn = args.min_route_btn;
     let passenger = args.passenger;
+    let disallow_red_zones = args.disallow_red_zones;
     let max_jumps = parse_max_jumps(&args);
     let max_max_jump: u64 = *max_jumps.values().max().unwrap();
 
@@ -1615,7 +1629,7 @@ fn main() -> Result<()> {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, max_max_jump);
+            world.populate_neighbors(&coords_to_world2, max_max_jump, disallow_red_zones);
         }
     }
     let mut sorted_coords: Vec<Coords> = coords_to_world.keys().cloned().collect();

@@ -366,7 +366,7 @@ mod tests {
         assert_eq!(aramis.wtn_port_modifier(), 0.5);
         assert_eq!(aramis.wtn(), 4.0);
         assert_eq!(aramis.gas_giants(), '0');
-        assert!(aramis.can_refuel());
+        assert!(aramis.can_refuel(false));
 
         Ok(())
     }
@@ -424,7 +424,7 @@ mod tests {
         assert_eq!(regina.wtn_port_modifier(), 0.0);
         assert_eq!(regina.wtn(), 5.0);
         assert_eq!(regina.gas_giants(), '3');
-        assert!(regina.can_refuel());
+        assert!(regina.can_refuel(false));
 
         Ok(())
     }
@@ -475,7 +475,7 @@ mod tests {
         assert_eq!(bronze.wtn_port_modifier(), 0.5);
         assert_eq!(bronze.wtn(), 0.0);
         assert_eq!(bronze.gas_giants(), '0');
-        assert!(bronze.can_refuel());
+        assert!(bronze.can_refuel(false));
 
         Ok(())
     }
@@ -525,7 +525,7 @@ mod tests {
         assert_eq!(callia.wtn_port_modifier(), -1.0);
         assert_eq!(callia.wtn(), 3.5);
         assert_eq!(callia.gas_giants(), '0');
-        assert!(!callia.can_refuel());
+        assert!(!callia.can_refuel(false));
 
         Ok(())
     }
@@ -576,7 +576,8 @@ mod tests {
         assert_eq!(candory.wtn_port_modifier(), 0.0);
         assert_eq!(candory.wtn(), 3.5);
         assert_eq!(candory.gas_giants(), '0');
-        assert!(!candory.can_refuel());
+        assert!(!candory.can_refuel(false));
+        assert!(!candory.can_refuel(true));
 
         Ok(())
     }
@@ -620,7 +621,7 @@ mod tests {
         assert_eq!(khiinra_ash.wtn_port_modifier(), 0.5);
         assert_eq!(khiinra_ash.wtn(), 2.5);
         assert_eq!(khiinra_ash.gas_giants(), '4');
-        assert!(khiinra_ash.can_refuel());
+        assert!(khiinra_ash.can_refuel(false));
 
         Ok(())
     }
@@ -826,7 +827,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1064,7 +1065,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
 
         let aramis = spin
@@ -1201,7 +1202,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1311,7 +1312,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1693,7 +1694,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1797,7 +1798,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -1944,7 +1945,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -2132,7 +2133,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
@@ -2203,7 +2204,7 @@ mod tests {
         // Make a temporary clone to avoid having mutable and immutable refs.
         let coords_to_world2 = coords_to_world.clone();
         for world in coords_to_world.values_mut() {
-            world.populate_neighbors(&coords_to_world2, 3);
+            world.populate_neighbors(&coords_to_world2, 3, false);
         }
         let mut sorted_coords: Vec<Coords>;
         sorted_coords = coords_to_world.keys().cloned().collect();
