@@ -32,6 +32,18 @@ mod tests {
         };
     }
 
+    macro_rules! set {
+        ( $( $val:expr ),* ) => {
+            {
+                let mut my_set = HashSet::new();
+                $(
+                    my_set.insert($val);
+                )*
+                my_set
+            }
+        };
+    }
+
     #[fixture]
     #[once]
     fn data_dir() -> PathBuf {
@@ -339,19 +351,14 @@ mod tests {
         assert_eq!(aramis.hex, "3110");
         assert_eq!(aramis.uwp, "A5A0556-B");
 
-        let mut tc = HashSet::new();
-        tc.insert("He".to_string());
-        tc.insert("Ni".to_string());
-        tc.insert("Cp".to_string());
+        let tc = set!("He".to_string(), "Ni".to_string(), "Cp".to_string());
         assert_eq!(aramis.trade_classifications, tc);
 
         assert_eq!(aramis.importance, 2);
         assert_eq!(aramis.economic, "846+1");
         assert_eq!(aramis.cultural, "474A");
         assert_eq!(aramis.nobles, "BF");
-        let mut bases = HashSet::new();
-        bases.insert("N".to_string());
-        bases.insert("S".to_string());
+        let bases = set!("N".to_string(), "S".to_string());
         assert_eq!(aramis.bases, bases);
         assert_eq!(aramis.zone, 'G');
         assert_eq!(aramis.pbg, "710");
@@ -391,25 +398,24 @@ mod tests {
         assert_eq!(regina.hex, "1910");
         assert_eq!(regina.uwp, "A788899-C");
 
-        let mut tc = HashSet::new();
-        tc.insert("Ri".to_string());
-        tc.insert("Pa".to_string());
-        tc.insert("Ph".to_string());
-        tc.insert("An".to_string());
-        tc.insert("Cp".to_string());
-        tc.insert("(Amindii)2".to_string());
-        tc.insert("Varg0".to_string());
-        tc.insert("Asla0".to_string());
-        tc.insert("Sa".to_string());
+        let tc = set!(
+            "Ri".to_string(),
+            "Pa".to_string(),
+            "Ph".to_string(),
+            "An".to_string(),
+            "Cp".to_string(),
+            "(Amindii)2".to_string(),
+            "Varg0".to_string(),
+            "Asla0".to_string(),
+            "Sa".to_string()
+        );
         assert_eq!(regina.trade_classifications, tc);
 
         assert_eq!(regina.importance, 4);
         assert_eq!(regina.economic, "D7E+5");
         assert_eq!(regina.cultural, "9C6D");
         assert_eq!(regina.nobles, "BcCeF");
-        let mut bases = HashSet::new();
-        bases.insert("N".to_string());
-        bases.insert("S".to_string());
+        let bases = set!("N".to_string(), "S".to_string());
         assert_eq!(regina.bases, bases);
         assert_eq!(regina.zone, 'G');
         assert_eq!(regina.pbg, "703");
@@ -449,11 +455,12 @@ mod tests {
         assert_eq!(bronze.hex, "1627");
         assert_eq!(bronze.uwp, "E201000-0");
 
-        let mut tc = HashSet::new();
-        tc.insert("Ba".to_string());
-        tc.insert("Ic".to_string());
-        tc.insert("Re".to_string());
-        tc.insert("Va".to_string());
+        let tc = set!(
+            "Ba".to_string(),
+            "Ic".to_string(),
+            "Re".to_string(),
+            "Va".to_string()
+        );
         assert_eq!(bronze.trade_classifications, tc);
 
         assert_eq!(bronze.importance, -3);
@@ -500,10 +507,7 @@ mod tests {
         assert_eq!(callia.hex, "1836");
         assert_eq!(callia.uwp, "E550852-6");
 
-        let mut tc = HashSet::new();
-        tc.insert("De".to_string());
-        tc.insert("Po".to_string());
-        tc.insert("Ph".to_string());
+        let tc = set!("De".to_string(), "Po".to_string(), "Ph".to_string());
         assert_eq!(callia.trade_classifications, tc);
 
         assert_eq!(callia.importance, -2);
@@ -550,11 +554,12 @@ mod tests {
         assert_eq!(candory.hex, "0336");
         assert_eq!(candory.uwp, "C593634-8");
 
-        let mut tc = HashSet::new();
-        tc.insert("Ni".to_string());
-        tc.insert("An".to_string());
-        tc.insert("Fo".to_string());
-        tc.insert("DroyW".to_string());
+        let tc = set!(
+            "Ni".to_string(),
+            "An".to_string(),
+            "Fo".to_string(),
+            "DroyW".to_string()
+        );
         assert_eq!(candory.trade_classifications, tc);
 
         assert_eq!(candory.importance, -2);
@@ -884,7 +889,7 @@ mod tests {
         let dinomn = htw!(spin, 1912, coords_to_world);
         let towers = htw!(spin, 3103, coords_to_world);
 
-        let mut set = HashSet::new();
+        let set = HashSet::new();
         assert_eq!(reacher.xboat_routes, set);
         assert_eq!(vinorian.xboat_routes, set);
         assert_eq!(nutema.xboat_routes, set);
@@ -892,21 +897,16 @@ mod tests {
         assert_eq!(corfu.xboat_routes, set);
         assert_eq!(lablon.xboat_routes, set);
 
-        set.insert(ldd.get_coords());
-        set.insert(natoko.get_coords());
+        let set = set!(ldd.get_coords(), natoko.get_coords());
         assert_eq!(aramis.xboat_routes, set);
 
-        set.clear();
-        set.insert(aramis.get_coords());
-        set.insert(celepina.get_coords());
+        let set = set!(aramis.get_coords(), celepina.get_coords());
         assert_eq!(ldd.xboat_routes, set);
 
-        set.clear();
-        set.insert(aramis.get_coords());
-        set.insert(teh.get_coords());
+        let set = set!(aramis.get_coords(), teh.get_coords());
         assert_eq!(natoko.xboat_routes, set);
 
-        set.clear();
+        let set = HashSet::new();
         assert_eq!(reacher.xboat_routes, set);
         assert_eq!(vinorian.xboat_routes, set);
         assert_eq!(nutema.xboat_routes, set);
@@ -914,20 +914,13 @@ mod tests {
         assert_eq!(corfu.xboat_routes, set);
         assert_eq!(lablon.xboat_routes, set);
 
-        set.clear();
-        set.insert(marz.get_coords());
-        set.insert(towers.get_coords());
+        let set = set!(marz.get_coords(), towers.get_coords());
         assert_eq!(junidy.xboat_routes, set);
 
-        set.clear();
-        set.insert(junidy.get_coords());
-        set.insert(ash.get_coords());
+        let set = set!(junidy.get_coords(), ash.get_coords());
         assert_eq!(marz.xboat_routes, set);
 
-        set.clear();
-        set.insert(roup.get_coords());
-        set.insert(jenghe.get_coords());
-        set.insert(dinomn.get_coords());
+        let set = set!(roup.get_coords(), jenghe.get_coords(), dinomn.get_coords());
         assert_eq!(regina.xboat_routes, set);
 
         Ok(())
@@ -979,53 +972,55 @@ mod tests {
         let celepina = htw!(spin, 2913, coords_to_world);
         let zivije = htw!(spin, 2812, coords_to_world);
 
-        let mut set = HashSet::new();
-        set.insert(ldd.get_coords());
-        set.insert(natoko.get_coords());
-        set.insert(reacher.get_coords());
-        set.insert(vinorian.get_coords());
+        let set = set!(
+            ldd.get_coords(),
+            natoko.get_coords(),
+            reacher.get_coords(),
+            vinorian.get_coords()
+        );
         assert_eq!(aramis.neighbors[1], set);
 
-        set.clear();
-        set.insert(nutema.get_coords());
-        set.insert(pysadi.get_coords());
+        let set = set!(nutema.get_coords(), pysadi.get_coords());
         assert_eq!(aramis.neighbors[2], set);
 
-        set.clear();
-        set.insert(margesi.get_coords());
-        set.insert(teh.get_coords());
-        set.insert(zila.get_coords());
-        set.insert(lewis.get_coords());
-        set.insert(patinir.get_coords());
-        set.insert(henoz.get_coords());
-        set.insert(suvfoto.get_coords());
-        set.insert(kretikaa.get_coords());
-        set.insert(new_ramma.get_coords());
-        set.insert(valhalla.get_coords());
+        let set = set!(
+            margesi.get_coords(),
+            teh.get_coords(),
+            zila.get_coords(),
+            lewis.get_coords(),
+            patinir.get_coords(),
+            henoz.get_coords(),
+            suvfoto.get_coords(),
+            kretikaa.get_coords(),
+            new_ramma.get_coords(),
+            valhalla.get_coords()
+        );
         assert_eq!(aramis.neighbors[3], set);
 
-        set.clear();
-        set.insert(aramis.get_coords());
-        set.insert(ldd.get_coords());
-        set.insert(reacher.get_coords());
-        set.insert(nutema.get_coords());
+        let set = set!(
+            aramis.get_coords(),
+            ldd.get_coords(),
+            reacher.get_coords(),
+            nutema.get_coords()
+        );
         assert_eq!(vinorian.neighbors[1], set);
 
-        set.clear();
-        set.insert(natoko.get_coords());
-        set.insert(margesi.get_coords());
-        set.insert(henoz.get_coords());
+        let set = set!(
+            natoko.get_coords(),
+            margesi.get_coords(),
+            henoz.get_coords()
+        );
         assert_eq!(vinorian.neighbors[2], set);
 
-        set.clear();
-        set.insert(kretikaa.get_coords());
-        set.insert(suvfoto.get_coords());
-        set.insert(saarinen.get_coords());
-        // set.insert(huderu.get_coords()); // Can't refuel
-        set.insert(celepina.get_coords());
-        set.insert(zivije.get_coords());
-        set.insert(valhalla.get_coords());
-        set.insert(pysadi.get_coords());
+        let set = set!(
+            kretikaa.get_coords(),
+            suvfoto.get_coords(),
+            saarinen.get_coords(),
+            celepina.get_coords(),
+            zivije.get_coords(),
+            valhalla.get_coords(),
+            pysadi.get_coords()
+        );
         assert_eq!(vinorian.neighbors[3], set);
 
         Ok(())
