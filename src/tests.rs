@@ -26,6 +26,12 @@ mod tests {
 
     const ALG: Algorithm = Algorithm::Dijkstra;
 
+    macro_rules! htw {
+        ($sector:expr, $hex:expr, $ctw:expr) => {
+            $sector.hex_to_world(format!("{:04}", $hex), &$ctw).unwrap()
+        };
+    }
+
     #[fixture]
     #[once]
     fn data_dir() -> PathBuf {
@@ -637,33 +643,15 @@ mod tests {
         );
         let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
 
         assert_eq!(<(f64, f64)>::from(aramis.get_coords()), (-97.0, -30.0));
         assert_eq!(<(f64, f64)>::from(ldd.get_coords()), (-98.0, -29.5));
@@ -692,48 +680,20 @@ mod tests {
         );
         let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let patinir = spin
-            .hex_to_world("3207".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let lablon = spin
-            .hex_to_world("2701".to_string(), &coords_to_world)
-            .unwrap();
-        let junidy = spin
-            .hex_to_world("3202".to_string(), &coords_to_world)
-            .unwrap();
-        let marz = dene
-            .hex_to_world("0201".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let patinir = htw!(spin, 3207, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let lablon = htw!(spin, 2701, coords_to_world);
+        let junidy = htw!(spin, 3202, coords_to_world);
+        let marz = htw!(dene, 0201, coords_to_world);
 
         assert_eq!(aramis.straight_line_distance(aramis), 0);
         assert_eq!(aramis.straight_line_distance(ldd), 1);
@@ -840,54 +800,22 @@ mod tests {
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let andor = spin
-            .hex_to_world("0236".to_string(), &coords_to_world)
-            .unwrap();
-        let candory = spin
-            .hex_to_world("0336".to_string(), &coords_to_world)
-            .unwrap();
-        let reno = spin
-            .hex_to_world("0102".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let mongo = spin
-            .hex_to_world("1204".to_string(), &coords_to_world)
-            .unwrap();
-        let collace = spin
-            .hex_to_world("1237".to_string(), &coords_to_world)
-            .unwrap();
-        let pavanne = spin
-            .hex_to_world("2905".to_string(), &coords_to_world)
-            .unwrap();
-        let raweh = spin
-            .hex_to_world("0139".to_string(), &coords_to_world)
-            .unwrap();
-        let javan = dene
-            .hex_to_world("2131".to_string(), &coords_to_world)
-            .unwrap();
-        let salaam = dene
-            .hex_to_world("3213".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let andor = htw!(spin, 0236, coords_to_world);
+        let candory = htw!(spin, 0336, coords_to_world);
+        let reno = htw!(spin, 0102, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let mongo = htw!(spin, 1204, coords_to_world);
+        let collace = htw!(spin, 1237, coords_to_world);
+        let pavanne = htw!(spin, 2905, coords_to_world);
+        let raweh = htw!(spin, 0139, coords_to_world);
+        let javan = htw!(dene, 2131, coords_to_world);
+        let salaam = htw!(dene, 3213, coords_to_world);
 
         assert_eq!(aramis.distance_modifier(aramis, &dist2), 0.0);
         assert_eq!(aramis.distance_modifier(ldd, &dist2), 0.0);
@@ -936,63 +864,25 @@ mod tests {
                 .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
                 .unwrap();
         }
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let lablon = spin
-            .hex_to_world("2701".to_string(), &coords_to_world)
-            .unwrap();
-        let junidy = spin
-            .hex_to_world("3202".to_string(), &coords_to_world)
-            .unwrap();
-        let marz = dene
-            .hex_to_world("0201".to_string(), &coords_to_world)
-            .unwrap();
-        let celepina = spin
-            .hex_to_world("2913".to_string(), &coords_to_world)
-            .unwrap();
-        let teh = dene
-            .hex_to_world("0208".to_string(), &coords_to_world)
-            .unwrap();
-        let ash = dene
-            .hex_to_world("0504".to_string(), &coords_to_world)
-            .unwrap();
-        let roup = spin
-            .hex_to_world("2007".to_string(), &coords_to_world)
-            .unwrap();
-        let jenghe = spin
-            .hex_to_world("1810".to_string(), &coords_to_world)
-            .unwrap();
-        let dinomn = spin
-            .hex_to_world("1912".to_string(), &coords_to_world)
-            .unwrap();
-        let towers = spin
-            .hex_to_world("3103".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let lablon = htw!(spin, 2701, coords_to_world);
+        let junidy = htw!(spin, 3202, coords_to_world);
+        let marz = htw!(dene, 0201, coords_to_world);
+        let celepina = htw!(spin, 2913, coords_to_world);
+        let teh = htw!(dene, 0208, coords_to_world);
+        let ash = htw!(dene, 0504, coords_to_world);
+        let roup = htw!(spin, 2007, coords_to_world);
+        let jenghe = htw!(spin, 1810, coords_to_world);
+        let dinomn = htw!(spin, 1912, coords_to_world);
+        let towers = htw!(spin, 3103, coords_to_world);
 
         let mut set = HashSet::new();
         assert_eq!(reacher.xboat_routes, set);
@@ -1068,66 +958,26 @@ mod tests {
             world.populate_neighbors(&coords_to_world2, 3, false);
         }
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let teh = dene
-            .hex_to_world("0208".to_string(), &coords_to_world)
-            .unwrap();
-        let pysadi = spin
-            .hex_to_world("3008".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let zila = spin
-            .hex_to_world("2908".to_string(), &coords_to_world)
-            .unwrap();
-        let lewis = spin
-            .hex_to_world("3107".to_string(), &coords_to_world)
-            .unwrap();
-        let patinir = spin
-            .hex_to_world("3207".to_string(), &coords_to_world)
-            .unwrap();
-        let henoz = spin
-            .hex_to_world("2912".to_string(), &coords_to_world)
-            .unwrap();
-        let suvfoto = dene
-            .hex_to_world("0211".to_string(), &coords_to_world)
-            .unwrap();
-        let kretikaa = dene
-            .hex_to_world("0209".to_string(), &coords_to_world)
-            .unwrap();
-        let new_ramma = dene
-            .hex_to_world("0108".to_string(), &coords_to_world)
-            .unwrap();
-        let valhalla = spin
-            .hex_to_world("2811".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let celepina = spin
-            .hex_to_world("2913".to_string(), &coords_to_world)
-            .unwrap();
-        let zivije = spin
-            .hex_to_world("2812".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let teh = htw!(dene, 0208, coords_to_world);
+        let pysadi = htw!(spin, 3008, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let zila = htw!(spin, 2908, coords_to_world);
+        let lewis = htw!(spin, 3107, coords_to_world);
+        let patinir = htw!(spin, 3207, coords_to_world);
+        let henoz = htw!(spin, 2912, coords_to_world);
+        let suvfoto = htw!(dene, 0211, coords_to_world);
+        let kretikaa = htw!(dene, 0209, coords_to_world);
+        let new_ramma = htw!(dene, 0108, coords_to_world);
+        let valhalla = htw!(spin, 2811, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let celepina = htw!(spin, 2913, coords_to_world);
+        let zivije = htw!(spin, 2812, coords_to_world);
 
         let mut set = HashSet::new();
         set.insert(ldd.get_coords());
@@ -1217,54 +1067,22 @@ mod tests {
         let (dist3, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 3, false, ALG);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let andor = spin
-            .hex_to_world("0236".to_string(), &coords_to_world)
-            .unwrap();
-        let candory = spin
-            .hex_to_world("0336".to_string(), &coords_to_world)
-            .unwrap();
-        let reno = spin
-            .hex_to_world("0102".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let mongo = spin
-            .hex_to_world("1204".to_string(), &coords_to_world)
-            .unwrap();
-        let collace = spin
-            .hex_to_world("1237".to_string(), &coords_to_world)
-            .unwrap();
-        let pavanne = spin
-            .hex_to_world("2905".to_string(), &coords_to_world)
-            .unwrap();
-        let raweh = spin
-            .hex_to_world("0139".to_string(), &coords_to_world)
-            .unwrap();
-        let javan = dene
-            .hex_to_world("2131".to_string(), &coords_to_world)
-            .unwrap();
-        let salaam = dene
-            .hex_to_world("3213".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let andor = htw!(spin, 0236, coords_to_world);
+        let candory = htw!(spin, 0336, coords_to_world);
+        let reno = htw!(spin, 0102, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let mongo = htw!(spin, 1204, coords_to_world);
+        let collace = htw!(spin, 1237, coords_to_world);
+        let pavanne = htw!(spin, 2905, coords_to_world);
+        let raweh = htw!(spin, 0139, coords_to_world);
+        let javan = htw!(dene, 2131, coords_to_world);
+        let salaam = htw!(dene, 3213, coords_to_world);
 
         assert_eq!(aramis.navigable_distance(aramis, &dist2), 0);
         assert_eq!(aramis.navigable_distance(aramis, &dist3), 0);
@@ -1327,145 +1145,53 @@ mod tests {
         let (dist3, pred3) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 3, false, ALG);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let andor = spin
-            .hex_to_world("0236".to_string(), &coords_to_world)
-            .unwrap();
-        let candory = spin
-            .hex_to_world("0336".to_string(), &coords_to_world)
-            .unwrap();
-        let reno = spin
-            .hex_to_world("0102".to_string(), &coords_to_world)
-            .unwrap();
-        let mongo = spin
-            .hex_to_world("1204".to_string(), &coords_to_world)
-            .unwrap();
-        let collace = spin
-            .hex_to_world("1237".to_string(), &coords_to_world)
-            .unwrap();
-        let javan = dene
-            .hex_to_world("2131".to_string(), &coords_to_world)
-            .unwrap();
-        let pysadi = spin
-            .hex_to_world("3008".to_string(), &coords_to_world)
-            .unwrap();
-        let lewis = spin
-            .hex_to_world("3107".to_string(), &coords_to_world)
-            .unwrap();
-        let yebab = spin
-            .hex_to_world("3002".to_string(), &coords_to_world)
-            .unwrap();
-        let lablon = spin
-            .hex_to_world("2701".to_string(), &coords_to_world)
-            .unwrap();
-        let violante = spin
-            .hex_to_world("2708".to_string(), &coords_to_world)
-            .unwrap();
-        let focaline = spin
-            .hex_to_world("2607".to_string(), &coords_to_world)
-            .unwrap();
-        let moughas = spin
-            .hex_to_world("2406".to_string(), &coords_to_world)
-            .unwrap();
-        let enope = spin
-            .hex_to_world("2205".to_string(), &coords_to_world)
-            .unwrap();
-        let becks_world = spin
-            .hex_to_world("2204".to_string(), &coords_to_world)
-            .unwrap();
-        let yorbund = spin
-            .hex_to_world("2303".to_string(), &coords_to_world)
-            .unwrap();
-        let heya = spin
-            .hex_to_world("2402".to_string(), &coords_to_world)
-            .unwrap();
-        let zila = spin
-            .hex_to_world("2908".to_string(), &coords_to_world)
-            .unwrap();
-        let zykoca = spin
-            .hex_to_world("3004".to_string(), &coords_to_world)
-            .unwrap();
-        let feri = spin
-            .hex_to_world("2005".to_string(), &coords_to_world)
-            .unwrap();
-        let uakye = spin
-            .hex_to_world("1805".to_string(), &coords_to_world)
-            .unwrap();
-        let efate = spin
-            .hex_to_world("1705".to_string(), &coords_to_world)
-            .unwrap();
-        let lysen = spin
-            .hex_to_world("1307".to_string(), &coords_to_world)
-            .unwrap();
-        let nakege = spin
-            .hex_to_world("1305".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let andor = htw!(spin, 0236, coords_to_world);
+        let candory = htw!(spin, 0336, coords_to_world);
+        let reno = htw!(spin, 0102, coords_to_world);
+        let mongo = htw!(spin, 1204, coords_to_world);
+        let collace = htw!(spin, 1237, coords_to_world);
+        let javan = htw!(dene, 2131, coords_to_world);
+        let pysadi = htw!(spin, 3008, coords_to_world);
+        let lewis = htw!(spin, 3107, coords_to_world);
+        let yebab = htw!(spin, 3002, coords_to_world);
+        let lablon = htw!(spin, 2701, coords_to_world);
+        let violante = htw!(spin, 2708, coords_to_world);
+        let focaline = htw!(spin, 2607, coords_to_world);
+        let moughas = htw!(spin, 2406, coords_to_world);
+        let enope = htw!(spin, 2205, coords_to_world);
+        let becks_world = htw!(spin, 2204, coords_to_world);
+        let yorbund = htw!(spin, 2303, coords_to_world);
+        let heya = htw!(spin, 2402, coords_to_world);
+        let zila = htw!(spin, 2908, coords_to_world);
+        let zykoca = htw!(spin, 3004, coords_to_world);
+        let feri = htw!(spin, 2005, coords_to_world);
+        let uakye = htw!(spin, 1805, coords_to_world);
+        let efate = htw!(spin, 1705, coords_to_world);
+        let lysen = htw!(spin, 1307, coords_to_world);
+        let nakege = htw!(spin, 1305, coords_to_world);
 
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let celepina = spin
-            .hex_to_world("2913".to_string(), &coords_to_world)
-            .unwrap();
-        let jae_tellona = spin
-            .hex_to_world("2814".to_string(), &coords_to_world)
-            .unwrap();
-        let rhylanor = spin
-            .hex_to_world("2716".to_string(), &coords_to_world)
-            .unwrap();
-        let equus = spin
-            .hex_to_world("2417".to_string(), &coords_to_world)
-            .unwrap();
-        let ivendo = spin
-            .hex_to_world("2319".to_string(), &coords_to_world)
-            .unwrap();
-        let quiru = spin
-            .hex_to_world("2321".to_string(), &coords_to_world)
-            .unwrap();
-        let resten = spin
-            .hex_to_world("2323".to_string(), &coords_to_world)
-            .unwrap();
-        let lunion = spin
-            .hex_to_world("2124".to_string(), &coords_to_world)
-            .unwrap();
-        let derchon = spin
-            .hex_to_world("2024".to_string(), &coords_to_world)
-            .unwrap();
-        let zaibon = spin
-            .hex_to_world("1825".to_string(), &coords_to_world)
-            .unwrap();
-        let iron = spin
-            .hex_to_world("1626".to_string(), &coords_to_world)
-            .unwrap();
-        let mithril = spin
-            .hex_to_world("1628".to_string(), &coords_to_world)
-            .unwrap();
-        let steel = spin
-            .hex_to_world("1529".to_string(), &coords_to_world)
-            .unwrap();
-        let dawnworld = spin
-            .hex_to_world("1531".to_string(), &coords_to_world)
-            .unwrap();
-        let forine = spin
-            .hex_to_world("1533".to_string(), &coords_to_world)
-            .unwrap();
-        let tarkine = spin
-            .hex_to_world("1434".to_string(), &coords_to_world)
-            .unwrap();
-        let talos = spin
-            .hex_to_world("1436".to_string(), &coords_to_world)
-            .unwrap();
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let celepina = htw!(spin, 2913, coords_to_world);
+        let jae_tellona = htw!(spin, 2814, coords_to_world);
+        let rhylanor = htw!(spin, 2716, coords_to_world);
+        let equus = htw!(spin, 2417, coords_to_world);
+        let ivendo = htw!(spin, 2319, coords_to_world);
+        let quiru = htw!(spin, 2321, coords_to_world);
+        let resten = htw!(spin, 2323, coords_to_world);
+        let lunion = htw!(spin, 2124, coords_to_world);
+        let derchon = htw!(spin, 2024, coords_to_world);
+        let zaibon = htw!(spin, 1825, coords_to_world);
+        let iron = htw!(spin, 1626, coords_to_world);
+        let mithril = htw!(spin, 1628, coords_to_world);
+        let steel = htw!(spin, 1529, coords_to_world);
+        let dawnworld = htw!(spin, 1531, coords_to_world);
+        let forine = htw!(spin, 1533, coords_to_world);
+        let tarkine = htw!(spin, 1434, coords_to_world);
+        let talos = htw!(spin, 1436, coords_to_world);
 
         let path_opt =
             aramis.navigable_path(aramis, &sorted_coords, &coords_to_world, &dist2, &pred2);
@@ -1707,51 +1433,21 @@ mod tests {
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let andor = spin
-            .hex_to_world("0236".to_string(), &coords_to_world)
-            .unwrap();
-        let candory = spin
-            .hex_to_world("0336".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let lablon = spin
-            .hex_to_world("2701".to_string(), &coords_to_world)
-            .unwrap();
-        let junidy = spin
-            .hex_to_world("3202".to_string(), &coords_to_world)
-            .unwrap();
-        let marz = dene
-            .hex_to_world("0201".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let andor = htw!(spin, 0236, coords_to_world);
+        let candory = htw!(spin, 0336, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let lablon = htw!(spin, 2701, coords_to_world);
+        let junidy = htw!(spin, 3202, coords_to_world);
+        let marz = htw!(dene, 0201, coords_to_world);
 
         assert_eq!(aramis.btn(ldd, &dist2, false), 8.0);
         assert_eq!(aramis.btn(natoko, &dist2, false), 6.5);
@@ -1811,51 +1507,21 @@ mod tests {
         let (dist2, _) =
             populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let ldd = spin
-            .hex_to_world("3010".to_string(), &coords_to_world)
-            .unwrap();
-        let natoko = spin
-            .hex_to_world("3209".to_string(), &coords_to_world)
-            .unwrap();
-        let vinorian = spin
-            .hex_to_world("3111".to_string(), &coords_to_world)
-            .unwrap();
-        let corfu = spin
-            .hex_to_world("2602".to_string(), &coords_to_world)
-            .unwrap();
-        let andor = spin
-            .hex_to_world("0236".to_string(), &coords_to_world)
-            .unwrap();
-        let candory = spin
-            .hex_to_world("0336".to_string(), &coords_to_world)
-            .unwrap();
-        let regina = spin
-            .hex_to_world("1910".to_string(), &coords_to_world)
-            .unwrap();
-        let reacher = spin
-            .hex_to_world("3210".to_string(), &coords_to_world)
-            .unwrap();
-        let nutema = spin
-            .hex_to_world("3112".to_string(), &coords_to_world)
-            .unwrap();
-        let margesi = spin
-            .hex_to_world("3212".to_string(), &coords_to_world)
-            .unwrap();
-        let saarinen = dene
-            .hex_to_world("0113".to_string(), &coords_to_world)
-            .unwrap();
-        let lablon = spin
-            .hex_to_world("2701".to_string(), &coords_to_world)
-            .unwrap();
-        let junidy = spin
-            .hex_to_world("3202".to_string(), &coords_to_world)
-            .unwrap();
-        let marz = dene
-            .hex_to_world("0201".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let ldd = htw!(spin, 3010, coords_to_world);
+        let natoko = htw!(spin, 3209, coords_to_world);
+        let vinorian = htw!(spin, 3111, coords_to_world);
+        let corfu = htw!(spin, 2602, coords_to_world);
+        let andor = htw!(spin, 0236, coords_to_world);
+        let candory = htw!(spin, 0336, coords_to_world);
+        let regina = htw!(spin, 1910, coords_to_world);
+        let reacher = htw!(spin, 3210, coords_to_world);
+        let nutema = htw!(spin, 3112, coords_to_world);
+        let margesi = htw!(spin, 3212, coords_to_world);
+        let saarinen = htw!(dene, 0113, coords_to_world);
+        let lablon = htw!(spin, 2701, coords_to_world);
+        let junidy = htw!(spin, 3202, coords_to_world);
+        let marz = htw!(dene, 0201, coords_to_world);
 
         assert_eq!(aramis.btn(ldd, &dist2, true), 8.5);
         assert_eq!(aramis.btn(natoko, &dist2, true), 7.0);
@@ -1981,18 +1647,10 @@ mod tests {
             &preds,
         );
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let mora = spin
-            .hex_to_world("3124".to_string(), &coords_to_world)
-            .unwrap();
-        let jesedipere = spin
-            .hex_to_world("3001".to_string(), &coords_to_world)
-            .unwrap();
-        let rruthaekuksu = gvur
-            .hex_to_world("2840".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let mora = htw!(spin, 3124, coords_to_world);
+        let jesedipere = htw!(spin, 3001, coords_to_world);
+        let rruthaekuksu = htw!(gvur, 2840, coords_to_world);
 
         fn set_to_worlds(
             set: &HashSet<Coords>,
@@ -2168,18 +1826,10 @@ mod tests {
             &preds,
         );
 
-        let aramis = spin
-            .hex_to_world("3110".to_string(), &coords_to_world)
-            .unwrap();
-        let mora = spin
-            .hex_to_world("3124".to_string(), &coords_to_world)
-            .unwrap();
-        let jesedipere = spin
-            .hex_to_world("3001".to_string(), &coords_to_world)
-            .unwrap();
-        let rruthaekuksu = gvur
-            .hex_to_world("2840".to_string(), &coords_to_world)
-            .unwrap();
+        let aramis = htw!(spin, 3110, coords_to_world);
+        let mora = htw!(spin, 3124, coords_to_world);
+        let jesedipere = htw!(spin, 3001, coords_to_world);
+        let rruthaekuksu = htw!(gvur, 2840, coords_to_world);
 
         assert_eq!(aramis.port_size(), 6);
         assert_eq!(mora.port_size(), 8);
@@ -2242,87 +1892,33 @@ mod tests {
         let dist2 = dists.get(&2).unwrap();
         let dist3 = dists.get(&3).unwrap();
 
-        let zuflucht = reft
-            .hex_to_world("0921".to_string(), &coords_to_world)
-            .unwrap();
-        let wellington = reft
-            .hex_to_world("0925".to_string(), &coords_to_world)
-            .unwrap();
-        let esperanza = reft
-            .hex_to_world("0926".to_string(), &coords_to_world)
-            .unwrap();
-        let st_hilaire = reft
-            .hex_to_world("0930".to_string(), &coords_to_world)
-            .unwrap();
-        let nebelwelt = reft
-            .hex_to_world("1030".to_string(), &coords_to_world)
-            .unwrap();
-        let gloire = reft
-            .hex_to_world("1123".to_string(), &coords_to_world)
-            .unwrap();
-        let serendip_belt = reft
-            .hex_to_world("1323".to_string(), &coords_to_world)
-            .unwrap();
-        let new_colchis = reft
-            .hex_to_world("1327".to_string(), &coords_to_world)
-            .unwrap();
-        let herzenslust = reft
-            .hex_to_world("1426".to_string(), &coords_to_world)
-            .unwrap();
-        let orphee = reft
-            .hex_to_world("1429".to_string(), &coords_to_world)
-            .unwrap();
-        let topas = reft
-            .hex_to_world("1522".to_string(), &coords_to_world)
-            .unwrap();
-        let elysee = reft
-            .hex_to_world("1525".to_string(), &coords_to_world)
-            .unwrap();
-        let besancon = reft
-            .hex_to_world("1526".to_string(), &coords_to_world)
-            .unwrap();
-        let berlichingen = reft
-            .hex_to_world("1621".to_string(), &coords_to_world)
-            .unwrap();
-        let joyeuse = reft
-            .hex_to_world("1628".to_string(), &coords_to_world)
-            .unwrap();
-        let sturgeons_law = reft
-            .hex_to_world("1724".to_string(), &coords_to_world)
-            .unwrap();
-        let quichotte = reft
-            .hex_to_world("1729".to_string(), &coords_to_world)
-            .unwrap();
-        let neubayern = reft
-            .hex_to_world("1822".to_string(), &coords_to_world)
-            .unwrap();
-        let schlesien_belt = reft
-            .hex_to_world("1923".to_string(), &coords_to_world)
-            .unwrap();
-        let new_home = reft
-            .hex_to_world("1925".to_string(), &coords_to_world)
-            .unwrap();
-        let colchis = reft
-            .hex_to_world("2026".to_string(), &coords_to_world)
-            .unwrap();
-        let st_genevieve = reft
-            .hex_to_world("2123".to_string(), &coords_to_world)
-            .unwrap();
-        let acadie = reft
-            .hex_to_world("2225".to_string(), &coords_to_world)
-            .unwrap();
-        let sansterre = reft
-            .hex_to_world("2322".to_string(), &coords_to_world)
-            .unwrap();
-        let achille = reft
-            .hex_to_world("2324".to_string(), &coords_to_world)
-            .unwrap();
-        let amondiage = reft
-            .hex_to_world("2325".to_string(), &coords_to_world)
-            .unwrap();
-        let st_denis = reft
-            .hex_to_world("2423".to_string(), &coords_to_world)
-            .unwrap();
+        let zuflucht = htw!(reft, 0921, coords_to_world);
+        let wellington = htw!(reft, 0925, coords_to_world);
+        let esperanza = htw!(reft, 0926, coords_to_world);
+        let st_hilaire = htw!(reft, 0930, coords_to_world);
+        let nebelwelt = htw!(reft, 1030, coords_to_world);
+        let gloire = htw!(reft, 1123, coords_to_world);
+        let serendip_belt = htw!(reft, 1323, coords_to_world);
+        let new_colchis = htw!(reft, 1327, coords_to_world);
+        let herzenslust = htw!(reft, 1426, coords_to_world);
+        let orphee = htw!(reft, 1429, coords_to_world);
+        let topas = htw!(reft, 1522, coords_to_world);
+        let elysee = htw!(reft, 1525, coords_to_world);
+        let besancon = htw!(reft, 1526, coords_to_world);
+        let berlichingen = htw!(reft, 1621, coords_to_world);
+        let joyeuse = htw!(reft, 1628, coords_to_world);
+        let sturgeons_law = htw!(reft, 1724, coords_to_world);
+        let quichotte = htw!(reft, 1729, coords_to_world);
+        let neubayern = htw!(reft, 1822, coords_to_world);
+        let schlesien_belt = htw!(reft, 1923, coords_to_world);
+        let new_home = htw!(reft, 1925, coords_to_world);
+        let colchis = htw!(reft, 2026, coords_to_world);
+        let st_genevieve = htw!(reft, 2123, coords_to_world);
+        let acadie = htw!(reft, 2225, coords_to_world);
+        let sansterre = htw!(reft, 2322, coords_to_world);
+        let achille = htw!(reft, 2324, coords_to_world);
+        let amondiage = htw!(reft, 2325, coords_to_world);
+        let st_denis = htw!(reft, 2423, coords_to_world);
 
         assert_eq!(zuflucht.uwtn(), 4.0);
         assert_eq!(zuflucht.wtn_port_modifier(), 0.0);
