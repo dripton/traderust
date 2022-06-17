@@ -372,6 +372,7 @@ mod tests {
         let aramis = coords_to_world.get(aramis_coords).unwrap();
         assert_eq!(aramis.name, "Aramis");
         assert_eq!(aramis.sector_location, (-4, -1));
+        assert_eq!(aramis.sector_name, "Spinward Marches");
         assert_eq!(aramis.hex, "3110");
         assert_eq!(aramis.uwp, "A5A0556-B");
 
@@ -419,6 +420,7 @@ mod tests {
         let regina = coords_to_world.get(regina_coords).unwrap();
         assert_eq!(regina.name, "Regina");
         assert_eq!(regina.sector_location, (-4, -1));
+        assert_eq!(regina.sector_name, "Spinward Marches");
         assert_eq!(regina.hex, "1910");
         assert_eq!(regina.uwp, "A788899-C");
 
@@ -476,6 +478,7 @@ mod tests {
         let bronze = coords_to_world.get(bronze_coords).unwrap();
         assert_eq!(bronze.name, "Bronze");
         assert_eq!(bronze.sector_location, (-4, -1));
+        assert_eq!(bronze.sector_name, "Spinward Marches");
         assert_eq!(bronze.hex, "1627");
         assert_eq!(bronze.uwp, "E201000-0");
 
@@ -528,6 +531,7 @@ mod tests {
         let callia = coords_to_world.get(callia_coords).unwrap();
         assert_eq!(callia.name, "Callia");
         assert_eq!(callia.sector_location, (-4, -1));
+        assert_eq!(callia.sector_name, "Spinward Marches");
         assert_eq!(callia.hex, "1836");
         assert_eq!(callia.uwp, "E550852-6");
 
@@ -575,6 +579,7 @@ mod tests {
         let candory = coords_to_world.get(candory_coords).unwrap();
         assert_eq!(candory.name, "Candory");
         assert_eq!(candory.sector_location, (-4, -1));
+        assert_eq!(candory.sector_name, "Spinward Marches");
         assert_eq!(candory.hex, "0336");
         assert_eq!(candory.uwp, "C593634-8");
 
@@ -628,6 +633,7 @@ mod tests {
         let khiinra_ash = coords_to_world.get(khiinra_ash_coords).unwrap();
         assert_eq!(khiinra_ash.name, "Khiinra Ash");
         assert_eq!(khiinra_ash.sector_location, (0, 0));
+        assert_eq!(khiinra_ash.sector_name, "Core");
         assert_eq!(khiinra_ash.hex, "2916");
         assert_eq!(khiinra_ash.uwp, "BAE6362-8");
         // No test for trade classifications to avoid UTF-8 in the code

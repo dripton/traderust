@@ -724,6 +724,7 @@ type RouteCounter = HashMap<Route, u64>;
 #[derive(Clone, Debug, Eq)]
 pub struct World {
     sector_location: (i64, i64),
+    sector_name: String,
     hex: String,
     name: String,
     uwp: String,
@@ -752,7 +753,12 @@ pub struct World {
 }
 
 impl World {
-    fn new(line: String, fields: &[(usize, usize, String)], sector_location: (i64, i64)) -> World {
+    fn new(
+        line: String,
+        fields: &[(usize, usize, String)],
+        sector_location: (i64, i64),
+        sector_name: String,
+    ) -> World {
         let mut hex = "".to_string();
         let mut name = "".to_string();
         let mut uwp = "".to_string();
@@ -874,6 +880,7 @@ impl World {
 
         World {
             sector_location,
+            sector_name,
             hex,
             name,
             uwp,
@@ -1284,6 +1291,11 @@ impl World {
         }
         port_size as u64
     }
+
+    /// Description of this world
+    fn desc(&self) -> String {
+        format!("{} ({} {})", self.name, self.sector_name, self.hex)
+    }
 }
 
 impl PartialEq for World {
@@ -1439,7 +1451,12 @@ impl Sector {
                 let separator = line;
                 fields = parse_header_and_separator(header, separator);
             } else {
-                let world = World::new(line.to_string(), &fields, self.location);
+                let world = World::new(
+                    line.to_string(),
+                    &fields,
+                    self.location,
+                    self.name.to_string(),
+                );
                 self.hex_to_coords
                     .insert(world.hex.clone(), world.get_coords());
                 coords_to_world.insert(world.get_coords(), world);
