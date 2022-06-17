@@ -664,7 +664,7 @@ fn populate_trade_routes(
 /// x is an integer
 /// y2 is an integer, equal to 2 * y
 /// This is needed because y is sometimes a float and floats can't be hash keys
-#[derive(Copy, Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Coords {
     x: i64,
     y2: i64,
@@ -694,6 +694,27 @@ impl From<Coords> for (f64, f64) {
         let fx = coords.x as f64;
         let fy = coords.y2 as f64 / 2.0;
         (fx, fy)
+    }
+}
+
+impl Ord for Coords {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.x.cmp(&other.x) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+            Ordering::Equal => self.y2.cmp(&other.y2),
+        }
+    }
+}
+
+impl PartialOrd for Coords {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.x.partial_cmp(&other.x) {
+            None => None,
+            Some(Ordering::Less) => Some(Ordering::Less),
+            Some(Ordering::Greater) => Some(Ordering::Greater),
+            Some(Ordering::Equal) => self.y2.partial_cmp(&other.y2),
+        }
     }
 }
 

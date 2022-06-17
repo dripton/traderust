@@ -84,6 +84,30 @@ mod tests {
     }
 
     #[rstest]
+    fn test_coords_ord() {
+        let mut sorted_coords = Vec::new();
+        let mut x = -101.0;
+        let mut y = -101.0;
+        while x <= 101.0 {
+            while y <= 101.0 {
+                let coords = Coords::new(x, y);
+                sorted_coords.push(coords);
+                y += 0.5;
+            }
+            x += 1.0;
+        }
+        sorted_coords.sort();
+        for (ii, coords1) in sorted_coords.iter().enumerate() {
+            for jj in ii + 1..sorted_coords.len() {
+                let coords2 = sorted_coords[jj];
+                assert!(
+                    coords2.x > coords1.x || (coords2.x == coords1.x && coords2.y2 > coords1.y2)
+                );
+            }
+        }
+    }
+
+    #[rstest]
     fn test_download_sector_data(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         let mut expected_filenames = Vec::new();
         if let Ok(sector_names) = download {
