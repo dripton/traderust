@@ -7,7 +7,7 @@ use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::{Hash, Hasher};
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::exit;
 use std::str::FromStr;
@@ -105,6 +105,10 @@ struct Args {
     /// Disallow all travel through red zones including gas giant refueling
     #[clap(short = 'R', long)]
     disallow_red_zones: bool,
+
+    /// Output BTNs in a text file
+    #[clap(short = 't', long)]
+    text_btns: bool,
 }
 
 const MAX_TECH_LEVEL: u32 = 23;
@@ -1592,6 +1596,53 @@ fn parse_max_jumps(args: &Args) -> RouteCounter {
     max_jumps
 }
 
+fn generate_text_btns(
+    output_dir: &Path,
+    location_to_sector: &HashMap<(i64, i64), Sector>,
+    coords_to_world: &HashMap<Coords, World>,
+    passenger: bool,
+    max_max_jump: u64,
+    ignore_xboat_routes: bool,
+    dists: &HashMap<u64, Array2<u16>>,
+) -> Result<()> {
+    let dist = dists.get(&max_max_jump).unwrap();
+    for sector in location_to_sector.values() {
+        let mut output_path = output_dir.to_path_buf();
+        output_path.push(format!("{}.txt", &sector.name));
+        let mut output_file = File::create(output_path)?;
+        let mut sorted_coords = Vec::new();
+        for coords in sector.hex_to_coords.values() {
+            sorted_coords.push(coords);
+        }
+        sorted_coords.sort();
+        for coords in sorted_coords.into_iter() {
+            let world = coords_to_world.get(coords).unwrap();
+            let mut neighbors = HashSet::new();
+            for jump in 1..=max_max_jump {
+                for coords2 in &world.neighbors[jump as usize] {
+                    neighbors.insert(coords2);
+                }
+            }
+            if !ignore_xboat_routes {
+                for coords2 in &world.xboat_routes {
+                    neighbors.insert(coords2);
+                }
+            }
+            let mut sorted_neighbors = Vec::new();
+            for neighbor in neighbors.into_iter() {
+                sorted_neighbors.push(neighbor);
+            }
+            sorted_neighbors.sort();
+            for coords2 in sorted_neighbors {
+                let neighbor = coords_to_world.get(coords2).unwrap();
+                let btn = world.btn(neighbor, dist, passenger);
+                writeln!(output_file, "{} {} {}", world.desc(), neighbor.desc(), btn)?
+            }
+        }
+    }
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -1630,6 +1681,7 @@ fn main() -> Result<()> {
     let disallow_red_zones = args.disallow_red_zones;
     let max_jumps = parse_max_jumps(&args);
     let max_max_jump: u64 = *max_jumps.values().max().unwrap();
+    let text_btns = args.text_btns;
 
     stderrlog::new()
         .module(module_path!())
@@ -1701,6 +1753,18 @@ fn main() -> Result<()> {
         &dists,
         &preds,
     );
+
+    if text_btns {
+        generate_text_btns(
+            output_dir,
+            &location_to_sector,
+            &coords_to_world,
+            passenger,
+            max_max_jump,
+            ignore_xboat_routes,
+            &dists,
+        )?
+    }
 
     generate_pdfs(output_dir, &location_to_sector, &coords_to_world);
 
