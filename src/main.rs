@@ -150,6 +150,11 @@ pub enum Route {
 }
 use Route::*;
 
+const TECH_LEVEL_TRAVELLER_TO_GURPS: [u64; MAX_TECH_LEVEL as usize + 1] = [
+    2, // actually 1-3
+    4, 5, 5, 5, 6, 6, 7, 8, 9, 9, 9, 10, 10, 11, 12, 13, 13, 14, 14, 14, 14, 14, 14,
+];
+
 lazy_static! {
     static ref STARPORT_TRAVELLER_TO_GURPS: HashMap<char, String> = {
         let mut sttg: HashMap<char, String> = HashMap::new();
@@ -160,35 +165,6 @@ lazy_static! {
         sttg.insert('E', "I".to_string());
         sttg.insert('X', "0".to_string());
         sttg
-    };
-
-    static ref TECH_LEVEL_TRAVELLER_TO_GURPS: HashMap<u32, u64> = {
-        let mut tttg: HashMap<u32, u64> = HashMap::new();
-        tttg.insert(0, 2); // actually 1-3
-        tttg.insert(1, 4);
-        tttg.insert(2, 5);
-        tttg.insert(3, 5);
-        tttg.insert(4, 5);
-        tttg.insert(5, 6);
-        tttg.insert(6, 6);
-        tttg.insert(7, 7);
-        tttg.insert(8, 8);
-        tttg.insert(9, 9);
-        tttg.insert(10, 9);
-        tttg.insert(11, 9);
-        tttg.insert(12, 10);
-        tttg.insert(13, 10);
-        tttg.insert(14, 11);
-        tttg.insert(15, 12);
-        tttg.insert(16, 13);
-        tttg.insert(17, 13);
-        tttg.insert(18, 14);
-        tttg.insert(19, 14);
-        tttg.insert(20, 14);
-        tttg.insert(21, 14);
-        tttg.insert(22, 14);
-        tttg.insert(23, 14);
-        tttg
     };
 
     static ref WTN_PORT_MODIFIER_TABLE: HashMap<(u64, String), f64> = {
@@ -1024,8 +1000,8 @@ impl World {
         if tech_level_char == '?' || tech_level_char == 'X' {
             tech_level_char = '0';
         }
-        let tech_level_int = tech_level_char.to_digit(MAX_TECH_LEVEL + 1).unwrap();
-        *TECH_LEVEL_TRAVELLER_TO_GURPS.get(&tech_level_int).unwrap()
+        let tech_level_int = tech_level_char.to_digit(MAX_TECH_LEVEL + 1).unwrap() as usize;
+        TECH_LEVEL_TRAVELLER_TO_GURPS[tech_level_int]
     }
 
     fn gas_giants(&self) -> char {
