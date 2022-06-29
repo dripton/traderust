@@ -229,7 +229,7 @@ fn dijkstra_dial_inner(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
             .map(|i| dial_one_row(i as u16, size, &neighbors_map, &weights))
             .collect();
     } else {
-        panic!("broken Algorithm");
+        panic!("invalid Algorithm");
     }
     for (i, (dist_row, pred_row)) in tuples.iter().enumerate() {
         // TODO Find a way to copy the entire row
@@ -298,6 +298,7 @@ mod tests {
         dist[[1, 3]] = 1;
         dist[[2, 0]] = 2;
         dist[[2, 3]] = 3;
+        dist[[3, 3]] = 0;
         debug!("dist before {:?}\n", dist);
         dist
     }
@@ -350,21 +351,21 @@ mod tests {
     #[test]
     fn test_floyd_warshall_scipy() {
         let mut dist = setup_scipy_test();
-        let pred = floyd_warshall(&mut dist);
+        let pred = shortest_path(&mut dist, Algorithm::Floyd);
         compare_scipy_test(dist, pred);
     }
 
     #[test]
     fn test_dijkstra_scipy() {
         let mut dist = setup_scipy_test();
-        let pred = dijkstra(&mut dist);
+        let pred = shortest_path(&mut dist, Algorithm::Dijkstra);
         compare_scipy_test(dist, pred);
     }
 
     #[test]
     fn test_dial_scipy() {
         let mut dist = setup_scipy_test();
-        let pred = dial(&mut dist);
+        let pred = shortest_path(&mut dist, Algorithm::Dial);
         compare_scipy_test(dist, pred);
     }
 
@@ -406,5 +407,12 @@ mod tests {
 
         assert_eq!(dist1, dist2);
         // predecessors are not guaranteed to be identical
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid Algorithm")]
+    fn test_dijkstra_dial_inner_bad_algorithm() {
+        let mut dist = setup_random_matrix(100, 1000);
+        dijkstra_dial_inner(&mut dist, Algorithm::Floyd);
     }
 }
