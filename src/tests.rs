@@ -1638,6 +1638,7 @@ mod tests {
         let lablon = htw!(spin, 2701, coords_to_world);
         let junidy = htw!(spin, 3202, coords_to_world);
         let marz = htw!(dene, 0201, coords_to_world);
+        let mora = htw!(spin, 3124, coords_to_world);
 
         assert_eq!(aramis.btn(ldd, &dist2, true), 8.5);
         assert_eq!(aramis.btn(natoko, &dist2, true), 7.0);
@@ -1648,6 +1649,7 @@ mod tests {
         assert_eq!(aramis.btn(junidy, &dist2, true), 8.0);
         assert_eq!(aramis.btn(marz, &dist2, true), 8.0);
         assert_eq!(aramis.btn(regina, &dist2, true), 8.5);
+        assert_eq!(aramis.btn(mora, &dist2, true), 9.0);
         assert_eq!(ldd.btn(aramis, &dist2, true), 8.5);
         assert_eq!(ldd.btn(natoko, &dist2, true), 6.0);
         assert_eq!(ldd.btn(reacher, &dist2, true), 6.5);
