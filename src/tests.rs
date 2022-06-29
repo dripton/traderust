@@ -1,5 +1,6 @@
 use anyhow::Result;
 use ndarray::Array2;
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, remove_dir_all};
 use std::path::PathBuf;
@@ -117,6 +118,24 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[rstest]
+    fn test_coords_ord2() {
+        let coords1 = Coords::new(0.0, 0.0);
+        let coords2 = Coords::new(1.0, 1.0);
+        assert_eq!(coords1.cmp(&coords1), Ordering::Equal);
+        assert_eq!(coords1.cmp(&coords2), Ordering::Less);
+        assert_eq!(coords2.cmp(&coords1), Ordering::Greater);
+    }
+
+    #[rstest]
+    fn test_coords_partial_ord() {
+        let coords1 = Coords::new(0.0, 0.0);
+        let coords2 = Coords::new(1.0, 1.0);
+        assert_eq!(coords1.partial_cmp(&coords1), Some(Ordering::Equal));
+        assert_eq!(coords1.partial_cmp(&coords2), Some(Ordering::Less));
+        assert_eq!(coords2.partial_cmp(&coords1), Some(Ordering::Greater));
     }
 
     #[rstest]
