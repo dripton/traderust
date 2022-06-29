@@ -396,6 +396,42 @@ mod tests {
     }
 
     #[rstest]
+    fn test_sector_ley(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Ley".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        assert_eq!(sector.name, "Ley");
+        assert_eq!(sector.names, vec!["Ley", r"Ley Sector", "Makhuniim"]);
+        assert_eq!(sector.abbreviation, "Ley");
+        assert_eq!(sector.location, (2, 0));
+        assert_eq!(sector.subsector_letter_to_name.len(), 16);
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'A').unwrap(),
+            "Ikhnaton".to_string()
+        );
+        assert_eq!(
+            *sector.subsector_letter_to_name.get(&'P').unwrap(),
+            "Outworld".to_string()
+        );
+        assert_eq!(sector.allegiance_code_to_name.len(), 5);
+        assert_eq!(
+            *sector.allegiance_code_to_name.get("CsIm").unwrap(),
+            "Client state, Third Imperium".to_string()
+        );
+        assert_eq!(sector.hex_to_coords.len(), 387);
+        let amikell_coords = sector.hex_to_coords.get("0101").unwrap();
+        let amikell = coords_to_world.get(amikell_coords).unwrap();
+        assert_eq!(amikell.name, "Amikell");
+        let burkona_coords = sector.hex_to_coords.get("3236").unwrap();
+        let burkona = coords_to_world.get(burkona_coords).unwrap();
+        assert_eq!(burkona.name, "Burkona");
+
+        Ok(())
+    }
+
+    #[rstest]
     fn test_world_aramis(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
         let sector_name = "Spinward Marches".to_string();
