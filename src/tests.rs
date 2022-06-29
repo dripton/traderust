@@ -659,6 +659,56 @@ mod tests {
     }
 
     #[rstest]
+    fn test_world_mora(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Spinward Marches".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let mora_coords = sector.hex_to_coords.get("3124").unwrap();
+        let mora = coords_to_world.get(mora_coords).unwrap();
+        assert_eq!(mora.name, "Mora");
+        assert_eq!(mora.sector_location, (-4, -1));
+        assert_eq!(mora.sector_name, "Spinward Marches");
+        assert_eq!(mora.hex, "3124");
+        assert_eq!(mora.uwp, "AA99AC7-F");
+
+        let tc = set!("Hi".to_string(), "In".to_string(), "Cs".to_string());
+        assert_eq!(mora.trade_classifications, tc);
+
+        assert_eq!(mora.importance(), 5);
+        assert_eq!(mora.economic(), "F9H+5");
+        assert_eq!(mora.cultural(), "AF5F");
+        assert_eq!(mora.nobles(), "BEF");
+        let bases = set!("N".to_string(), "S".to_string());
+        assert_eq!(mora.bases, bases);
+        assert_eq!(mora.zone, 'G');
+        assert_eq!(mora.pbg, "112");
+        assert_eq!(mora.worlds(), 9);
+        assert_eq!(mora.allegiance, "ImDd");
+        assert_eq!(mora.stars(), vec!["F0 V"]);
+        assert_eq!(mora.starport(), 'A');
+        assert_eq!(mora.g_starport(), "V");
+        assert_eq!(mora.size(), 'A');
+        assert_eq!(mora.atmosphere(), '9');
+        assert_eq!(mora.hydrosphere(), '9');
+        assert_eq!(mora.population(), 'A');
+        assert_eq!(mora.government(), 'C');
+        assert_eq!(mora.law_level(), '7');
+        assert_eq!(mora.tech_level(), 'F');
+        assert_eq!(mora.g_tech_level(), 12);
+        assert_eq!(mora.uwtn(), 6.5);
+        assert_eq!(mora.wtn_port_modifier(), 0.0);
+        assert_eq!(mora.wtn(), 6.5);
+        assert_eq!(mora.gas_giants(), '2');
+        assert!(mora.can_refuel(false));
+        assert!(mora.can_refuel(true));
+        assert_eq!(mora.desc(), "Mora (Spinward Marches 3124)");
+
+        Ok(())
+    }
+
+    #[rstest]
     fn test_world_khiinra_ash(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
         let sector_name = "Core".to_string();
