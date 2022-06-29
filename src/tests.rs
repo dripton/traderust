@@ -74,6 +74,9 @@ mod tests {
             "Spinward Marches".to_string(),
             "Core".to_string(),
             "Reft".to_string(),
+            "Ley".to_string(),
+            "Empty Quarter".to_string(),
+            "Fornast".to_string(),
         ];
         download_sector_data(&data_dir, &sector_names)?;
 
@@ -1076,6 +1079,40 @@ mod tests {
 
         let set = set!(roup.get_coords(), jenghe.get_coords(), dinomn.get_coords());
         assert_eq!(regina.xboat_routes, set);
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_xboat_routes_ley_empty_fornast(
+        data_dir: &PathBuf,
+        download: &Result<Vec<String>>,
+    ) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let ley = Sector::new(&data_dir, "Ley".to_string(), &mut coords_to_world);
+        let empt = Sector::new(&data_dir, "Empty Quarter".to_string(), &mut coords_to_world);
+        let forn = Sector::new(&data_dir, "Fornast".to_string(), &mut coords_to_world);
+        location_to_sector.insert(ley.location, ley.clone());
+        location_to_sector.insert(empt.location, empt.clone());
+        location_to_sector.insert(forn.location, forn.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+
+        let econdora = htw!(ley, 0201, coords_to_world);
+        let maissia = htw!(ley, 0504, coords_to_world);
+        let nulinad = htw!(empt, 0338, coords_to_world);
+        let allyn = htw!(forn, 3103, coords_to_world);
+        let set = set!(
+            nulinad.get_coords(),
+            allyn.get_coords(),
+            maissia.get_coords()
+        );
+        assert_eq!(econdora.xboat_routes, set);
 
         Ok(())
     }
