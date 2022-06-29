@@ -725,6 +725,8 @@ mod tests {
         let saarinen = htw!(dene, 0113, coords_to_world);
         let regina = htw!(spin, 1910, coords_to_world);
 
+        let no_world = spin.hex_to_world("9999".to_string(), &coords_to_world);
+
         assert_eq!(<(f64, f64)>::from(aramis.get_coords()), (-97.0, -30.0));
         assert_eq!(<(f64, f64)>::from(ldd.get_coords()), (-98.0, -29.5));
         assert_eq!(<(f64, f64)>::from(natoko.get_coords()), (-96.0, -30.5));
@@ -734,6 +736,7 @@ mod tests {
         assert_eq!(<(f64, f64)>::from(margesi.get_coords()), (-96.0, -27.5));
         assert_eq!(<(f64, f64)>::from(saarinen.get_coords()), (-95.0, -27.0));
         assert_eq!(<(f64, f64)>::from(regina.get_coords()), (-109.0, -30.0));
+        assert_eq!(no_world, None);
 
         Ok(())
     }
@@ -839,8 +842,11 @@ mod tests {
     }
 
     #[rstest]
-    #[should_panic(expected="Too many worlds for a u16!  We will overflow!")]
-    fn test_populate_navigable_distances_overflow(data_dir: &PathBuf, download: &Result<Vec<String>>) {
+    #[should_panic(expected = "Too many worlds for a u16!  We will overflow!")]
+    fn test_populate_navigable_distances_overflow(
+        data_dir: &PathBuf,
+        download: &Result<Vec<String>>,
+    ) {
         if let Ok(_sector_names) = download {};
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
@@ -866,8 +872,7 @@ mod tests {
         for ii in 0..66666 {
             sorted_coords.push(Coords::new(ii as f64, ii as f64));
         }
-        let (_, _) =
-            populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
+        let (_, _) = populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
     }
 
     #[rstest]
