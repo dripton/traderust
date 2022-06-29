@@ -6,7 +6,7 @@ use log::{debug, error};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::fs::{create_dir_all, read_to_string, write, File};
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -1280,25 +1280,6 @@ impl World {
 impl PartialEq for World {
     fn eq(&self, other: &Self) -> bool {
         self.hex == other.hex && self.name == other.name
-    }
-}
-
-impl Hash for World {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.hex.hash(state);
-        self.name.hash(state);
-    }
-}
-
-impl Ord for World {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.get_coords().cmp(&other.get_coords())
-    }
-}
-
-impl PartialOrd for World {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.get_coords().partial_cmp(&other.get_coords())
     }
 }
 
