@@ -44,9 +44,8 @@ struct HexInfo<'a> {
 
 fn get_hex_info(sector: &Sector, x: i64, y: i64) -> HexInfo {
     let hex = format!("{:02}{:02}", x, y);
-    // leftmost point
+    // cx is the leftmost point and cy is the topmost point
     let cx = (4.0 + x as f64) * 3.0 * SCALE;
-    // topmost point
     let cy = (3.0 + y as f64 * 2.0 + ((x as f64 - 1.0) as i64 & 1) as f64) * SQRT3 * SCALE;
     let vertexes = vec![
         (cx + SCALE, cy),
