@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use crate::apsp::{Algorithm, INFINITY};
 use crate::pdf::generate_pdfs;
 use crate::{
-    distance_modifier_table, download_sector_data, find_max_allowed_jump,
+    distance_modifier_table, download_sector_data, find_max_allowed_jump, parse_file_of_sectors,
     parse_header_and_separator, populate_navigable_distances, populate_trade_routes,
     same_allegiance, Route, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
 };
@@ -428,6 +428,20 @@ mod tests {
         let burkona_coords = sector.hex_to_coords.get("3236").unwrap();
         let burkona = coords_to_world.get(burkona_coords).unwrap();
         assert_eq!(burkona.name, "Burkona");
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_parse_file_of_sectors() -> Result<()> {
+        let file_of_sectors = PathBuf::from("./sector_lists/CsTw.txt");
+        let sector_names = parse_file_of_sectors(file_of_sectors)?;
+        let set = set!(
+            "Gzirr!k'l".to_string(),
+            "K'trekreer".to_string(),
+            "Star's End".to_string()
+        );
+        assert_eq!(sector_names, set);
 
         Ok(())
     }
