@@ -410,17 +410,17 @@ mod tests {
         let tc = set!("He".to_string(), "Ni".to_string(), "Cp".to_string());
         assert_eq!(aramis.trade_classifications, tc);
 
-        assert_eq!(aramis.importance, 2);
-        assert_eq!(aramis.economic, "846+1");
-        assert_eq!(aramis.cultural, "474A");
-        assert_eq!(aramis.nobles, "BF");
+        assert_eq!(aramis.importance(), 2);
+        assert_eq!(aramis.economic(), "846+1");
+        assert_eq!(aramis.cultural(), "474A");
+        assert_eq!(aramis.nobles(), "BF");
         let bases = set!("N".to_string(), "S".to_string());
-        assert_eq!(aramis.bases, bases);
+        assert_eq!(aramis.bases(), bases);
         assert_eq!(aramis.zone, 'G');
         assert_eq!(aramis.pbg, "710");
-        assert_eq!(aramis.worlds, 9);
+        assert_eq!(aramis.worlds(), 9);
         assert_eq!(aramis.allegiance, "ImDd");
-        assert_eq!(aramis.stars, vec!["M2 V"]);
+        assert_eq!(aramis.stars(), vec!["M2 V"]);
         assert_eq!(aramis.starport(), 'A');
         assert_eq!(aramis.g_starport(), "V");
         assert_eq!(aramis.size(), '5');
@@ -436,6 +436,7 @@ mod tests {
         assert_eq!(aramis.wtn(), 4.0);
         assert_eq!(aramis.gas_giants(), '0');
         assert!(aramis.can_refuel(false));
+        assert_eq!(aramis.desc(), "Aramis (Spinward Marches 3110)");
 
         Ok(())
     }
@@ -468,17 +469,17 @@ mod tests {
         );
         assert_eq!(regina.trade_classifications, tc);
 
-        assert_eq!(regina.importance, 4);
-        assert_eq!(regina.economic, "D7E+5");
-        assert_eq!(regina.cultural, "9C6D");
-        assert_eq!(regina.nobles, "BcCeF");
+        assert_eq!(regina.importance(), 4);
+        assert_eq!(regina.economic(), "D7E+5");
+        assert_eq!(regina.cultural(), "9C6D");
+        assert_eq!(regina.nobles(), "BcCeF");
         let bases = set!("N".to_string(), "S".to_string());
-        assert_eq!(regina.bases, bases);
+        assert_eq!(regina.bases(), bases);
         assert_eq!(regina.zone, 'G');
         assert_eq!(regina.pbg, "703");
-        assert_eq!(regina.worlds, 8);
+        assert_eq!(regina.worlds(), 8);
         assert_eq!(regina.allegiance, "ImDd");
-        assert_eq!(regina.stars, vec!["F7 V", "BD", "M3 V"]);
+        assert_eq!(regina.stars(), vec!["F7 V", "BD", "M3 V"]);
         assert_eq!(regina.starport(), 'A');
         assert_eq!(regina.g_starport(), "V");
         assert_eq!(regina.size(), '7');
@@ -494,6 +495,7 @@ mod tests {
         assert_eq!(regina.wtn(), 5.0);
         assert_eq!(regina.gas_giants(), '3');
         assert!(regina.can_refuel(false));
+        assert_eq!(regina.desc(), "Regina (Spinward Marches 1910)");
 
         Ok(())
     }
@@ -521,17 +523,17 @@ mod tests {
         );
         assert_eq!(bronze.trade_classifications, tc);
 
-        assert_eq!(bronze.importance, -3);
-        assert_eq!(bronze.economic, "200-5");
-        assert_eq!(bronze.cultural, "0000");
-        assert_eq!(bronze.nobles, "");
+        assert_eq!(bronze.importance(), -3);
+        assert_eq!(bronze.economic(), "200-5");
+        assert_eq!(bronze.cultural(), "0000");
+        assert_eq!(bronze.nobles(), "");
         let bases = HashSet::new();
-        assert_eq!(bronze.bases, bases);
+        assert_eq!(bronze.bases(), bases);
         assert_eq!(bronze.zone, 'G');
         assert_eq!(bronze.pbg, "010");
-        assert_eq!(bronze.worlds, 5);
+        assert_eq!(bronze.worlds(), 5);
         assert_eq!(bronze.allegiance, "SwCf");
-        assert_eq!(bronze.stars, vec!["M3 V"]);
+        assert_eq!(bronze.stars(), vec!["M3 V"]);
         assert_eq!(bronze.starport(), 'E');
         assert_eq!(bronze.g_starport(), "I");
         assert_eq!(bronze.size(), '2');
@@ -547,6 +549,7 @@ mod tests {
         assert_eq!(bronze.wtn(), 0.0);
         assert_eq!(bronze.gas_giants(), '0');
         assert!(bronze.can_refuel(false));
+        assert_eq!(bronze.desc(), "Bronze (Spinward Marches 1627)");
 
         Ok(())
     }
@@ -569,17 +572,17 @@ mod tests {
         let tc = set!("De".to_string(), "Po".to_string(), "Ph".to_string());
         assert_eq!(callia.trade_classifications, tc);
 
-        assert_eq!(callia.importance, -2);
-        assert_eq!(callia.economic, "A75-5");
-        assert_eq!(callia.cultural, "4612");
-        assert_eq!(callia.nobles, "Be");
+        assert_eq!(callia.importance(), -2);
+        assert_eq!(callia.economic(), "A75-5");
+        assert_eq!(callia.cultural(), "4612");
+        assert_eq!(callia.nobles(), "Be");
         let bases = HashSet::new();
-        assert_eq!(callia.bases, bases);
+        assert_eq!(callia.bases(), bases);
         assert_eq!(callia.zone, 'G');
         assert_eq!(callia.pbg, "810");
-        assert_eq!(callia.worlds, 11);
+        assert_eq!(callia.worlds(), 11);
         assert_eq!(callia.allegiance, "ImDd");
-        assert_eq!(callia.stars, vec!["M3 V"]);
+        assert_eq!(callia.stars(), vec!["M3 V"]);
         assert_eq!(callia.starport(), 'E');
         assert_eq!(callia.g_starport(), "I");
         assert_eq!(callia.size(), '5');
@@ -595,6 +598,7 @@ mod tests {
         assert_eq!(callia.wtn(), 3.5);
         assert_eq!(callia.gas_giants(), '0');
         assert!(!callia.can_refuel(false));
+        assert_eq!(callia.desc(), "Callia (Spinward Marches 1836)");
 
         Ok(())
     }
@@ -622,17 +626,17 @@ mod tests {
         );
         assert_eq!(candory.trade_classifications, tc);
 
-        assert_eq!(candory.importance, -2);
-        assert_eq!(candory.economic, "A52-4");
-        assert_eq!(candory.cultural, "4436");
-        assert_eq!(candory.nobles, "");
+        assert_eq!(candory.importance(), -2);
+        assert_eq!(candory.economic(), "A52-4");
+        assert_eq!(candory.cultural(), "4436");
+        assert_eq!(candory.nobles(), "");
         let bases = HashSet::new();
         assert_eq!(candory.bases, bases);
         assert_eq!(candory.zone, 'R');
         assert_eq!(candory.pbg, "920");
-        assert_eq!(candory.worlds, 5);
+        assert_eq!(candory.worlds(), 5);
         assert_eq!(candory.allegiance, "ImDd");
-        assert_eq!(candory.stars, vec!["F6 V", "M3 V"]);
+        assert_eq!(candory.stars(), vec!["F6 V", "M3 V"]);
         assert_eq!(candory.starport(), 'C');
         assert_eq!(candory.g_starport(), "III");
         assert_eq!(candory.size(), '5');
@@ -649,6 +653,7 @@ mod tests {
         assert_eq!(candory.gas_giants(), '0');
         assert!(!candory.can_refuel(false));
         assert!(!candory.can_refuel(true));
+        assert_eq!(candory.desc(), "Candory (Spinward Marches 0336)");
 
         Ok(())
     }
@@ -668,17 +673,17 @@ mod tests {
         assert_eq!(khiinra_ash.hex, "2916");
         assert_eq!(khiinra_ash.uwp, "BAE6362-8");
         // No test for trade classifications to avoid UTF-8 in the code
-        assert_eq!(khiinra_ash.importance, -1);
-        assert_eq!(khiinra_ash.economic, "920-5");
-        assert_eq!(khiinra_ash.cultural, "1214");
-        assert_eq!(khiinra_ash.nobles, "B");
+        assert_eq!(khiinra_ash.importance(), -1);
+        assert_eq!(khiinra_ash.economic(), "920-5");
+        assert_eq!(khiinra_ash.cultural(), "1214");
+        assert_eq!(khiinra_ash.nobles(), "B");
         let bases = HashSet::new();
-        assert_eq!(khiinra_ash.bases, bases);
+        assert_eq!(khiinra_ash.bases(), bases);
         assert_eq!(khiinra_ash.zone, 'G');
         assert_eq!(khiinra_ash.pbg, "704");
-        assert_eq!(khiinra_ash.worlds, 7);
+        assert_eq!(khiinra_ash.worlds(), 7);
         assert_eq!(khiinra_ash.allegiance, "ImSy");
-        assert_eq!(khiinra_ash.stars, vec!["M1 V", "M2 V"]);
+        assert_eq!(khiinra_ash.stars(), vec!["M1 V", "M2 V"]);
         assert_eq!(khiinra_ash.starport(), 'B');
         assert_eq!(khiinra_ash.g_starport(), "IV");
         assert_eq!(khiinra_ash.size(), 'A');
@@ -694,6 +699,7 @@ mod tests {
         assert_eq!(khiinra_ash.wtn(), 2.5);
         assert_eq!(khiinra_ash.gas_giants(), '4');
         assert!(khiinra_ash.can_refuel(false));
+        assert_eq!(khiinra_ash.desc(), "Khiinra Ash (Core 2916)");
 
         Ok(())
     }
