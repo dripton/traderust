@@ -310,8 +310,7 @@ fn populate_navigable_distances(
     debug!("populate_navigable_distances max_jump={}", max_jump);
     let num_worlds = sorted_coords.len();
     if num_worlds >= u16::MAX as usize {
-        error!("Too many worlds for a u16!  We will overflow!");
-        exit(3);
+        panic!("Too many worlds for a u16!  We will overflow!");
     }
     let mut np = Array2::<u16>::zeros((num_worlds, num_worlds));
     let mut num_edges = 0;

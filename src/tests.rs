@@ -839,6 +839,38 @@ mod tests {
     }
 
     #[rstest]
+    #[should_panic(expected="Too many worlds for a u16!  We will overflow!")]
+    fn test_populate_navigable_distances_overflow(data_dir: &PathBuf, download: &Result<Vec<String>>) {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2, 3, false);
+        }
+        let mut sorted_coords: Vec<Coords> = Vec::new();
+        for ii in 0..66666 {
+            sorted_coords.push(Coords::new(ii as f64, ii as f64));
+        }
+        let (_, _) =
+            populate_navigable_distances(&sorted_coords, &coords_to_world, 2, false, ALG);
+    }
+
+    #[rstest]
     fn test_distance_modifier(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
