@@ -77,6 +77,7 @@ mod tests {
             "Ley".to_string(),
             "Empty Quarter".to_string(),
             "Fornast".to_string(),
+            "Yiklerzdanzh".to_string(),
         ];
         download_sector_data(&data_dir, &sector_names)?;
 
@@ -789,6 +790,53 @@ mod tests {
         assert_eq!(khiinra_ash.gas_giants(), '4');
         assert!(khiinra_ash.can_refuel(false));
         assert_eq!(khiinra_ash.desc(), "Khiinra Ash (Core 2916)");
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_world_enz(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let sector_name = "Yiklerzdanzh".to_string();
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let sector = Sector::new(&data_dir, sector_name, &mut coords_to_world);
+
+        let enz_coords = sector.hex_to_coords.get("0119").unwrap();
+        let enz = coords_to_world.get(enz_coords).unwrap();
+        assert_eq!(enz.name, "Enz");
+        assert_eq!(enz.sector_location, (-7, -1));
+        assert_eq!(enz.sector_name, "Yiklerzdanzh");
+        assert_eq!(enz.hex, "0119");
+        assert_eq!(enz.uwp, "C10056E-8");
+        let tc = set!("Ni".to_string(), "Va".to_string(), "O:0221".to_string());
+        assert_eq!(enz.trade_classifications, tc);
+        assert_eq!(enz.importance(), 0);
+        assert_eq!(enz.economic(), "    ");
+        assert_eq!(enz.cultural(), "    ");
+        assert_eq!(enz.nobles(), "");
+        let bases = set!("K".to_string());
+        assert_eq!(enz.bases(), bases);
+        assert_eq!(enz.zone, 'A');
+        assert_eq!(enz.pbg, "301");
+        assert_eq!(enz.worlds(), 0);
+        assert_eq!(enz.allegiance, "Sr");
+        assert_eq!(enz.stars(), vec!["M6 V", "M4 V", "DM"]);
+        assert_eq!(enz.starport(), 'C');
+        assert_eq!(enz.g_starport(), "III");
+        assert_eq!(enz.size(), '1');
+        assert_eq!(enz.atmosphere(), '0');
+        assert_eq!(enz.hydrosphere(), '0');
+        assert_eq!(enz.population(), '5');
+        assert_eq!(enz.government(), '6');
+        assert_eq!(enz.law_level(), 'E');
+        assert_eq!(enz.tech_level(), '8');
+        assert_eq!(enz.g_tech_level(), 8);
+        assert_eq!(enz.uwtn(), 3.0);
+        assert_eq!(enz.wtn_port_modifier(), 0.0);
+        assert_eq!(enz.wtn(), 3.0);
+        assert_eq!(enz.gas_giants(), '1');
+        assert!(enz.can_refuel(false));
+        assert_eq!(enz.desc(), "Enz (Yiklerzdanzh 0119)");
 
         Ok(())
     }
