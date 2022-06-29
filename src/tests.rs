@@ -1218,185 +1218,155 @@ mod tests {
         let tarkine = htw!(spin, 1434, coords_to_world);
         let talos = htw!(spin, 1436, coords_to_world);
 
-        let path_opt =
-            aramis.navigable_path(aramis, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 1);
-            assert_eq!(path[0], aramis.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(aramis, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        assert_eq!(path.len(), 1);
+        assert_eq!(path[0], aramis.get_coords());
 
-        let path_opt =
-            aramis.navigable_path(aramis, &sorted_coords, &coords_to_world, &dist3, &pred3);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 1);
-            assert_eq!(path[0], aramis.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(aramis, &sorted_coords, &coords_to_world, &dist3, &pred3)
+            .unwrap();
+        assert_eq!(path.len(), 1);
+        assert_eq!(path[0], aramis.get_coords());
 
-        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 2);
-            assert_eq!(path[0], aramis.get_coords());
-            assert_eq!(path[1], ldd.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(ldd, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0], aramis.get_coords());
+        assert_eq!(path[1], ldd.get_coords());
 
-        let path_opt = aramis.navigable_path(ldd, &sorted_coords, &coords_to_world, &dist3, &pred3);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 2);
-            assert_eq!(path[0], aramis.get_coords());
-            assert_eq!(path[1], ldd.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(ldd, &sorted_coords, &coords_to_world, &dist3, &pred3)
+            .unwrap();
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0], aramis.get_coords());
+        assert_eq!(path[1], ldd.get_coords());
 
-        let path_opt =
-            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 2);
-            assert_eq!(path[0], aramis.get_coords());
-            assert_eq!(path[1], vinorian.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0], aramis.get_coords());
+        assert_eq!(path[1], vinorian.get_coords());
 
-        let path_opt =
-            aramis.navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist3, &pred3);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 2);
-            assert_eq!(path[0], aramis.get_coords());
-            assert_eq!(path[1], vinorian.get_coords());
-        } else {
-            panic!("No navigable path");
-        }
+        let path = aramis
+            .navigable_path(vinorian, &sorted_coords, &coords_to_world, &dist3, &pred3)
+            .unwrap();
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0], aramis.get_coords());
+        assert_eq!(path[1], vinorian.get_coords());
 
-        let path_opt =
-            aramis.navigable_path(corfu, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            assert_eq!(path.len(), 11);
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(
-                path,
-                vec![
-                    aramis.get_coords(),
-                    pysadi.get_coords(),
-                    zila.get_coords(),
-                    violante.get_coords(),
-                    focaline.get_coords(),
-                    moughas.get_coords(),
-                    enope.get_coords(),
-                    becks_world.get_coords(),
-                    yorbund.get_coords(),
-                    heya.get_coords(),
-                    corfu.get_coords(),
-                ]
-            );
-        } else {
-            panic!("No navigable path");
+        let path = aramis
+            .navigable_path(corfu, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        assert_eq!(path.len(), 11);
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(
+            path,
+            vec![
+                aramis.get_coords(),
+                pysadi.get_coords(),
+                zila.get_coords(),
+                violante.get_coords(),
+                focaline.get_coords(),
+                moughas.get_coords(),
+                enope.get_coords(),
+                becks_world.get_coords(),
+                yorbund.get_coords(),
+                heya.get_coords(),
+                corfu.get_coords(),
+            ]
+        );
 
-        let path_opt =
-            aramis.navigable_path(corfu, &sorted_coords, &coords_to_world, &dist3, &pred3);
-        if let Some(path) = path_opt {
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(path.len(), 6);
-            assert_eq!(
-                path,
-                vec![
-                    aramis.get_coords(),
-                    lewis.get_coords(),
-                    zykoca.get_coords(),
-                    yebab.get_coords(),
-                    lablon.get_coords(),
-                    corfu.get_coords(),
-                ]
-            );
-        } else {
-            panic!("No navigable path");
+        let path = aramis
+            .navigable_path(corfu, &sorted_coords, &coords_to_world, &dist3, &pred3)
+            .unwrap();
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(path.len(), 6);
+        assert_eq!(
+            path,
+            vec![
+                aramis.get_coords(),
+                lewis.get_coords(),
+                zykoca.get_coords(),
+                yebab.get_coords(),
+                lablon.get_coords(),
+                corfu.get_coords(),
+            ]
+        );
 
-        let path_opt =
-            aramis.navigable_path(mongo, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(path.len(), 13);
-            assert_eq!(
-                path,
-                vec![
-                    aramis.get_coords(),
-                    pysadi.get_coords(),
-                    zila.get_coords(),
-                    violante.get_coords(),
-                    focaline.get_coords(),
-                    moughas.get_coords(),
-                    enope.get_coords(),
-                    feri.get_coords(),
-                    uakye.get_coords(),
-                    efate.get_coords(),
-                    lysen.get_coords(),
-                    nakege.get_coords(),
-                    mongo.get_coords(),
-                ]
-            );
-        } else {
-            panic!("No navigable path");
+        let path = aramis
+            .navigable_path(mongo, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(path.len(), 13);
+        assert_eq!(
+            path,
+            vec![
+                aramis.get_coords(),
+                pysadi.get_coords(),
+                zila.get_coords(),
+                violante.get_coords(),
+                focaline.get_coords(),
+                moughas.get_coords(),
+                enope.get_coords(),
+                feri.get_coords(),
+                uakye.get_coords(),
+                efate.get_coords(),
+                lysen.get_coords(),
+                nakege.get_coords(),
+                mongo.get_coords(),
+            ]
+        );
 
-        let path_opt =
-            aramis.navigable_path(collace, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(path.len(), 20);
-            assert_eq!(
-                path,
-                vec![
-                    aramis.get_coords(),
-                    nutema.get_coords(),
-                    celepina.get_coords(),
-                    jae_tellona.get_coords(),
-                    rhylanor.get_coords(),
-                    equus.get_coords(),
-                    ivendo.get_coords(),
-                    quiru.get_coords(),
-                    resten.get_coords(),
-                    lunion.get_coords(),
-                    derchon.get_coords(),
-                    zaibon.get_coords(),
-                    iron.get_coords(),
-                    mithril.get_coords(),
-                    steel.get_coords(),
-                    dawnworld.get_coords(),
-                    forine.get_coords(),
-                    tarkine.get_coords(),
-                    talos.get_coords(),
-                    collace.get_coords(),
-                ]
-            );
-        } else {
-            panic!("No navigable path");
+        let path = aramis
+            .navigable_path(collace, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(path.len(), 20);
+        assert_eq!(
+            path,
+            vec![
+                aramis.get_coords(),
+                nutema.get_coords(),
+                celepina.get_coords(),
+                jae_tellona.get_coords(),
+                rhylanor.get_coords(),
+                equus.get_coords(),
+                ivendo.get_coords(),
+                quiru.get_coords(),
+                resten.get_coords(),
+                lunion.get_coords(),
+                derchon.get_coords(),
+                zaibon.get_coords(),
+                iron.get_coords(),
+                mithril.get_coords(),
+                steel.get_coords(),
+                dawnworld.get_coords(),
+                forine.get_coords(),
+                tarkine.get_coords(),
+                talos.get_coords(),
+                collace.get_coords(),
+            ]
+        );
 
-        let path_opt = reno.navigable_path(javan, &sorted_coords, &coords_to_world, &dist2, &pred2);
-        if let Some(path) = path_opt {
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(path.len(), 33);
-        } else {
-            panic!("No navigable path");
+        let path = reno
+            .navigable_path(javan, &sorted_coords, &coords_to_world, &dist2, &pred2)
+            .unwrap();
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(path.len(), 33);
 
         let path_opt =
             andor.navigable_path(candory, &sorted_coords, &coords_to_world, &dist2, &pred2);
@@ -1410,16 +1380,13 @@ mod tests {
             aramis.navigable_path(andor, &sorted_coords, &coords_to_world, &dist2, &pred2);
         assert_eq!(path_opt, None);
 
-        let path_opt =
-            aramis.navigable_path(andor, &sorted_coords, &coords_to_world, &dist3, &pred3);
-        if let Some(path) = path_opt {
-            for coords in &path {
-                println!("{}", coords_to_world.get(&coords).unwrap().name);
-            }
-            assert_eq!(path.len(), 17);
-        } else {
-            panic!("No navigable path");
+        let path = aramis
+            .navigable_path(andor, &sorted_coords, &coords_to_world, &dist3, &pred3)
+            .unwrap();
+        for coords in &path {
+            println!("{}", coords_to_world.get(&coords).unwrap().name);
         }
+        assert_eq!(path.len(), 17);
 
         Ok(())
     }
