@@ -2,15 +2,17 @@ use anyhow::Result;
 use ndarray::Array2;
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
-use std::fs::{create_dir_all, remove_dir_all};
+use std::fs::{create_dir_all, read_to_string};
 use std::path::PathBuf;
+use tempfile::tempdir;
 
 use crate::apsp::{Algorithm, INFINITY};
 use crate::pdf::generate_pdfs;
 use crate::{
-    distance_modifier_table, download_sector_data, find_max_allowed_jump, parse_file_of_sectors,
-    parse_header_and_separator, parse_max_jumps, populate_navigable_distances,
-    populate_trade_routes, same_allegiance, Route, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
+    distance_modifier_table, download_sector_data, find_max_allowed_jump, generate_text_btns,
+    parse_file_of_sectors, parse_header_and_separator, parse_max_jumps,
+    populate_navigable_distances, populate_trade_routes, same_allegiance, Route,
+    MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
 };
 use crate::{Args, Coords, Sector, World};
 use Route::{Feeder, Intermediate, Main, Major, Minor};
@@ -25,8 +27,6 @@ mod tests {
 
     // Reuse a test directory and downloaded files to avoid overloading travellermap.com
     const TEST_DATA_DIR: &'static str = "/var/tmp/traderust_tests";
-
-    const TEST_OUTPUT_DIR: &'static str = "/var/tmp/traderust_tests_output";
 
     const ALG: Algorithm = Algorithm::Dijkstra;
 
@@ -54,15 +54,6 @@ mod tests {
         let data_dir = PathBuf::from(TEST_DATA_DIR);
         create_dir_all(&data_dir).unwrap();
         data_dir
-    }
-
-    #[fixture]
-    #[once]
-    fn output_dir() -> PathBuf {
-        let output_dir = PathBuf::from(TEST_OUTPUT_DIR);
-        remove_dir_all(&output_dir).unwrap();
-        create_dir_all(&output_dir).unwrap();
-        output_dir
     }
 
     #[fixture]
@@ -2455,11 +2446,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_generate_pdfs(
-        data_dir: &PathBuf,
-        output_dir: &PathBuf,
-        download: &Result<Vec<String>>,
-    ) -> Result<()> {
+    fn test_generate_pdfs(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
         if let Ok(_sector_names) = download {};
         let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
         let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
@@ -2516,16 +2503,108 @@ mod tests {
             &preds,
         );
 
-        let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&output_dir)?
-            .map(|res| res.map(|e| e.file_name()))
-            .collect();
-        assert_eq!(found_filename_results.len(), 0);
-        generate_pdfs(output_dir, &location_to_sector, &coords_to_world);
+        let temp_dir = tempdir()?;
+        let output_dir: PathBuf = temp_dir.path().to_path_buf();
+
+        generate_pdfs(&output_dir, &location_to_sector, &coords_to_world);
         let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&output_dir)?
             .map(|res| res.map(|e| e.file_name()))
             .collect();
         assert_eq!(found_filename_results.len(), 3);
         // TODO Validate the PDF files with pdf-rs
+
+        temp_dir.close()?;
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_generate_text_btns(data_dir: &PathBuf, download: &Result<Vec<String>>) -> Result<()> {
+        if let Ok(_sector_names) = download {};
+        let mut coords_to_world: HashMap<Coords, World> = HashMap::new();
+        let mut location_to_sector: HashMap<(i64, i64), Sector> = HashMap::new();
+        let spin = Sector::new(
+            &data_dir,
+            "Spinward Marches".to_string(),
+            &mut coords_to_world,
+        );
+        let dene = Sector::new(&data_dir, "Deneb".to_string(), &mut coords_to_world);
+        let gvur = Sector::new(&data_dir, "Gvurrdon".to_string(), &mut coords_to_world);
+        location_to_sector.insert(spin.location, spin.clone());
+        location_to_sector.insert(dene.location, dene.clone());
+        location_to_sector.insert(gvur.location, gvur.clone());
+        for sector in location_to_sector.values() {
+            sector
+                .parse_xml_routes(&data_dir, &location_to_sector, &mut coords_to_world)
+                .unwrap();
+        }
+        // Make a temporary clone to avoid having mutable and immutable refs.
+        let coords_to_world2 = coords_to_world.clone();
+        for world in coords_to_world.values_mut() {
+            world.populate_neighbors(&coords_to_world2, 3, false);
+        }
+        let mut sorted_coords: Vec<Coords>;
+        sorted_coords = coords_to_world.keys().cloned().collect();
+        sorted_coords.sort();
+        for (ii, coords) in sorted_coords.iter_mut().enumerate() {
+            let world = coords_to_world.get_mut(coords).unwrap();
+            world.index = Some(ii);
+        }
+
+        let mut max_jumps = HashMap::new();
+        max_jumps.insert(Minor, 2);
+        max_jumps.insert(Feeder, 3);
+        max_jumps.insert(Intermediate, 3);
+        max_jumps.insert(Main, 3);
+        max_jumps.insert(Major, 3);
+        let all_jumps: HashSet<u64> = max_jumps.values().cloned().collect();
+        let mut dists: HashMap<u64, Array2<u16>> = HashMap::new();
+        let mut preds: HashMap<u64, Array2<u16>> = HashMap::new();
+        for jump in all_jumps.iter() {
+            let (dist, pred) =
+                populate_navigable_distances(&sorted_coords, &coords_to_world, *jump, false, ALG);
+            dists.insert(*jump, dist);
+            preds.insert(*jump, pred);
+        }
+        populate_trade_routes(
+            &mut coords_to_world,
+            *MIN_BTN,
+            *MIN_ROUTE_BTN,
+            false,
+            &max_jumps,
+            &dists,
+            &preds,
+        );
+        let max_max_jump: u64 = *max_jumps.values().max().unwrap();
+
+        let temp_dir = tempdir()?;
+        let output_dir: PathBuf = temp_dir.path().to_path_buf();
+
+        generate_text_btns(
+            &output_dir,
+            &location_to_sector,
+            &coords_to_world,
+            false,
+            max_max_jump,
+            false,
+            &dists,
+        )?;
+        let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&output_dir)?
+            .map(|res| res.map(|e| e.file_name()))
+            .collect();
+        assert_eq!(found_filename_results.len(), 3);
+        let mut spin_path = output_dir;
+        spin_path.push("Spinward Marches.txt");
+        let contents = read_to_string(spin_path)?;
+        let lines: Vec<&str> = contents.split("\n").collect();
+        assert!(lines
+            .contains(&"Aramis (Spinward Marches 3110) L'oeul d'Dieu (Spinward Marches 3010) 8"));
+        assert!(
+            lines.contains(&"Aramis (Spinward Marches 3110) Natoko (Spinward Marches 3209) 6.5")
+        );
+        assert!(lines.contains(&"Aramis (Spinward Marches 3110) Reacher (Spinward Marches 3210) 7"));
+
+        temp_dir.close()?;
 
         Ok(())
     }
