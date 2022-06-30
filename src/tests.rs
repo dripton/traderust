@@ -9,10 +9,10 @@ use crate::apsp::{Algorithm, INFINITY};
 use crate::pdf::generate_pdfs;
 use crate::{
     distance_modifier_table, download_sector_data, find_max_allowed_jump, parse_file_of_sectors,
-    parse_header_and_separator, populate_navigable_distances, populate_trade_routes,
-    same_allegiance, Route, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
+    parse_header_and_separator, parse_max_jumps, populate_navigable_distances,
+    populate_trade_routes, same_allegiance, Route, MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
 };
-use crate::{Coords, Sector, World};
+use crate::{Args, Coords, Sector, World};
 use Route::{Feeder, Intermediate, Main, Major, Minor};
 
 #[cfg(test)]
@@ -442,6 +442,39 @@ mod tests {
             "Star's End".to_string()
         );
         assert_eq!(sector_names, set);
+
+        Ok(())
+    }
+
+    #[rstest]
+    fn test_parse_max_jumps() -> Result<()> {
+        let args = Args {
+            algorithm: Algorithm::Dial,
+            min_btn: 0.0,
+            data_directory: Some(PathBuf::from("/tmp")),
+            file_of_sectors: vec![],
+            max_jump: None,
+            max_jump_minor: 1,
+            max_jump_feeder: 2,
+            max_jump_intermediate: 3,
+            max_jump_main: 4,
+            max_jump_major: 5,
+            output_directory: PathBuf::from("/tmp"),
+            quiet: true,
+            min_route_btn: 0.0,
+            sector: vec![],
+            verbose: 0,
+            ignore_xboat_routes: false,
+            passenger: false,
+            disallow_red_zones: false,
+            text_btns: false,
+        };
+        let max_jumps = parse_max_jumps(&args);
+        assert_eq!(max_jumps.get(&Minor), Some(&1));
+        assert_eq!(max_jumps.get(&Feeder), Some(&2));
+        assert_eq!(max_jumps.get(&Intermediate), Some(&3));
+        assert_eq!(max_jumps.get(&Main), Some(&4));
+        assert_eq!(max_jumps.get(&Major), Some(&5));
 
         Ok(())
     }
