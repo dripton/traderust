@@ -109,12 +109,17 @@ struct Args {
     /// Output BTNs in a text file
     #[clap(short = 't', long)]
     text_btns: bool,
+
+    /// Use distance modifiers and max BTN from Interstellar Wars
+    #[clap(short = 'w', long)]
+    iw_rules: bool,
 }
 
 const MAX_TECH_LEVEL: u32 = 23;
 const MAX_POPULATION: u32 = 15;
 
 const MAX_DISTANCE_PENALTY: f64 = 9999.0;
+const IW_MAX_DISTANCE: u16 = 20;
 
 // Rules don't say BTN can't be negative but it seems reasonable to me.
 const ABSOLUTE_MIN_BTN: f64 = 0.0;
@@ -341,7 +346,23 @@ fn populate_navigable_distances(
     (np, pred)
 }
 
-fn distance_modifier_table(distance: u16) -> f64 {
+fn distance_modifier_table(distance: u16, iw_rules: bool) -> f64 {
+    if iw_rules {
+        iw_distance_modifier_table(distance)
+    } else {
+        ft_distance_modifier_table(distance)
+    }
+
+fn iw_distance_modifier_table(distance: u16) -> f64 {
+    if distance >= IW_MAX_DISTANCE {
+        return MAX_DISTANCE_PENALTY;
+    }
+    let table: Vec<u16> = vec![0, 2, 5, 9, 19, INFINITY];
+    let index = bisect_left(&table, &distance);
+    index as f64 / 2.0
+}
+
+fn ft_distance_modifier_table(distance: u16) -> f64 {
     if distance == INFINITY {
         return MAX_DISTANCE_PENALTY;
     }
@@ -408,6 +429,7 @@ fn populate_trade_routes(
     max_jumps: &RouteCounter,
     dists: &HashMap<u64, Array2<u16>>,
     preds: &HashMap<u64, Array2<u16>>,
+    iw_rules: bool,
 ) {
     debug!("populate_trade_routes");
     let mut dwtn_coords: Vec<(u64, Coords)> = Vec::new();
@@ -432,7 +454,7 @@ fn populate_trade_routes(
                 break;
             }
             let sld = coords1.straight_line_distance(coords2) as u16;
-            let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld);
+            let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld, iw_rules);
             if max_btn1 < min_btn - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus the bonus,
                 // so if even the straight line distance modifier puts us too
@@ -467,7 +489,7 @@ fn populate_trade_routes(
         .map(|(coords1, coords2)| {
             let world1 = coords_to_world.get(&coords1).unwrap();
             let world2 = coords_to_world.get(&coords2).unwrap();
-            let btn = world1.btn(world2, dist, passenger);
+            let btn = world1.btn(world2, dist, passenger, iw_rules);
             let dbtn = (2.0 * btn) as usize;
             (coords1, coords2, dbtn)
         })
@@ -1134,17 +1156,17 @@ impl World {
         Some(path)
     }
 
-    fn distance_modifier(&self, other: &World, dist: &Array2<u16>) -> f64 {
+    fn distance_modifier(&self, other: &World, dist: &Array2<u16>, iw_rules: bool) -> f64 {
         let distance = self.navigable_distance(other, dist);
-        distance_modifier_table(distance)
+        distance_modifier_table(distance, iw_rules)
     }
 
-    fn btn(&self, other: &World, dist: &Array2<u16>, passenger: bool) -> f64 {
+    fn btn(&self, other: &World, dist: &Array2<u16>, passenger: bool, iw_rules: bool) -> f64 {
         let wtn1 = self.wtn();
         let wtn2 = other.wtn();
         let min_wtn = f64::min(wtn1, wtn2);
         let base_btn = wtn1 + wtn2 + self.wtcm(other);
-        let mut btn = base_btn - self.distance_modifier(other, dist);
+        let mut btn = base_btn - self.distance_modifier(other, dist, iw_rules);
         if passenger {
             for world in [self, other] {
                 if world.trade_classifications.contains("Ri") {
@@ -1560,6 +1582,7 @@ fn generate_text_btns(
     max_max_jump: u64,
     ignore_xboat_routes: bool,
     dists: &HashMap<u64, Array2<u16>>,
+    iw_rules: bool,
 ) -> Result<()> {
     let dist = dists.get(&max_max_jump).unwrap();
     for sector in location_to_sector.values() {
@@ -1591,7 +1614,7 @@ fn generate_text_btns(
             sorted_neighbors.sort();
             for coords2 in sorted_neighbors {
                 let neighbor = coords_to_world.get(coords2).unwrap();
-                let btn = world.btn(neighbor, dist, passenger);
+                let btn = world.btn(neighbor, dist, passenger, iw_rules);
                 writeln!(output_file, "{} {} {}", world.desc(), neighbor.desc(), btn)?
             }
         }
@@ -1638,6 +1661,7 @@ fn main() -> Result<()> {
     let max_jumps = parse_max_jumps(&args);
     let max_max_jump: u64 = *max_jumps.values().max().unwrap();
     let text_btns = args.text_btns;
+    let iw_rules = args.iw_rules;
 
     stderrlog::new()
         .module(module_path!())
@@ -1708,6 +1732,7 @@ fn main() -> Result<()> {
         &max_jumps,
         &dists,
         &preds,
+        iw_rules,
     );
 
     if text_btns {
@@ -1719,6 +1744,7 @@ fn main() -> Result<()> {
             max_max_jump,
             ignore_xboat_routes,
             &dists,
+            iw_rules,
         )?
     }
 

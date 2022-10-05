@@ -459,6 +459,7 @@ mod tests {
             passenger: false,
             disallow_red_zones: false,
             text_btns: false,
+            iw_rules: false,
         };
         let max_jumps = parse_max_jumps(&args);
         assert_eq!(max_jumps.get(&Minor), Some(&1));
@@ -1922,6 +1923,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let aramis = htw!(spin, 3110, coords_to_world);
@@ -2101,6 +2103,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let aramis = htw!(spin, 3110, coords_to_world);
@@ -2164,6 +2167,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let dist2 = dists.get(&2).unwrap();
@@ -2501,6 +2505,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let temp_dir = tempdir()?;
@@ -2574,6 +2579,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
         let max_max_jump: u64 = *max_jumps.values().max().unwrap();
 
