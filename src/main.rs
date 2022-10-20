@@ -5,6 +5,7 @@ use elementtree::Element;
 use log::{debug, error};
 use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::fs::{create_dir_all, read_to_string, write, File};
 use std::hash::Hash;
 use std::io::{Read, Write};
@@ -694,6 +695,12 @@ impl PartialOrd for Coords {
             Some(Ordering::Greater) => Some(Ordering::Greater),
             Some(Ordering::Equal) => self.y2.partial_cmp(&other.y2),
         }
+    }
+}
+
+impl fmt::Display for Coords {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {})", self.x, self.y2)
     }
 }
 
