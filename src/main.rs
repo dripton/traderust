@@ -248,6 +248,7 @@ lazy_static! {
         300_000_000_000,
         750_000_000_000,
         3_000_000_000_000,
+        7_500_000_000_000,
     ];
 
     static ref MIN_BTN: f64 = f64::from_str(DEFAULT_MIN_BTN).unwrap();
