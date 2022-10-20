@@ -9,9 +9,9 @@ use tempfile::tempdir;
 use crate::apsp::{Algorithm, INFINITY};
 use crate::pdf::generate_pdfs;
 use crate::{
-    distance_modifier_table, download_sector_data, find_max_allowed_jump, generate_text_btns,
-    parse_file_of_sectors, parse_header_and_separator, parse_max_jumps,
-    populate_navigable_distances, populate_trade_routes, same_allegiance, Route,
+    distance_modifier_table_ft, distance_modifier_table_iw, download_sector_data,
+    find_max_allowed_jump, generate_text_btns, parse_file_of_sectors, parse_header_and_separator,
+    parse_max_jumps, populate_navigable_distances, populate_trade_routes, same_allegiance, Route,
     MAX_DISTANCE_PENALTY, MIN_BTN, MIN_ROUTE_BTN,
 };
 use crate::{Args, Coords, Sector, World};
@@ -459,6 +459,7 @@ mod tests {
             passenger: false,
             disallow_red_zones: false,
             text_btns: false,
+            iw_rules: false,
         };
         let max_jumps = parse_max_jumps(&args);
         assert_eq!(max_jumps.get(&Minor), Some(&1));
@@ -971,33 +972,48 @@ mod tests {
     }
 
     #[rstest]
-    fn test_distance_modifier_table() {
-        assert_eq!(distance_modifier_table(0), 0.0);
-        assert_eq!(distance_modifier_table(1), 0.0);
-        assert_eq!(distance_modifier_table(2), 0.5);
-        assert_eq!(distance_modifier_table(3), 1.0);
-        assert_eq!(distance_modifier_table(5), 1.0);
-        assert_eq!(distance_modifier_table(6), 1.5);
-        assert_eq!(distance_modifier_table(9), 1.5);
-        assert_eq!(distance_modifier_table(10), 2.0);
-        assert_eq!(distance_modifier_table(19), 2.0);
-        assert_eq!(distance_modifier_table(20), 2.5);
-        assert_eq!(distance_modifier_table(29), 2.5);
-        assert_eq!(distance_modifier_table(30), 3.0);
-        assert_eq!(distance_modifier_table(59), 3.0);
-        assert_eq!(distance_modifier_table(60), 3.5);
-        assert_eq!(distance_modifier_table(99), 3.5);
-        assert_eq!(distance_modifier_table(100), 4.0);
-        assert_eq!(distance_modifier_table(199), 4.0);
-        assert_eq!(distance_modifier_table(200), 4.5);
-        assert_eq!(distance_modifier_table(299), 4.5);
-        assert_eq!(distance_modifier_table(300), 5.0);
-        assert_eq!(distance_modifier_table(599), 5.0);
-        assert_eq!(distance_modifier_table(600), 5.5);
-        assert_eq!(distance_modifier_table(999), 5.5);
-        assert_eq!(distance_modifier_table(1000), 6.0);
-        assert_eq!(distance_modifier_table(9999), 6.0);
-        assert_eq!(distance_modifier_table(INFINITY), MAX_DISTANCE_PENALTY);
+    fn test_distance_modifier_table_ft() {
+        assert_eq!(distance_modifier_table_ft(0), 0.0);
+        assert_eq!(distance_modifier_table_ft(1), 0.0);
+        assert_eq!(distance_modifier_table_ft(2), 0.5);
+        assert_eq!(distance_modifier_table_ft(3), 1.0);
+        assert_eq!(distance_modifier_table_ft(5), 1.0);
+        assert_eq!(distance_modifier_table_ft(6), 1.5);
+        assert_eq!(distance_modifier_table_ft(9), 1.5);
+        assert_eq!(distance_modifier_table_ft(10), 2.0);
+        assert_eq!(distance_modifier_table_ft(19), 2.0);
+        assert_eq!(distance_modifier_table_ft(20), 2.5);
+        assert_eq!(distance_modifier_table_ft(29), 2.5);
+        assert_eq!(distance_modifier_table_ft(30), 3.0);
+        assert_eq!(distance_modifier_table_ft(59), 3.0);
+        assert_eq!(distance_modifier_table_ft(60), 3.5);
+        assert_eq!(distance_modifier_table_ft(99), 3.5);
+        assert_eq!(distance_modifier_table_ft(100), 4.0);
+        assert_eq!(distance_modifier_table_ft(199), 4.0);
+        assert_eq!(distance_modifier_table_ft(200), 4.5);
+        assert_eq!(distance_modifier_table_ft(299), 4.5);
+        assert_eq!(distance_modifier_table_ft(300), 5.0);
+        assert_eq!(distance_modifier_table_ft(599), 5.0);
+        assert_eq!(distance_modifier_table_ft(600), 5.5);
+        assert_eq!(distance_modifier_table_ft(999), 5.5);
+        assert_eq!(distance_modifier_table_ft(1000), 6.0);
+        assert_eq!(distance_modifier_table_ft(9999), 6.0);
+        assert_eq!(distance_modifier_table_ft(INFINITY), MAX_DISTANCE_PENALTY);
+    }
+
+    #[rstest]
+    fn test_distance_modifier_table_iw() {
+        assert_eq!(distance_modifier_table_iw(0), 0.0);
+        assert_eq!(distance_modifier_table_iw(1), 0.5);
+        assert_eq!(distance_modifier_table_iw(2), 0.5);
+        assert_eq!(distance_modifier_table_iw(3), 1.0);
+        assert_eq!(distance_modifier_table_iw(5), 1.0);
+        assert_eq!(distance_modifier_table_iw(6), 1.5);
+        assert_eq!(distance_modifier_table_iw(9), 1.5);
+        assert_eq!(distance_modifier_table_iw(10), 2.0);
+        assert_eq!(distance_modifier_table_iw(19), 2.0);
+        assert_eq!(distance_modifier_table_iw(20), MAX_DISTANCE_PENALTY);
+        assert_eq!(distance_modifier_table_iw(INFINITY), MAX_DISTANCE_PENALTY);
     }
 
     #[rstest]
@@ -1101,31 +1117,31 @@ mod tests {
         let javan = htw!(dene, 2131, coords_to_world);
         let salaam = htw!(dene, 3213, coords_to_world);
 
-        assert_eq!(aramis.distance_modifier(aramis, &dist2), 0.0);
-        assert_eq!(aramis.distance_modifier(ldd, &dist2), 0.0);
-        assert_eq!(aramis.distance_modifier(vinorian, &dist2), 0.0);
-        assert_eq!(aramis.distance_modifier(corfu, &dist2), 2.0);
+        assert_eq!(aramis.distance_modifier(aramis, &dist2, false), 0.0);
+        assert_eq!(aramis.distance_modifier(ldd, &dist2, false), 0.0);
+        assert_eq!(aramis.distance_modifier(vinorian, &dist2, false), 0.0);
+        assert_eq!(aramis.distance_modifier(corfu, &dist2, false), 2.0);
         assert_eq!(
-            aramis.distance_modifier(andor, &dist2),
+            aramis.distance_modifier(andor, &dist2, false),
             MAX_DISTANCE_PENALTY
         );
-        assert_eq!(aramis.distance_modifier(margesi, &dist2), 1.0);
-        assert_eq!(aramis.distance_modifier(pavanne, &dist2), 1.5);
-        assert_eq!(aramis.distance_modifier(regina, &dist2), 2.0);
-        assert_eq!(aramis.distance_modifier(mongo, &dist2), 2.5);
-        assert_eq!(aramis.distance_modifier(collace, &dist2), 3.0);
-        assert_eq!(reno.distance_modifier(javan, &dist2), 3.5);
+        assert_eq!(aramis.distance_modifier(margesi, &dist2, false), 1.0);
+        assert_eq!(aramis.distance_modifier(pavanne, &dist2, false), 1.5);
+        assert_eq!(aramis.distance_modifier(regina, &dist2, false), 2.0);
+        assert_eq!(aramis.distance_modifier(mongo, &dist2, false), 2.5);
+        assert_eq!(aramis.distance_modifier(collace, &dist2, false), 3.0);
+        assert_eq!(reno.distance_modifier(javan, &dist2, false), 3.5);
         assert_eq!(
-            andor.distance_modifier(candory, &dist2),
+            andor.distance_modifier(candory, &dist2, false),
             MAX_DISTANCE_PENALTY
         );
         assert_eq!(
-            candory.distance_modifier(andor, &dist2),
+            candory.distance_modifier(andor, &dist2, false),
             MAX_DISTANCE_PENALTY
         );
-        assert_eq!(ldd.distance_modifier(natoko, &dist2), 0.5);
-        assert_eq!(collace.distance_modifier(salaam, &dist2), 3.0);
-        assert_eq!(raweh.distance_modifier(salaam, &dist2), 3.5);
+        assert_eq!(ldd.distance_modifier(natoko, &dist2, false), 0.5);
+        assert_eq!(collace.distance_modifier(salaam, &dist2, false), 3.0);
+        assert_eq!(raweh.distance_modifier(salaam, &dist2, false), 3.5);
 
         Ok(())
     }
@@ -1724,27 +1740,27 @@ mod tests {
         let junidy = htw!(spin, 3202, coords_to_world);
         let marz = htw!(dene, 0201, coords_to_world);
 
-        assert_eq!(aramis.btn(ldd, &dist2, false), 8.0);
-        assert_eq!(aramis.btn(natoko, &dist2, false), 6.5);
-        assert_eq!(aramis.btn(reacher, &dist2, false), 7.0);
-        assert_eq!(aramis.btn(vinorian, &dist2, false), 8.0);
-        assert_eq!(aramis.btn(corfu, &dist2, false), 5.5);
-        assert_eq!(aramis.btn(lablon, &dist2, false), 6.0);
-        assert_eq!(aramis.btn(junidy, &dist2, false), 7.5);
-        assert_eq!(aramis.btn(marz, &dist2, false), 7.5);
-        assert_eq!(aramis.btn(regina, &dist2, false), 7.0);
-        assert_eq!(ldd.btn(aramis, &dist2, false), 8.0);
-        assert_eq!(ldd.btn(natoko, &dist2, false), 6.0);
-        assert_eq!(ldd.btn(reacher, &dist2, false), 6.5);
-        assert_eq!(ldd.btn(nutema, &dist2, false), 6.0);
-        assert_eq!(ldd.btn(margesi, &dist2, false), 6.0);
-        assert_eq!(ldd.btn(saarinen, &dist2, false), 5.5);
-        assert_eq!(natoko.btn(reacher, &dist2, false), 5.5);
-        assert_eq!(vinorian.btn(nutema, &dist2, false), 6.5);
-        assert_eq!(nutema.btn(margesi, &dist2, false), 5.5);
-        assert_eq!(margesi.btn(saarinen, &dist2, false), 5.5);
-        assert_eq!(aramis.btn(andor, &dist2, false), 0.0);
-        assert_eq!(andor.btn(candory, &dist2, false), 0.0);
+        assert_eq!(aramis.btn(ldd, &dist2, false, false), 8.0);
+        assert_eq!(aramis.btn(natoko, &dist2, false, false), 6.5);
+        assert_eq!(aramis.btn(reacher, &dist2, false, false), 7.0);
+        assert_eq!(aramis.btn(vinorian, &dist2, false, false), 8.0);
+        assert_eq!(aramis.btn(corfu, &dist2, false, false), 5.5);
+        assert_eq!(aramis.btn(lablon, &dist2, false, false), 6.0);
+        assert_eq!(aramis.btn(junidy, &dist2, false, false), 7.5);
+        assert_eq!(aramis.btn(marz, &dist2, false, false), 7.5);
+        assert_eq!(aramis.btn(regina, &dist2, false, false), 7.0);
+        assert_eq!(ldd.btn(aramis, &dist2, false, false), 8.0);
+        assert_eq!(ldd.btn(natoko, &dist2, false, false), 6.0);
+        assert_eq!(ldd.btn(reacher, &dist2, false, false), 6.5);
+        assert_eq!(ldd.btn(nutema, &dist2, false, false), 6.0);
+        assert_eq!(ldd.btn(margesi, &dist2, false, false), 6.0);
+        assert_eq!(ldd.btn(saarinen, &dist2, false, false), 5.5);
+        assert_eq!(natoko.btn(reacher, &dist2, false, false), 5.5);
+        assert_eq!(vinorian.btn(nutema, &dist2, false, false), 6.5);
+        assert_eq!(nutema.btn(margesi, &dist2, false, false), 5.5);
+        assert_eq!(margesi.btn(saarinen, &dist2, false, false), 5.5);
+        assert_eq!(aramis.btn(andor, &dist2, false, false), 0.0);
+        assert_eq!(andor.btn(candory, &dist2, false, false), 0.0);
         Ok(())
     }
 
@@ -1799,28 +1815,28 @@ mod tests {
         let marz = htw!(dene, 0201, coords_to_world);
         let mora = htw!(spin, 3124, coords_to_world);
 
-        assert_eq!(aramis.btn(ldd, &dist2, true), 8.5);
-        assert_eq!(aramis.btn(natoko, &dist2, true), 7.0);
-        assert_eq!(aramis.btn(reacher, &dist2, true), 7.5);
-        assert_eq!(aramis.btn(vinorian, &dist2, true), 8.5);
-        assert_eq!(aramis.btn(corfu, &dist2, true), 6.0);
-        assert_eq!(aramis.btn(lablon, &dist2, true), 6.5);
-        assert_eq!(aramis.btn(junidy, &dist2, true), 8.0);
-        assert_eq!(aramis.btn(marz, &dist2, true), 8.0);
-        assert_eq!(aramis.btn(regina, &dist2, true), 8.5);
-        assert_eq!(aramis.btn(mora, &dist2, true), 9.0);
-        assert_eq!(ldd.btn(aramis, &dist2, true), 8.5);
-        assert_eq!(ldd.btn(natoko, &dist2, true), 6.0);
-        assert_eq!(ldd.btn(reacher, &dist2, true), 6.5);
-        assert_eq!(ldd.btn(nutema, &dist2, true), 6.0);
-        assert_eq!(ldd.btn(margesi, &dist2, true), 6.0);
-        assert_eq!(ldd.btn(saarinen, &dist2, true), 5.5);
-        assert_eq!(natoko.btn(reacher, &dist2, true), 5.5);
-        assert_eq!(vinorian.btn(nutema, &dist2, true), 6.5);
-        assert_eq!(nutema.btn(margesi, &dist2, true), 5.5);
-        assert_eq!(margesi.btn(saarinen, &dist2, true), 5.5);
-        assert_eq!(aramis.btn(andor, &dist2, true), 0.0);
-        assert_eq!(andor.btn(candory, &dist2, true), 0.0);
+        assert_eq!(aramis.btn(ldd, &dist2, true, false), 8.5);
+        assert_eq!(aramis.btn(natoko, &dist2, true, false), 7.0);
+        assert_eq!(aramis.btn(reacher, &dist2, true, false), 7.5);
+        assert_eq!(aramis.btn(vinorian, &dist2, true, false), 8.5);
+        assert_eq!(aramis.btn(corfu, &dist2, true, false), 6.0);
+        assert_eq!(aramis.btn(lablon, &dist2, true, false), 6.5);
+        assert_eq!(aramis.btn(junidy, &dist2, true, false), 8.0);
+        assert_eq!(aramis.btn(marz, &dist2, true, false), 8.0);
+        assert_eq!(aramis.btn(regina, &dist2, true, false), 8.5);
+        assert_eq!(aramis.btn(mora, &dist2, true, false), 9.0);
+        assert_eq!(ldd.btn(aramis, &dist2, true, false), 8.5);
+        assert_eq!(ldd.btn(natoko, &dist2, true, false), 6.0);
+        assert_eq!(ldd.btn(reacher, &dist2, true, false), 6.5);
+        assert_eq!(ldd.btn(nutema, &dist2, true, false), 6.0);
+        assert_eq!(ldd.btn(margesi, &dist2, true, false), 6.0);
+        assert_eq!(ldd.btn(saarinen, &dist2, true, false), 5.5);
+        assert_eq!(natoko.btn(reacher, &dist2, true, false), 5.5);
+        assert_eq!(vinorian.btn(nutema, &dist2, true, false), 6.5);
+        assert_eq!(nutema.btn(margesi, &dist2, true, false), 5.5);
+        assert_eq!(margesi.btn(saarinen, &dist2, true, false), 5.5);
+        assert_eq!(aramis.btn(andor, &dist2, true, false), 0.0);
+        assert_eq!(andor.btn(candory, &dist2, true, false), 0.0);
         Ok(())
     }
 
@@ -1922,6 +1938,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let aramis = htw!(spin, 3110, coords_to_world);
@@ -2101,6 +2118,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let aramis = htw!(spin, 3110, coords_to_world);
@@ -2164,6 +2182,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let dist2 = dists.get(&2).unwrap();
@@ -2289,128 +2308,128 @@ mod tests {
         assert!(zuflucht.xboat_routes.is_empty());
 
         assert_eq!(zuflucht.navigable_distance(wellington, &dist2), INFINITY);
-        assert_eq!(zuflucht.btn(wellington, &dist2, false), 0.0);
-        assert_eq!(zuflucht.btn(wellington, &dist2, true), 0.0);
+        assert_eq!(zuflucht.btn(wellington, &dist2, false, false), 0.0);
+        assert_eq!(zuflucht.btn(wellington, &dist2, true, false), 0.0);
         assert_eq!(zuflucht.navigable_distance(wellington, &dist3), 6);
         assert_eq!(zuflucht.wtcm(wellington), -0.5);
-        assert_eq!(zuflucht.btn(wellington, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(wellington, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(wellington, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(wellington, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(esperanza, &dist2), INFINITY);
         assert_eq!(zuflucht.wtcm(esperanza), -0.5);
-        assert_eq!(zuflucht.btn(esperanza, &dist2, false), 0.0);
-        assert_eq!(zuflucht.btn(esperanza, &dist2, true), 0.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist2, false, false), 0.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist2, true, false), 0.0);
         assert_eq!(zuflucht.navigable_distance(esperanza, &dist3), 7);
-        assert_eq!(zuflucht.btn(esperanza, &dist3, false), 8.0);
-        assert_eq!(zuflucht.btn(esperanza, &dist3, true), 8.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist3, false, false), 8.0);
+        assert_eq!(zuflucht.btn(esperanza, &dist3, true, false), 8.0);
 
         assert_eq!(zuflucht.navigable_distance(gloire, &dist2), INFINITY);
         assert_eq!(zuflucht.wtcm(gloire), -0.5);
-        assert_eq!(zuflucht.btn(gloire, &dist2, false), 0.0);
-        assert_eq!(zuflucht.btn(gloire, &dist2, true), 0.0);
+        assert_eq!(zuflucht.btn(gloire, &dist2, false, false), 0.0);
+        assert_eq!(zuflucht.btn(gloire, &dist2, true, false), 0.0);
         assert_eq!(zuflucht.navigable_distance(gloire, &dist3), 3);
-        assert_eq!(zuflucht.btn(gloire, &dist3, false), 6.0);
-        assert_eq!(zuflucht.btn(gloire, &dist3, true), 6.0);
+        assert_eq!(zuflucht.btn(gloire, &dist3, false, false), 6.0);
+        assert_eq!(zuflucht.btn(gloire, &dist3, true, false), 6.0);
 
         assert_eq!(zuflucht.navigable_distance(serendip_belt, &dist3), 5);
         assert_eq!(zuflucht.wtcm(serendip_belt), 0.0);
-        assert_eq!(zuflucht.btn(serendip_belt, &dist3, false), 8.5);
-        assert_eq!(zuflucht.btn(serendip_belt, &dist3, true), 8.5);
+        assert_eq!(zuflucht.btn(serendip_belt, &dist3, false, false), 8.5);
+        assert_eq!(zuflucht.btn(serendip_belt, &dist3, true, false), 8.5);
 
         assert_eq!(zuflucht.navigable_distance(herzenslust, &dist3), 10);
         assert_eq!(zuflucht.wtcm(herzenslust), -0.5);
-        assert_eq!(zuflucht.btn(herzenslust, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(herzenslust, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(herzenslust, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(herzenslust, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(orphee, &dist3), INFINITY);
         assert_eq!(zuflucht.wtcm(orphee), -0.5);
-        assert_eq!(zuflucht.btn(orphee, &dist3, false), 0.0);
-        assert_eq!(zuflucht.btn(orphee, &dist3, true), 0.0);
+        assert_eq!(zuflucht.btn(orphee, &dist3, false, false), 0.0);
+        assert_eq!(zuflucht.btn(orphee, &dist3, true, false), 0.0);
 
         assert_eq!(zuflucht.navigable_distance(topas, &dist3), 7);
         assert_eq!(zuflucht.wtcm(topas), 0.0);
-        assert_eq!(zuflucht.btn(topas, &dist3, false), 6.5);
-        assert_eq!(zuflucht.btn(topas, &dist3, true), 6.5);
+        assert_eq!(zuflucht.btn(topas, &dist3, false, false), 6.5);
+        assert_eq!(zuflucht.btn(topas, &dist3, true, false), 6.5);
 
         assert_eq!(zuflucht.navigable_distance(elysee, &dist3), 8);
         assert_eq!(zuflucht.wtcm(elysee), -0.5);
-        assert_eq!(zuflucht.btn(elysee, &dist3, false), 6.0);
-        assert_eq!(zuflucht.btn(elysee, &dist3, true), 6.0);
+        assert_eq!(zuflucht.btn(elysee, &dist3, false, false), 6.0);
+        assert_eq!(zuflucht.btn(elysee, &dist3, true, false), 6.0);
 
         assert_eq!(zuflucht.navigable_distance(besancon, &dist3), 9);
         assert_eq!(zuflucht.wtcm(besancon), -0.5);
-        assert_eq!(zuflucht.btn(besancon, &dist3, false), 5.0);
-        assert_eq!(zuflucht.btn(besancon, &dist3, true), 5.0);
+        assert_eq!(zuflucht.btn(besancon, &dist3, false, false), 5.0);
+        assert_eq!(zuflucht.btn(besancon, &dist3, true, false), 5.0);
 
         assert_eq!(zuflucht.navigable_distance(berlichingen, &dist3), 8);
         assert_eq!(zuflucht.wtcm(berlichingen), -0.5);
-        assert_eq!(zuflucht.btn(berlichingen, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(berlichingen, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(berlichingen, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(berlichingen, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(joyeuse, &dist3), 12);
         assert_eq!(zuflucht.wtcm(joyeuse), -0.5);
-        assert_eq!(zuflucht.btn(joyeuse, &dist3, false), 7.0);
-        assert_eq!(zuflucht.btn(joyeuse, &dist3, true), 7.0);
+        assert_eq!(zuflucht.btn(joyeuse, &dist3, false, false), 7.0);
+        assert_eq!(zuflucht.btn(joyeuse, &dist3, true, false), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(sturgeons_law, &dist3), 10);
         assert_eq!(zuflucht.wtcm(sturgeons_law), -0.5);
-        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(sturgeons_law, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(quichotte, &dist3), 13);
         assert_eq!(zuflucht.wtcm(quichotte), -0.5);
-        assert_eq!(zuflucht.btn(quichotte, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(quichotte, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(quichotte, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(quichotte, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(neubayern, &dist3), 10);
         assert_eq!(zuflucht.wtcm(neubayern), -0.5);
-        assert_eq!(zuflucht.btn(neubayern, &dist3, false), 7.0);
-        assert_eq!(zuflucht.btn(neubayern, &dist3, true), 7.0);
+        assert_eq!(zuflucht.btn(neubayern, &dist3, false, false), 7.0);
+        assert_eq!(zuflucht.btn(neubayern, &dist3, true, false), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(schlesien_belt, &dist3), 11);
         assert_eq!(zuflucht.wtcm(schlesien_belt), -0.5);
-        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, false), 4.5);
-        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, true), 4.5);
+        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, false, false), 4.5);
+        assert_eq!(zuflucht.btn(schlesien_belt, &dist3, true, false), 4.5);
 
         assert_eq!(zuflucht.navigable_distance(new_home, &dist3), 12);
         assert_eq!(zuflucht.wtcm(new_home), -0.5);
-        assert_eq!(zuflucht.btn(new_home, &dist3, false), 6.5);
-        assert_eq!(zuflucht.btn(new_home, &dist3, true), 7.0);
+        assert_eq!(zuflucht.btn(new_home, &dist3, false, false), 6.5);
+        assert_eq!(zuflucht.btn(new_home, &dist3, true, false), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(colchis, &dist3), 14);
         assert_eq!(zuflucht.wtcm(colchis), -0.5);
-        assert_eq!(zuflucht.btn(colchis, &dist3, false), 6.5);
-        assert_eq!(zuflucht.btn(colchis, &dist3, true), 6.5);
+        assert_eq!(zuflucht.btn(colchis, &dist3, false, false), 6.5);
+        assert_eq!(zuflucht.btn(colchis, &dist3, true, false), 6.5);
 
         assert_eq!(zuflucht.navigable_distance(st_genevieve, &dist3), 13);
         assert_eq!(zuflucht.wtcm(st_genevieve), -0.5);
-        assert_eq!(zuflucht.btn(st_genevieve, &dist3, false), 3.5);
-        assert_eq!(zuflucht.btn(st_genevieve, &dist3, true), 3.5);
+        assert_eq!(zuflucht.btn(st_genevieve, &dist3, false, false), 3.5);
+        assert_eq!(zuflucht.btn(st_genevieve, &dist3, true, false), 3.5);
 
         assert_eq!(zuflucht.navigable_distance(acadie, &dist3), 15);
         assert_eq!(zuflucht.wtcm(acadie), -0.5);
-        assert_eq!(zuflucht.btn(acadie, &dist3, false), 5.0);
-        assert_eq!(zuflucht.btn(acadie, &dist3, true), 5.0);
+        assert_eq!(zuflucht.btn(acadie, &dist3, false, false), 5.0);
+        assert_eq!(zuflucht.btn(acadie, &dist3, true, false), 5.0);
 
         assert_eq!(zuflucht.navigable_distance(sansterre, &dist3), 15);
         assert_eq!(zuflucht.wtcm(sansterre), -0.5);
-        assert_eq!(zuflucht.btn(sansterre, &dist3, false), 7.0);
-        assert_eq!(zuflucht.btn(sansterre, &dist3, true), 7.0);
+        assert_eq!(zuflucht.btn(sansterre, &dist3, false, false), 7.0);
+        assert_eq!(zuflucht.btn(sansterre, &dist3, true, false), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(achille, &dist3), 15);
         assert_eq!(zuflucht.wtcm(achille), -0.5);
-        assert_eq!(zuflucht.btn(achille, &dist3, false), 4.0);
-        assert_eq!(zuflucht.btn(achille, &dist3, true), 4.0);
+        assert_eq!(zuflucht.btn(achille, &dist3, false, false), 4.0);
+        assert_eq!(zuflucht.btn(achille, &dist3, true, false), 4.0);
 
         assert_eq!(zuflucht.navigable_distance(amondiage, &dist3), 16);
         assert_eq!(zuflucht.wtcm(amondiage), -0.5);
-        assert_eq!(zuflucht.btn(amondiage, &dist3, false), 7.0);
-        assert_eq!(zuflucht.btn(amondiage, &dist3, true), 7.0);
+        assert_eq!(zuflucht.btn(amondiage, &dist3, false, false), 7.0);
+        assert_eq!(zuflucht.btn(amondiage, &dist3, true, false), 7.0);
 
         assert_eq!(zuflucht.navigable_distance(st_denis, &dist3), 16);
         assert_eq!(zuflucht.wtcm(st_denis), -0.5);
-        assert_eq!(zuflucht.btn(st_denis, &dist3, false), 5.0);
-        assert_eq!(zuflucht.btn(st_denis, &dist3, true), 5.0);
+        assert_eq!(zuflucht.btn(st_denis, &dist3, false, false), 5.0);
+        assert_eq!(zuflucht.btn(st_denis, &dist3, true, false), 5.0);
 
         println!("{:?}", zuflucht.dbtn_to_coords);
         for (ii, set) in zuflucht.dbtn_to_coords.iter().enumerate() {
@@ -2501,6 +2520,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
 
         let temp_dir = tempdir()?;
@@ -2574,6 +2594,7 @@ mod tests {
             &max_jumps,
             &dists,
             &preds,
+            false,
         );
         let max_max_jump: u64 = *max_jumps.values().max().unwrap();
 
@@ -2588,6 +2609,7 @@ mod tests {
             max_max_jump,
             false,
             &dists,
+            false,
         )?;
         let found_filename_results: Vec<Result<OsString, io::Error>> = read_dir(&output_dir)?
             .map(|res| res.map(|e| e.file_name()))
