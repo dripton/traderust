@@ -98,14 +98,14 @@ fn dijkstra_one_row(
 
     while !heap.is_empty() {
         if let Some(Reverse((priority, u))) = heap.pop() {
-            if priority == dist_row[u as usize] as u16 {
+            if priority == dist_row[u as usize] {
                 if let Some(neighbors) = neighbors_map.get(&u) {
                     for v in neighbors {
                         let weight = weights.get(&(u, *v)).unwrap();
-                        let alt = dist_row[u as usize] as u16 + weight;
-                        if alt < (dist_row[*v as usize]) as u16 {
-                            dist_row[*v as usize] = alt as u16;
-                            pred_row[*v as usize] = u as u16;
+                        let alt = dist_row[u as usize] + weight;
+                        if alt < (dist_row[*v as usize]) {
+                            dist_row[*v as usize] = alt;
+                            pred_row[*v as usize] = u;
                             let tup = (alt, *v);
                             heap.push(Reverse(tup));
                         }
@@ -139,11 +139,11 @@ fn dial_one_row(
                     if let Some(neighbors) = neighbors_map.get(&u) {
                         for v in neighbors {
                             let weight = weights.get(&(u, *v)).unwrap();
-                            let alt = dist_row[u as usize] as u16 + weight;
-                            if alt < (dist_row[*v as usize]) as u16 {
-                                dist_row[*v as usize] = alt as u16;
-                                pred_row[*v as usize] = u as u16;
-                                queue.enqueue(*v as u16, alt as usize);
+                            let alt = dist_row[u as usize] + weight;
+                            if alt < (dist_row[*v as usize]) {
+                                dist_row[*v as usize] = alt;
+                                pred_row[*v as usize] = u;
+                                queue.enqueue(*v, alt as usize);
                             }
                         }
                     }
@@ -202,7 +202,7 @@ fn dijkstra_dial_inner(dist: &mut Array2<u16>, alg: Algorithm) -> Array2<u16> {
     for i in 0..size {
         for j in 0..size {
             if dist[[i, j]] > 0 && dist[[i, j]] != INFINITY {
-                weights.insert((i as u16, j as u16), dist[[i, j]] as u16);
+                weights.insert((i as u16, j as u16), dist[[i, j]]);
             }
         }
     }

@@ -308,7 +308,7 @@ fn parse_header_and_separator(header: &str, separator: &str) -> Vec<(usize, usiz
 /// if ignore_xboat_routes is not set.
 /// Must be run after all neighbors are built.
 fn populate_navigable_distances(
-    sorted_coords: &Vec<Coords>,
+    sorted_coords: &[Coords],
     coords_to_world: &HashMap<Coords, World>,
     max_jump: u64,
     ignore_xboat_routes: bool,
@@ -335,7 +335,7 @@ fn populate_navigable_distances(
             for coords in &world.xboat_routes {
                 let neighbor = coords_to_world.get(coords).unwrap();
                 let jj = neighbor.index.unwrap();
-                np[[ii, jj]] = world.straight_line_distance(neighbor) as u16;
+                np[[ii, jj]] = world.straight_line_distance(neighbor);
                 num_edges += 1;
             }
         }
@@ -461,7 +461,7 @@ fn populate_trade_routes(
                 // forming any trade routes with coords1.
                 break;
             }
-            let sld = coords1.straight_line_distance(coords2) as u16;
+            let sld = coords1.straight_line_distance(coords2);
             let max_btn1 = wtn1 + wtn2 - distance_modifier_table(sld, iw_rules);
             if max_btn1 < min_btn - MAX_WTCM_BONUS {
                 // BTN can't be more than the sum of the WTNs plus the bonus,
@@ -718,12 +718,7 @@ impl Ord for Coords {
 
 impl PartialOrd for Coords {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.x.partial_cmp(&other.x) {
-            None => None,
-            Some(Ordering::Less) => Some(Ordering::Less),
-            Some(Ordering::Greater) => Some(Ordering::Greater),
-            Some(Ordering::Equal) => self.y2.partial_cmp(&other.y2),
-        }
+        Some(self.cmp(other))
     }
 }
 
@@ -962,7 +957,7 @@ impl World {
     }
 
     fn starport(&self) -> char {
-        return self.uwp.chars().next().unwrap() as char;
+        self.uwp.chars().next().unwrap()
     }
 
     fn g_starport(&self) -> String {
@@ -975,27 +970,27 @@ impl World {
     }
 
     fn size(&self) -> char {
-        return self.uwp.chars().nth(1).unwrap() as char;
+        self.uwp.chars().nth(1).unwrap()
     }
 
     fn atmosphere(&self) -> char {
-        return self.uwp.chars().nth(2).unwrap() as char;
+        self.uwp.chars().nth(2).unwrap()
     }
 
     fn hydrosphere(&self) -> char {
-        return self.uwp.chars().nth(3).unwrap() as char;
+        self.uwp.chars().nth(3).unwrap()
     }
 
     fn population(&self) -> char {
-        return self.uwp.chars().nth(4).unwrap() as char;
+        self.uwp.chars().nth(4).unwrap()
     }
 
     pub fn government(&self) -> char {
-        return self.uwp.chars().nth(5).unwrap() as char;
+        self.uwp.chars().nth(5).unwrap()
     }
 
     pub fn law_level(&self) -> char {
-        return self.uwp.chars().nth(6).unwrap() as char;
+        self.uwp.chars().nth(6).unwrap()
     }
 
     pub fn importance(&self) -> i64 {
@@ -1027,7 +1022,7 @@ impl World {
     }
 
     fn tech_level(&self) -> char {
-        return self.uwp.chars().nth(8).unwrap() as char;
+        self.uwp.chars().nth(8).unwrap()
     }
 
     fn g_tech_level(&self) -> u64 {
@@ -1064,7 +1059,7 @@ impl World {
             let pop_int = pop_char.to_digit(MAX_POPULATION + 1).unwrap();
             pop_mod = pop_int as f64 / 2.0;
         }
-        tl_mod + pop_mod as f64
+        tl_mod + pop_mod
     }
 
     fn wtn_port_modifier(&self) -> f64 {
@@ -1695,7 +1690,7 @@ fn main() -> Result<()> {
     }
     debug!("{} sectors: {:?}", sector_names.len(), sector_names);
 
-    create_dir_all(&output_dir)?;
+    create_dir_all(output_dir)?;
     create_dir_all(&data_dir)?;
 
     download_sector_data(&data_dir, &sector_names)?;
