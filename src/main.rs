@@ -1550,7 +1550,7 @@ impl Sector {
         &'a self,
         hex: String,
         coords_to_world: &'a HashMap<Coords, World>,
-    ) -> Option<&World> {
+    ) -> Option<&'a World> {
         let coords_opt = self.hex_to_coords.get(&hex);
         if let Some(coords) = coords_opt {
             return coords_to_world.get(coords);
